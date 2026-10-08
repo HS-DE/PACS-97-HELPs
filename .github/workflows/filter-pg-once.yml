@@ -1,0 +1,59 @@
+name: Filter pg_matrix to metadata samples
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/filter-pg-once.yml
+permissions:
+  contents: write
+jobs:
+  filter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Keep metadata-approved sample columns only
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import tempfile, os, sys
+          sys.path.insert(0, "scripts")
+          from filter_samples import records
+          root = Path.cwd()
+          study = records(root / "all_sample_metadata.xlsx")
+          qc = records(root / "all_QC_metadata.xlsx")
+          retained_qc = [r for r in qc if r["group1"].strip().lower() != "blank" and r["group2"].strip().lower() != "blank"]
+          wanted = [r["sample_id"] for r in study] + [r["sample_id"] for r in retained_qc]
+          assert len(study) == 54 and len(retained_qc) == 21 and len(wanted) == len(set(wanted)) == 75
+          assert sum(r["group1"] == "Internal-QC" for r in retained_qc) == 6
+          assert sum(r["group1"] == "QC1" for r in retained_qc) == 15
+          pg = root / "pg_matrix.tsv"
+          with pg.open(encoding="utf-8", newline="") as source:
+              header = source.readline().rstrip("\r\n").split("\t")
+              assert header[:5] == ["Protein.Group","Protein.Ids","Protein.Names","Genes","First.Protein.Description"]
+              assert len(header) == 114 and len(header[5:]) == len(set(header[5:])) == 109
+              assert set(wanted).issubset(header[5:])
+              cols = list(range(5)) + [i for i in range(5, len(header)) if header[i] in set(wanted)]
+              assert len(cols) == 80 and set(header[i] for i in cols[5:]) == set(wanted)
+              with tempfile.NamedTemporaryFile(mode="w", dir=root, suffix=".tsv", encoding="utf-8", newline="", delete=False) as out:
+                  tmp = Path(out.name)
+                  out.write("\t".join(header[i] for i in cols) + "\n")
+                  count = 0
+                  for line in source:
+                      if not line.strip():
+                          continue
+                      values = line.rstrip("\r\n").split("\t")
+                      assert len(values) == len(header), (count + 1, len(values))
+                      out.write("\t".join(values[i] for i in cols) + "\n")
+                      count += 1
+          assert count == 6830, count
+          os.replace(tmp, pg)
+          print(f"PASS: {count} protein rows, {len(cols)-5} sample columns, {len(header)-len(cols)} removed")
+          PY
+      - name: Commit cleaned pg file
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pg_matrix.tsv
+          git diff --cached --quiet || (git commit -m "Filter new pg_matrix to 75 metadata samples [skip ci]" && git push)
