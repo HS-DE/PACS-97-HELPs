@@ -1,0 +1,3 @@
+﻿Protein.Group,Protein.Ids,Protein.Names,Genes,First.Protein.Description,total_detected,Internal-QC_detected_n,Internal-QC_detection_rate_pct,Internal-QC_CV_pct,pooled QC_detected_n,pooled QC_detection_rate_pct,pooled QC_CV_pct,HC_detected_n,HC_detection_rate_pct,HC_CV_pct,S_detected_n,S_detection_rate_pct,S_CV_pct
+P00924,P00924,ENO1_YEAST,ENO1,Enolase 1,74,5,83.33333333333333,26.86798671488537,15,100.0,4.574923472285867,27,100.0,44.63011241762084,27,100.0,66.52819245657678
+P00925,P00925,ENO2_YEAST,ENO2,Enolase 2,74,5,83.33333333333333,15.52103190602518,15,100.0,8.984974034110294,27,100.0,45.0645862680827,27,100.0,62.993368066366656

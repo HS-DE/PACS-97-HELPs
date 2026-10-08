@@ -1,0 +1,5 @@
+﻿group,sample_n,detected_protein_groups,distinct_Protein.Names,mean_detected_per_sample,median_detected_per_sample,CV_eligible_protein_groups,median_protein_CV_pct,identification_count_CV_pct
+Internal-QC,6,2,2,1.6666666666666667,2.0,2,21.194509310455274,48.989794855663554
+pooled QC,15,2,2,2,2,2,6.779948753198081,0.0
+HC,27,2,2,2,2,2,44.84734934285177,0.0
+S,27,2,2,2,2,2,64.76078026147172,0.0
