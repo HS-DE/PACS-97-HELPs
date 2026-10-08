@@ -1,0 +1,27 @@
+name: Clean metadata-unlisted samples
+on:
+  push:
+    branches: [cleanup/metadata-samples-only]
+    paths: [scripts/filter_samples.py, .github/workflows/clean-samples-once.yml]
+permissions:
+  contents: write
+jobs:
+  clean:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: cleanup/metadata-samples-only
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python scripts/filter_samples.py
+      - name: Commit cleaned data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "LH_ratio_tables_2026.9.22—ALL-HELP.xlsx" all_QC_metadata.xlsx pg_matrix.tsv README.md FILTERING_REPORT.md
+          if ! git diff --cached --quiet; then
+            git commit -m "Apply metadata-only sample filtering"
+            git push origin HEAD:cleanup/metadata-samples-only
+          fi
