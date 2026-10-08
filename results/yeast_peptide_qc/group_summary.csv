@@ -1,0 +1,5 @@
+﻿group,sample_n,detected_peptide_species,mean_detected_per_sample,median_cv_pct,cv_eligible_peptides
+Internal-QC,6,2,1.6666666666666667,36.9492365634261,2
+pooled QC,15,2,2,13.69460242448822,2
+HC,27,2,2,35.88399271258232,2
+S,27,2,2,36.032904171437494,2
