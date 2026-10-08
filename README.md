@@ -1,0 +1,3 @@
+LH_ratio_table：HELPs强度表.
+metadata：样本信息表，QC_metadata为QC样本的metadata，里面包含internal-QC，QC1（也就是pooled plasma），Blank是用不到的样本；sample_metadata为study sample的metadata.
+pg_matrix：蛋白强度定量表，前5列为注释列，后续为样本列，里面的样本包含了QC和study sample，还有一些用不到的样本，所以需要先剔除metadata的sample_id中不存在的样本列和QC metadata里的Blank。
