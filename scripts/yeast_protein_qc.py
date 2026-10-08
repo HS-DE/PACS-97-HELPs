@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """PACS yeast spike-in: metadata-group detection and raw-intensity CV.
 
-Select rows where Protein.Names contains YEAST (case-insensitive).
+Select only Protein.Names ENO1_YEAST and ENO2_YEAST (case-insensitive).
 Detected = finite positive intensity. CV = sample SD / mean * 100,
 provided >= max(3, ceil(0.70 * group size)) detections and mean >= 1e-8.
 Missing/zero values do not contribute to CV. No imputation or normalization.
@@ -9,6 +9,7 @@ Missing/zero values do not contribute to CV. No imputation or normalization.
 import csv
 import math
 import re
+import shutil
 import statistics as st
 import zipfile
 from pathlib import Path
@@ -109,7 +110,7 @@ def figures(proteins, summary, sample_stats):
         plt.close(fig)
 
     def empty(ax):
-        ax.text(0.5, 0.5, "No YEAST entries in Protein.Names",
+        ax.text(0.5, 0.5, "No ENO1_YEAST / ENO2_YEAST entries",
                 transform=ax.transAxes, ha="center", va="center",
                 fontsize=13, color="#64748b")
         ax.set_xticks([])
@@ -122,17 +123,17 @@ def figures(proteins, summary, sample_stats):
     ax.set_xticks(range(4), [f'{g} (n={summary[i]["sample_n"]})'
                              for i, g in enumerate(GROUPS)])
     ax.set_ylim(0, max([1] + counts) * 1.2)
-    ax.set_ylabel("Protein groups detected in at least one sample")
-    ax.set_title("Yeast proteins detected by group")
+    ax.set_ylabel("ENO1/ENO2 protein groups detected in >=1 sample")
+    ax.set_title("Yeast ENO1 / ENO2 detected by group")
     save(fig, "01_group_detected_counts")
 
     # Protein-level rates and CVs; paginate so all identities remain legible.
     ordered = sorted(proteins, key=lambda r: (-r["total_detected"], r["Protein.Names"]))
     for kind, prefix, title, xlabel in (
         ("detection_rate_pct", "02_per_protein_detection_rates",
-         "Yeast protein detection rate by group", "Detection rate (%)"),
+         "ENO1 / ENO2 detection rates by group", "Detection rate (%)"),
         ("CV_pct", "04_per_protein_cv",
-         "Yeast protein intensity CV by group", "CV (%)"),
+         "ENO1 / ENO2 intensity CV by group", "CV (%)"),
     ):
         batches = [ordered[i:i + 30] for i in range(0, len(ordered), 30)] or [[]]
         for page, batch in enumerate(batches):
@@ -166,7 +167,7 @@ def figures(proteins, summary, sample_stats):
             save(fig, prefix + extra)
 
     fig, ax = plt.subplots(figsize=(9, 5), layout="constrained")
-    ax.set_title("Yeast protein intensity CV distribution")
+    ax.set_title("ENO1 / ENO2 intensity CV by group")
     vals = [[r[g + "_CV_pct"] for r in proteins if r[g + "_CV_pct"] is not None]
             for g in GROUPS]
     if any(vals):
@@ -210,8 +211,8 @@ def figures(proteins, summary, sample_stats):
     ax.set_xticks(range(4), [f'{g} (n={summary[i]["sample_n"]})'
                              for i, g in enumerate(GROUPS)])
     ax.set_ylim(0, max(means) * 1.2 if any(means) else 1)
-    ax.set_ylabel("Mean detected yeast protein groups / sample")
-    ax.set_title("Mean yeast protein identification per sample")
+    ax.set_ylabel("Mean detected ENO1/ENO2 protein groups / sample")
+    ax.set_title("Mean ENO1 / ENO2 detected per sample")
     save(fig, "05_group_mean_identification")
 
     ordered_samples = [r for g in GROUPS for r in sample_stats if r["group"] == g]
@@ -222,8 +223,8 @@ def figures(proteins, summary, sample_stats):
            color=color_values, width=0.85)
     ax.set_xticks(indexes, [r["sample_id"] for r in ordered_samples],
                   rotation=85, fontsize=6)
-    ax.set_ylabel("Detected yeast protein groups")
-    ax.set_title("Yeast protein identification by sample")
+    ax.set_ylabel("Detected ENO1/ENO2 protein groups")
+    ax.set_title("ENO1 / ENO2 detection by sample")
     ax.legend(handles=[Patch(color=c, label=f'{g} (n={summary[i]["sample_n"]})')
                        for i, (g, c) in enumerate(zip(GROUPS, COLORS))],
               loc="upper right", frameon=False)
@@ -241,8 +242,119 @@ def figures(proteins, summary, sample_stats):
                              for i, g in enumerate(GROUPS)])
     ax.set_ylim(0, max(counts) * 1.2 if any(counts) else 1)
     ax.set_ylabel("Protein groups with estimable CV")
-    ax.set_title("Yeast proteins eligible for CV (70% detected)")
+    ax.set_title("ENO1 / ENO2 eligible for CV (70% detected)")
     save(fig, "07_cv_eligible_counts")
+
+
+
+def write_report(proteins, summary):
+    """Write the results index from freshly calculated values, not old counts."""
+    lines = [
+        "# ENO1 / ENO2 yeast spike-in quality control",
+        "",
+        "Only protein-group rows containing `ENO1_YEAST` or `ENO2_YEAST` as",
+        "semicolon-delimited `Protein.Names` tokens are included.",
+        "All other yeast and human proteins are excluded.",
+        "",
+        "Data: [pg_matrix.tsv](../../pg_matrix.tsv), "
+        "[QC metadata](../../all_QC_metadata.xlsx), "
+        "[study metadata](../../all_sample_metadata.xlsx).",
+        "No intensity normalization and no missing-value imputation.",
+        "",
+        "## Four-group summary",
+        "",
+        "| Group | Samples | ENO groups detected (of 2) | "
+        "Mean detected / sample | CV-estimable ENO groups | "
+        "Median ENO protein CV (%) |",
+        "| --- | ---: | ---: | ---: | ---: | ---: |",
+    ]
+    for r in summary:
+        med = r["median_protein_CV_pct"]
+        lines.append(
+            f'| {r["group"]} | {r["sample_n"]} | '
+            f'{r["detected_protein_groups"]} | '
+            f'{r["mean_detected_per_sample"]:.3f} | '
+            f'{r["CV_eligible_protein_groups"]} | '
+            f'{med:.2f} |' if med is not None else
+            f'| {r["group"]} | {r["sample_n"]} | '
+            f'{r["detected_protein_groups"]} | '
+            f'{r["mean_detected_per_sample"]:.3f} | '
+            f'{r["CV_eligible_protein_groups"]} | NA |'
+        )
+    lines.extend([
+        "",
+        "Here \"groups detected\" counts target Protein.Group rows with at "
+        "least one positive, finite intensity in the indicated sample group.",
+        "The four group totals can overlap.",
+        "",
+        "## ENO1 and ENO2 separately",
+        "",
+        "| Protein.Names | Group | Detected / n | Detection (%) | CV (%) |",
+        "| --- | --- | ---: | ---: | ---: |",
+    ])
+    for p in sorted(proteins, key=lambda x: x["Protein.Names"]):
+        for r in summary:
+            g = r["group"]
+            v = p[g + "_CV_pct"]
+            cvtext = f"{v:.2f}" if v is not None else "NA"
+            lines.append(
+                f'| {p["Protein.Names"]} | {g} | '
+                f'{p[g + "_detected_n"]} / {r["sample_n"]} | '
+                f'{p[g + "_detection_rate_pct"]:.2f} | {cvtext} |'
+            )
+    lines.extend([
+        "",
+        "## Definitions",
+        "",
+        "- Detected = finite intensity > 0. Missing, 0, negative and "
+        "nonfinite values are undetected.",
+        "- Detection rate = number detected / **all** samples in group × 100.",
+        "- Intensity CV = sample standard deviation (ddof=1) / arithmetic "
+        "mean × 100, computed on detected **raw** intensities (no log2).",
+        "- Following the attached R reference: compute CV only when "
+        "detected n >= max(3, ceil(0.70 × group sample count)) and "
+        "mean intensity >= 1e-8. Otherwise CV = NA.",
+        "- Minimum detected n for CV: Internal-QC 5/6, pooled QC 11/15, "
+        "HC 19/27, S 19/27.",
+        "- Internal-QC pairs LM_2_1/LM_2_2 and LM_3_2/LM_3_3 are "
+        "**intentionally duplicated**, so n=6 is nominal rather than "
+        "six independent values.",
+        "- Study-group CV may reflect biological and technical variation.",
+        "- One row = one Protein.Group, not necessarily one individually "
+        "resolved protein; inspect Protein.Names when interpreting identity.",
+        "",
+        "## Visualizations",
+        "",
+        "Group colors throughout: Internal-QC blue, pooled QC orange, "
+        "HC green, S purple.",
+        "",
+        "![Number detected in each group](figures/01_group_detected_counts.png)",
+        "",
+        "![ENO1 and ENO2 detection rates](figures/02_per_protein_detection_rates.png)",
+        "",
+        "![ENO1 and ENO2 CV distribution](figures/03_group_cv_violin_box.png)",
+        "",
+        "![ENO1 and ENO2 CV by group](figures/04_per_protein_cv.png)",
+        "",
+        "![Mean detection count](figures/05_group_mean_identification.png)",
+        "",
+        "![Per-sample detection count](figures/06_per_sample_identification.png)",
+        "",
+        "![CV eligibility count](figures/07_cv_eligible_counts.png)",
+        "",
+        "PNG and SVG versions are available in `figures/`.",
+        "",
+        "## Downloadable data and reproduction",
+        "",
+        "- [group_summary.csv](group_summary.csv): four-group summary",
+        "- [per_protein.csv](per_protein.csv): target protein groups, "
+        "per-group detection counts/rates/CVs",
+        "- [per_sample.csv](per_sample.csv): target-group detections per sample",
+        "- [Python script](../../scripts/yeast_protein_qc.py)",
+        "- [GitHub Actions workflow](../../.github/workflows/yeast-protein-qc.yml)",
+        "",
+    ])
+    (OUT / "README.md").write_text("\n".join(lines), encoding="utf-8")
 
 
 def main():
@@ -259,9 +371,21 @@ def main():
         cols_by_group = {g: [s for s in cols[5:] if samples[s] == g] for g in GROUPS}
         if any(not x for x in cols_by_group.values()):
             raise ValueError("Missing one of the four analysis groups")
-        yeast = [row for row in reader if "YEAST" in row["Protein.Names"].upper()]
+        yeast = [
+            row for row in reader
+            if re.search(r"(?:^|;)\s*ENO[12]_YEAST\s*(?:;|$)",
+                         row["Protein.Names"], flags=re.IGNORECASE)
+        ]
     if not yeast:
-        raise ValueError("No YEAST protein names found; check the new pg_matrix.tsv")
+        raise ValueError("Neither ENO1_YEAST nor ENO2_YEAST found in pg_matrix.tsv")
+    targeted = {
+        name for row in yeast
+        for name in re.split(r";\s*", row["Protein.Names"].upper())
+        if name in {"ENO1_YEAST", "ENO2_YEAST"}
+    }
+    if targeted != {"ENO1_YEAST", "ENO2_YEAST"}:
+        raise ValueError("Missing target(s): " +
+                         str({"ENO1_YEAST", "ENO2_YEAST"} - targeted))
     if len({r["Protein.Group"] for r in yeast}) != len(yeast):
         raise ValueError("Duplicate Protein.Group among yeast rows")
 
@@ -305,16 +429,19 @@ def main():
                 if len(per_sample) >= 2 and st.mean(per_sample) != 0 else None
             ),
         })
+    # Remove all legacy yeast QC artifacts, including stale multi-page plots.
+    shutil.rmtree(OUT, ignore_errors=True)
     save_csv(OUT / "group_summary.csv", list(summary[0]), summary)
     save_csv(OUT / "per_protein.csv", protein_fields, proteins)
     save_csv(OUT / "per_sample.csv", list(sample_stats[0]), sample_stats)
     figures(proteins, summary, sample_stats)
+    write_report(proteins, summary)
     detected = sum(p["total_detected"] > 0 for p in proteins)
-    print(f"YEAST annotated protein groups={len(proteins)}, detected in >=1 sample={detected}, unique names={len({r['Protein.Names'] for r in proteins})}")
+    print(f"ENO1/ENO2 annotated protein groups={len(proteins)}, detected in >=1 sample={detected}, unique names={len({r['Protein.Names'] for r in proteins})}")
     for r in summary:
         print(f"{r['group']}: n={r['sample_n']}, detected={r['detected_protein_groups']}, CV eligible={r['CV_eligible_protein_groups']}")
     if not proteins:
-        print("SOURCE DATA ISSUE: NO YEAST IN Protein.Names; CV is UNDEFINED.")
+        print("SOURCE DATA ISSUE: NO TARGET ENOLASE IN Protein.Names.")
 
 
 if __name__ == "__main__":
