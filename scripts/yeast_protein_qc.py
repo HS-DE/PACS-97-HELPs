@@ -94,7 +94,7 @@ def save_csv(path, fields, rows):
         writer.writerows(rows)
 
 
-def figures(proteins, summary):
+def figures(proteins, summary, sample_stats):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -151,7 +151,7 @@ def figures(proteins, summary):
                         ax.scatter([v for v in vals if v is not None],
                                    [y for y, v in zip(yy, vals) if v is not None],
                                    s=34, color=color, label=g)
-                labels = [r["Protein.Names"] + " [" + r["Protein.Group"] + "]"
+                labels = [r["Protein.Names"].split(";")[0] + " [" + r["Protein.Group"] + "]"
                           for r in batch]
                 ax.set_yticks(ys, labels, fontsize=8)
                 ax.invert_yaxis()
@@ -202,6 +202,49 @@ def figures(proteins, summary):
     save(fig, "03_group_cv_violin_box")
 
 
+    # Supplementary identification plots (bars); CV keeps the violin and scatter views.
+    fig, ax = plt.subplots(figsize=(9.5, 5.2), layout="constrained")
+    means = [r["mean_detected_per_sample"] for r in summary]
+    bars = ax.bar(range(4), means, color=COLORS, width=0.6)
+    ax.bar_label(bars, labels=[f"{v:.1f}" for v in means], padding=5)
+    ax.set_xticks(range(4), [f'{g} (n={summary[i]["sample_n"]})'
+                             for i, g in enumerate(GROUPS)])
+    ax.set_ylim(0, max(means) * 1.2 if any(means) else 1)
+    ax.set_ylabel("Mean detected yeast protein groups / sample")
+    ax.set_title("Mean yeast protein identification per sample")
+    save(fig, "05_group_mean_identification")
+
+    ordered_samples = [r for g in GROUPS for r in sample_stats if r["group"] == g]
+    fig, ax = plt.subplots(figsize=(16, 5.5), layout="constrained")
+    indexes = list(range(len(ordered_samples)))
+    color_values = [COLORS[GROUPS.index(r["group"])] for r in ordered_samples]
+    ax.bar(indexes, [r["detected_yeast_protein_groups"] for r in ordered_samples],
+           color=color_values, width=0.85)
+    ax.set_xticks(indexes, [r["sample_id"] for r in ordered_samples],
+                  rotation=85, fontsize=6)
+    ax.set_ylabel("Detected yeast protein groups")
+    ax.set_title("Yeast protein identification by sample")
+    ax.legend(handles=[Patch(color=c, label=f'{g} (n={summary[i]["sample_n"]})')
+                       for i, (g, c) in enumerate(zip(GROUPS, COLORS))],
+              loc="upper right", frameon=False)
+    offset = 0
+    for g in GROUPS[:-1]:
+        offset += sum(r["group"] == g for r in ordered_samples)
+        ax.axvline(offset - 0.5, color="#94a3b8", lw=0.9, ls="--")
+    save(fig, "06_per_sample_identification")
+
+    fig, ax = plt.subplots(figsize=(9.5, 5.2), layout="constrained")
+    counts = [r["CV_eligible_protein_groups"] for r in summary]
+    bars = ax.bar(range(4), counts, color=COLORS, width=0.6)
+    ax.bar_label(bars, padding=5)
+    ax.set_xticks(range(4), [f'{g} (n={summary[i]["sample_n"]})'
+                             for i, g in enumerate(GROUPS)])
+    ax.set_ylim(0, max(counts) * 1.2 if any(counts) else 1)
+    ax.set_ylabel("Protein groups with estimable CV")
+    ax.set_title("Yeast proteins eligible for CV (70% detected)")
+    save(fig, "07_cv_eligible_counts")
+
+
 def main():
     samples = metadata()
     with (ROOT / "pg_matrix.tsv").open(encoding="utf-8-sig", newline="") as f:
@@ -217,6 +260,8 @@ def main():
         if any(not x for x in cols_by_group.values()):
             raise ValueError("Missing one of the four analysis groups")
         yeast = [row for row in reader if "YEAST" in row["Protein.Names"].upper()]
+    if not yeast:
+        raise ValueError("No YEAST protein names found; check the new pg_matrix.tsv")
     if len({r["Protein.Group"] for r in yeast}) != len(yeast):
         raise ValueError("Duplicate Protein.Group among yeast rows")
 
@@ -255,12 +300,17 @@ def main():
             "median_detected_per_sample": st.median(per_sample),
             "CV_eligible_protein_groups": len(cv_vals),
             "median_protein_CV_pct": st.median(cv_vals) if cv_vals else None,
+            "identification_count_CV_pct": (
+                100 * st.stdev(per_sample) / st.mean(per_sample)
+                if len(per_sample) >= 2 and st.mean(per_sample) != 0 else None
+            ),
         })
     save_csv(OUT / "group_summary.csv", list(summary[0]), summary)
     save_csv(OUT / "per_protein.csv", protein_fields, proteins)
     save_csv(OUT / "per_sample.csv", list(sample_stats[0]), sample_stats)
-    figures(proteins, summary)
-    print(f"YEAST protein groups={len(proteins)}, distinct names={len({r['Protein.Names'] for r in proteins})}")
+    figures(proteins, summary, sample_stats)
+    detected = sum(p["total_detected"] > 0 for p in proteins)
+    print(f"YEAST annotated protein groups={len(proteins)}, detected in >=1 sample={detected}, unique names={len({r['Protein.Names'] for r in proteins})}")
     for r in summary:
         print(f"{r['group']}: n={r['sample_n']}, detected={r['detected_protein_groups']}, CV eligible={r['CV_eligible_protein_groups']}")
     if not proteins:
