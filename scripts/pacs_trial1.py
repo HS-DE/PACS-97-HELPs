@@ -343,7 +343,54 @@ def plot_cv(rows, summary):
     save_figure(fig, "05_protein_cv_violin_box")
 
 
-def report(factors, ref, pg_n, cv_summary, n_pca_features, explained):
+def compare_directions(raw, multiplied, corrected, samples, groups, current_summary):
+    """Compare direction empirically; keep divide as trial-1 primary result."""
+    items = []
+    for g in GROUPS:
+        ix = [i for i, sid in enumerate(samples) if groups[sid] == g]
+        a, na, _ = cv_by_feature(raw[:, ix])
+        b, nb, _ = cv_by_feature(corrected[:, ix])
+        m, nm, _ = cv_by_feature(multiplied[:, ix])
+        if not np.array_equal(na, nb) or not np.array_equal(na, nm):
+            raise AssertionError("Direction scaling unexpectedly changed detection")
+        matched = np.isfinite(a) & np.isfinite(b) & np.isfinite(m)
+        a, b, m = a[matched], b[matched], m[matched]
+        items.append({
+            "group": g,
+            "n_samples": len(ix),
+            "eligible_proteins_paired": int(len(a)),
+            "median_cv_uncorrected_pct": float(np.median(a)),
+            "median_cv_divide_pct": float(np.median(b)),
+            "median_cv_multiply_pct": float(np.median(m)),
+            "median_divide_minus_original_pp": float(np.median(b - a)),
+            "median_multiply_minus_original_pp": float(np.median(m - a)),
+            "fraction_cv_lower_divide_pct": float(100 * np.mean(b < a)),
+            "fraction_cv_lower_multiply_pct": float(100 * np.mean(m < a)),
+        })
+    table = pd.DataFrame(items)
+    table.to_csv(OUT / "direction_sensitivity_cv.csv", index=False)
+    fig, ax = plt.subplots(figsize=(11.5, 6), layout="constrained")
+    xs = np.arange(len(GROUPS))
+    for shift, name, key, fill in [
+        (-0.25, "Original", "median_cv_uncorrected_pct", "#7a8592"),
+        (0, "Divide by factor", "median_cv_divide_pct", "#bf5562"),
+        (0.25, "Multiply by factor", "median_cv_multiply_pct", "#48a48a"),
+    ]:
+        values = table[key].to_numpy()
+        bars = ax.bar(xs + shift, values, width=.24, color=fill, label=name)
+        ax.bar_label(bars, fmt="%.1f%%", padding=3, fontsize=9)
+    ax.set_xticks(xs, GROUPS)
+    ax.set_ylim(0, max(table[["median_cv_uncorrected_pct",
+                             "median_cv_divide_pct",
+                             "median_cv_multiply_pct"]].max()) * 1.25)
+    ax.set_ylabel("Median across per-protein within-group CVs (%)")
+    ax.set_title("Sensitivity check: correction direction matters")
+    ax.legend(frameon=False)
+    save_figure(fig, "06_cv_direction_sensitivity")
+    return table
+
+
+def report(factors, ref, pg_n, cv_summary, n_pca_features, explained, directions):
     med_qc = factors[factors.group == "pooled QC"]["factor_sample_over_ref"].median()
     lines = [
         "# PACS Trial 1 — 97 HELP median L/H-ratio factor", "",
@@ -392,6 +439,28 @@ def report(factors, ref, pg_n, cv_summary, n_pca_features, explained):
             f'{r["fraction_proteins_cv_lower_after_pct"]:.1f}% |'
         )
     lines.extend([
+        "", "## Multiplication-direction sensitivity (not the primary corrected matrix)", "",
+        "Both candidate directions use exactly the same sample factor:",
+        "divide = intensity / factor; multiply = intensity * factor.",
+        "This comparison uses the same CV detection threshold and the same",
+        "paired eligible proteins in each group; neither direction is selected",
+        "as a validated normalization method.",
+        "",
+        "| Group | Original median CV | Divide median CV | Multiply median CV |",
+        "| --- | ---: | ---: | ---: |",
+    ])
+    for r in directions.to_dict("records"):
+        lines.append(
+            f'| {r["group"]} | {r["median_cv_uncorrected_pct"]:.2f}% | '
+            f'{r["median_cv_divide_pct"]:.2f}% | '
+            f'{r["median_cv_multiply_pct"]:.2f}% |'
+        )
+    lines.extend([
+        "", "The multiplier-direction check is a diagnostic, not a third-party",
+        "validated quality benchmark. Further assess yeast spike-ins and",
+        "biological preservation before committing to a direction.",
+    ])
+    lines.extend([
         "", "## Figures", "",
         "Group colors throughout: Internal-QC blue, pooled QC orange, HC green, S purple.",
         "![Sample factors](figures/01_sample_factors.png)", "",
@@ -399,6 +468,7 @@ def report(factors, ref, pg_n, cv_summary, n_pca_features, explained):
         "![Group sample median boxplots](figures/03_group_sample_median_boxes.png)", "",
         "![PCA](figures/04_pca_before_after.png)", "",
         "![Violin/box/points per-protein CV](figures/05_protein_cv_violin_box.png)", "",
+        "![CV direction comparison](figures/06_cv_direction_sensitivity.png)", "",
         "Figures are saved in PNG and SVG formats.",
         "", "## Data files", "",
         "- normalization_factors.csv: all sample medians, common pooled QC reference,",
@@ -408,6 +478,8 @@ def report(factors, ref, pg_n, cv_summary, n_pca_features, explained):
         "- pca_scores.csv: sample PCA coordinates and variance percentages.",
         "- per_protein_cv.csv: each protein-group row × group, before/after raw-intensity CV.",
         "- group_cv_summary.csv: four-group protein CV comparison.",
+        "- direction_sensitivity_cv.csv: original vs divide vs multiply per-protein CV.",
+        "- pg_matrix_multiply_sensitivity.tsv: alternative direction, not the primary matrix.",
         "- scripts/pacs_trial1.py: reproducible calculation and plots.",
         "- .github/workflows/pacs-trial1.yml: auto-regenerate on input/script changes.",
         "", "## Interpretation warning", "",
@@ -453,7 +525,15 @@ def main():
     nfeatures, explained = pca_analysis(raw, corrected, samples, groups)
     protein_cv, summary = protein_cv_analysis(raw, corrected, pg.loc[:, ANN], samples, groups)
     plot_cv(protein_cv, summary)
-    report(factors, reference, len(pg), summary, nfeatures, explained)
+    multiplied = raw * factors["factor_sample_over_ref"].to_numpy()[None, :]
+    alt_pg = pg.loc[:, ANN].copy()
+    alt_pg[samples] = multiplied
+    alt_pg.to_csv(OUT / "pg_matrix_multiply_sensitivity.tsv", sep="\t",
+                  index=False, na_rep="", float_format="%.10g")
+    directions = compare_directions(raw, multiplied, corrected, samples, groups, summary)
+    report(factors, reference, len(pg), summary, nfeatures, explained, directions)
+    print("Correction direction sensitivity:")
+    print(directions.to_string(index=False))
     print(f"PASS trial1: samples={len(samples)}, proteins={len(pg)}, "
           f"HELP_peptides=97, pooledQC=15, reference_mR={reference:.10g}, "
           f"PCA_features={nfeatures}")
