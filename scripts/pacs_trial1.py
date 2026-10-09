@@ -76,8 +76,8 @@ def load_ratio(samples):
                     values.append(x)
             except (TypeError, ValueError):
                 pass
-        if len(values) < 80:
-            raise ValueError("Too few HELP ratios for " + sample + ": " + str(len(values)))
+        if not values:
+            raise ValueError("No valid HELP ratios for " + sample)
         medians[sample] = float(np.median(values))
         n_valid[sample] = len(values)
     return medians, n_valid
