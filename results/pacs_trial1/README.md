@@ -43,6 +43,25 @@ No HC, S or Internal-QC values contribute to ref_mR.
 | HC | 27 | 5581 | 23.35% | 28.00% | +4.32 | 25.7% |
 | S | 27 | 5822 | 28.71% | 34.48% | +5.76 | 20.6% |
 
+## Multiplication-direction sensitivity (not the primary corrected matrix)
+
+Both candidate directions use exactly the same sample factor:
+divide = intensity / factor; multiply = intensity * factor.
+This comparison uses the same CV detection threshold and the same
+paired eligible proteins in each group; neither direction is selected
+as a validated normalization method.
+
+| Group | Original median CV | Divide median CV | Multiply median CV |
+| --- | ---: | ---: | ---: |
+| Internal-QC | 56.51% | 59.79% | 56.51% |
+| pooled QC | 10.33% | 11.83% | 11.96% |
+| HC | 23.35% | 28.00% | 29.09% |
+| S | 28.71% | 34.48% | 34.58% |
+
+The multiplier-direction check is a diagnostic, not a third-party
+validated quality benchmark. Further assess yeast spike-ins and
+biological preservation before committing to a direction.
+
 ## Figures
 
 Group colors throughout: Internal-QC blue, pooled QC orange, HC green, S purple.
@@ -56,6 +75,8 @@ Group colors throughout: Internal-QC blue, pooled QC orange, HC green, S purple.
 
 ![Violin/box/points per-protein CV](figures/05_protein_cv_violin_box.png)
 
+![CV direction comparison](figures/06_cv_direction_sensitivity.png)
+
 Figures are saved in PNG and SVG formats.
 
 ## Data files
@@ -67,6 +88,8 @@ Figures are saved in PNG and SVG formats.
 - pca_scores.csv: sample PCA coordinates and variance percentages.
 - per_protein_cv.csv: each protein-group row × group, before/after raw-intensity CV.
 - group_cv_summary.csv: four-group protein CV comparison.
+- direction_sensitivity_cv.csv: original vs divide vs multiply per-protein CV.
+- pg_matrix_multiply_sensitivity.tsv: alternative direction, not the primary matrix.
 - scripts/pacs_trial1.py: reproducible calculation and plots.
 - .github/workflows/pacs-trial1.yml: auto-regenerate on input/script changes.
 
