@@ -1,0 +1,40 @@
+name: PACS Trial 1B - LM unchanged, two views
+on:
+  push:
+    branches: [main]
+    paths:
+      - pg_matrix.tsv
+      - LH_ratio_tables_2026.9.22—ALL-HELP.xlsx
+      - all_QC_metadata.xlsx
+      - all_sample_metadata.xlsx
+      - scripts/pacs_trial1b.py
+      - scripts/pacs_trial1.py
+      - scripts/filter_samples.py
+      - scripts/yeast_protein_qc.py
+      - .github/workflows/pacs-trial1b.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install numerical and plotting libraries
+        run: python -m pip install numpy pandas matplotlib scikit-learn
+      - name: Run Trial 1B and verify LM invariance
+        run: python scripts/pacs_trial1b.py
+      - name: Commit Trial 1B outputs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results/pacs_trial1b/
+          if ! git diff --cached --quiet; then
+            git commit -m "Recompute PACS Trial 1B: untouched LM and two-view QC plots"
+            git push
+          fi
