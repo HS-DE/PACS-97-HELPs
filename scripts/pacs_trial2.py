@@ -432,7 +432,7 @@ def make_scenario(sc, method, with_help, raw, pg, samples, labels, factors):
         raise AssertionError("Detection masks changed")
     for j, sid in enumerate(samples):
         if labels[sid] not in STUDY_GROUPS:
-            if not np.array_equal(corrected_linear[:, j], raw[:, j], equal_nan=True):
+            if not np.allclose(corrected_linear[:, j], raw[:, j], rtol=0, atol=0, equal_nan=True):
                 raise AssertionError("QC intensities were modified: " + sid)
     export_protein_matrices(folder, pg, samples, raw, corrected_log,
                             corrected_linear, labels)
