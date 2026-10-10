@@ -427,7 +427,10 @@ def make_scenario(sc, method, with_help, raw, pg, samples, labels, factors):
     corrected_linear = raw.copy()
     detected = finite_positive(raw)
     scaled = np.exp2(corrected_log)
-    corrected_linear[detected] = scaled[detected]
+    study_columns = np.asarray([labels[sid] in STUDY_GROUPS for sid in samples])
+    study_detected = detected & study_columns[None, :]
+    # Never roundtrip any QC value through log2/exp2: preserve QC raw numbers exactly.
+    corrected_linear[study_detected] = scaled[study_detected]
     if not np.array_equal(finite_positive(corrected_linear), detected):
         raise AssertionError("Detection masks changed")
     for j, sid in enumerate(samples):
