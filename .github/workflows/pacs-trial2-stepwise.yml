@@ -1,0 +1,77 @@
+name: PACS Trial 2 stepwise new matrix
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/pacs_trial2_stepwise.py
+      - .github/workflows/pacs-trial2-stepwise.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  rerun:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install numerical libraries
+        run: python -m pip install numpy pandas matplotlib scikit-learn
+      - name: Archive old results under results_v1 and start fresh results
+        run: |
+          if [ -d results ] && [ ! -d results_v1 ]; then
+            git mv results results_v1
+          fi
+          mkdir -p results
+          rm -rf results/*
+          test -d results_v1
+          test -f results_v1/pacs_trial2/README.md
+          echo "Archived all earlier output to results_v1/; new output will go to results/"
+      - name: Re-filter matrix and run Raw -> Factor1 -> Factor1+Factor2
+        run: OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 python scripts/pacs_trial2_stepwise.py
+      - name: Validate saved data and visualizations
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import pandas as pd
+          root=Path("results")
+          for f in ("README.md","screening_report.json","pg_matrix_filtered.tsv",
+                    "sample_factors.csv","yeast_factor_details.csv",
+                    "all_stage_cv_summary.csv","all_stage_pca_summary.csv"):
+              assert (root/f).is_file(), f"Missing: {f}"
+          source=pd.read_csv("pg_matrix.tsv",sep="\t",nrows=0)
+          filtered=pd.read_csv(root/"pg_matrix_filtered.tsv",sep="\t",nrows=0)
+          assert len(filtered.columns)==80
+          assert len(source.columns)>=len(filtered.columns)
+          pngs=list(root.rglob("*.png"))
+          assert len(pngs)==24, f"Expected 24 PNG figures, got {len(pngs)}"
+          assert not list(root.rglob("*.svg")), "Unexpected SVG result"
+          for method in ("a","b"):
+              p=root/("method_"+method)
+              for stage in ("factor1","factor1_factor2"):
+                  assert (p/("pg_matrix_"+stage+"_linear.tsv")).is_file()
+                  assert (p/("pg_matrix_"+stage+"_log2.tsv")).is_file()
+              for view in ("all_groups","study_only"):
+                  files=list((p/"figures"/view).glob("*.png"))
+                  assert len(files)==6, f"Expected 6 PNGs in {p}/{view}"
+          cv=pd.read_csv(root/"all_stage_cv_summary.csv")
+          assert len(cv)==24, f"Expected 2 methods x 3 stages x 4 groups, got {len(cv)}"
+          for group in ("Internal-QC","pooled QC"):
+              block=cv[cv.group==group]
+              baseline=block[block.stage=="raw"].median_cv_pct.iloc[0]
+              assert (block.median_cv_pct-baseline).abs().max()<1e-10
+          print("PASS: 6677-row source reprocessed; 2 methods x 2 views x 6 PNG = 24 figures; both QC groups unchanged")
+          PY
+      - name: Commit archived v1 and new results
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A results results_v1
+          if ! git diff --cached --quiet; then
+            git commit -m "Archive previous outputs as results_v1 and publish fresh stepwise Trial 2"
+            git push
+          fi
