@@ -1,17 +1,32 @@
-# 97-HELP metadata-based sample filtering
+# Latest pg_matrix.tsv metadata-based refilter
 
-Retain all 54 study samples (27 HC + 27 S), 6 Internal-QC, and 15 QC1 pooled plasma; exclude 6 Blank QC records.
-All three HELP sheets retain 97 peptides x 75 sample columns.
-pg_matrix.tsv retains 6613 protein rows, 5 annotation columns + 75 sample columns.
-Original HELP sample columns: 109; removed 34. Original pg_matrix: 87 named sample columns plus 22 unnamed trailing columns; removed 12 named and 22 unnamed.
-This operation only deletes unused columns and Blank metadata rows; it does NOT alter retained intensity or ratio values.
+This run filters ONLY pg_matrix.tsv, using the existing current
+all_sample_metadata.xlsx and all_QC_metadata.xlsx sample IDs.
+No other input files or prior trial result files were modified by this script.
 
-## Removed HELP IDs
+- Status: **filtered and rewritten**.
+- Protein.Group rows: **6677** before and after.
+- Original TSV columns: **114** (including five protein annotations).
+- Retained TSV columns: **80** = five protein annotations + 75 samples.
+- Original named sample columns: **109**.
+- Original unnamed sample columns: **0**.
+- Removed metadata-unlisted named columns: **34**.
+- Retained groups: **Internal-QC (6), pooled QC (15), HC (27), S (27)**.
+- Blank QC and other metadata-unlisted sample columns are excluded.
+- Sample order follows the newly uploaded matrix, without reordering.
+- All protein annotations and retained intensity strings are unchanged.
+- No normalization, log transform, or protein-row filtering is performed.
+- Uploaded matrix SHA-256: 8f2af2cf40ef2be1e96c983f148fbf0c5bc065900ed1b797c5daf2625067f169.
+- Filtered matrix SHA-256: 1890ae9651b67e8ec944f8a72f76579e94b9660b1ff37fe0111e9d3ec1f787c9.
+- Original size: 4901253 bytes; filtered size: 3896244 bytes.
+
+## Excluded named sample columns
 
 - k_26_9_2_1
+- k_26_9_2_4
+- k_26_9_2_5
+- k_26_9_2_6
 - k_26_9_2_10
-- k_26_9_2_101
-- k_26_9_2_103
 - k_26_9_2_12
 - k_26_9_2_15
 - k_26_9_2_17
@@ -21,16 +36,13 @@ This operation only deletes unused columns and Blank metadata rows; it does NOT 
 - k_26_9_2_27
 - k_26_9_2_28
 - k_26_9_2_29
-- k_26_9_2_4
 - k_26_9_2_40
 - k_26_9_2_41
 - k_26_9_2_42
 - k_26_9_2_45
-- k_26_9_2_5
 - k_26_9_2_50
 - k_26_9_2_53
 - k_26_9_2_56
-- k_26_9_2_6
 - k_26_9_2_64
 - k_26_9_2_65
 - k_26_9_2_67
@@ -42,18 +54,8 @@ This operation only deletes unused columns and Blank metadata rows; it does NOT 
 - k_26_9_2_80
 - k_26_9_2_81
 - k_26_9_2_89
-
-## Removed pg_matrix IDs
-
-- k_26_9_2_1
-- k_26_9_2_4
-- k_26_9_2_27
-- k_26_9_2_40
-- k_26_9_2_41
-- k_26_9_2_42
-- k_26_9_2_71
-- k_26_9_2_80
-- k_26_9_2_81
-- k_26_9_2_89
 - k_26_9_2_101
 - k_26_9_2_103
+
+Note: downstream Trial 1/2 results generated from an earlier matrix
+should be considered historical until explicitly recomputed.
