@@ -25,7 +25,9 @@ jobs:
           from pathlib import Path
           import sys
           sys.path.insert(0, "scripts")
-          from prepare_eno1_protein_data import workbook
+          from prepare_eno1_protein_data import sheet_path, shared_strings, sheet_rows
+          from xml.etree import ElementTree as ET
+          import zipfile
           found=[]
           with Path("pg_matrix.tsv").open("r",encoding="utf-8-sig") as f:
               header=f.readline().rstrip("\r\n").split("\t")
@@ -35,10 +37,10 @@ jobs:
                   if "ENO" in protein.upper() or "YEAST" in protein.upper():
                       found.append((lineno,cols[0],protein))
           print("PROTEIN CANDIDATES:",found[:100],flush=True)
-          names,keys,roots,records=workbook(Path("EN01.xlsx"))
-          print("EN01 SHEETS:",names,flush=True)
-          for sheet,rec in zip(names,records):
-              print("EN01 LAYOUT:",sheet,"rows",len(rec),"first header columns",[(k,v) for k,v in sorted(rec[0].items())[:10]],"protein names",[r.get(3) for r in rec[1:10]],flush=True)
+          with zipfile.ZipFile("EN01.xlsx") as z:
+              sheet,key=sheet_path(z)
+              rec=sheet_rows(ET.fromstring(z.read(key)),shared_strings(z))
+          print("EN01 LAYOUT:",sheet,"rows",len(rec),"first header columns",[(k,v) for k,v in sorted(rec[0].items())[:12]],"protein names",[r.get(3) for r in rec[1:10]],flush=True)
           PY
       - name: Filter EN01 samples and remove only ENO1_YEAST protein rows
         run: python scripts/prepare_eno1_protein_data.py
@@ -50,18 +52,22 @@ jobs:
           import sys
           sys.path.insert(0, "scripts")
           from yeast_protein_qc import metadata
-          from prepare_eno1_protein_data import workbook, header, ANNOTATIONS
+          from prepare_eno1_protein_data import sheet_path, sheet_rows, shared_strings, ANNOTATIONS
+          from xml.etree import ElementTree as ET
+          import zipfile
           labels=metadata()
           with open("pg_matrix.tsv", encoding="utf-8-sig") as f:
               hdr=f.readline().rstrip("\n\r").split("\t")
               rows=[line.rstrip("\n\r").split("\t") for line in f]
           assert hdr[:5]==ANNOTATIONS and set(hdr[5:])==set(labels) and len(hdr)==80
           assert len(rows)==6675 and all(r[2]!="ENO1_YEAST" and len(r)==80 for r in rows)
-          sheets, keys, roots, records=workbook(Path("EN01.xlsx"))
-          assert len(records)==1 and len(records[0])==3
-          assert len(header(records[0]))==75
-          assert {sid for _,sid in header(records[0])}==set(labels)
-          assert all(r.get(3)=="ENO1_YEAST" for r in records[0][1:])
+          with zipfile.ZipFile("EN01.xlsx") as z:
+              sheet,key=sheet_path(z)
+              records=sheet_rows(ET.fromstring(z.read(key)),shared_strings(z))
+          assert len(records)==3
+          assert len(records[0])==80
+          assert set(records[0][i] for i in range(6,81))==set(labels)
+          assert all(r.get(3)=="ENO1_YEAST" for r in records[1:])
           assert Path("ENO1_DATA_CLEANUP_REPORT.md").is_file()
           print("PASS 6677->6675 protein rows, 2 ENO1 rows preserved separately, EN01 has 75 metadata-matched samples")
           PY
