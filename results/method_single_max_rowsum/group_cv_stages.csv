@@ -1,0 +1,13 @@
+method,stage,group,sample_n,cv_min_detected_n,eligible_proteins,median_cv_pct,median_paired_change_pp,fraction_proteins_improved_pct
+single_max_rowsum,raw,Internal-QC,6,5,651,63.87570968404149,0.0,0.0
+single_max_rowsum,factor1,Internal-QC,6,5,651,63.87570968404149,0.0,0.0
+single_max_rowsum,factor1_factor2,Internal-QC,6,5,651,63.87570968404149,0.0,0.0
+single_max_rowsum,raw,pooled QC,15,11,5912,10.406372359280741,0.0,0.0
+single_max_rowsum,factor1,pooled QC,15,11,5912,10.406372359280741,0.0,0.0
+single_max_rowsum,factor1_factor2,pooled QC,15,11,5912,10.406372359280741,0.0,0.0
+single_max_rowsum,raw,HC,27,19,5496,23.041024105698845,0.0,0.0
+single_max_rowsum,factor1,HC,27,19,5496,49.10168465828235,27.07477139095983,10.480349344978166
+single_max_rowsum,factor1_factor2,HC,27,19,5496,50.029326092278595,28.579966891641842,12.190684133915575
+single_max_rowsum,raw,S,27,19,5755,28.822953718906234,0.0,0.0
+single_max_rowsum,factor1,S,27,19,5755,68.9458182903915,40.3415855353033,10.112945264986967
+single_max_rowsum,factor1_factor2,S,27,19,5755,89.53845188305296,61.90695736644497,7.749782797567333
