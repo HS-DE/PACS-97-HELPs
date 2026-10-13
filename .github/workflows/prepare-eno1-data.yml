@@ -1,0 +1,55 @@
+name: Prepare ENO1 protein data (metadata-only)
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/prepare_eno1_protein_data.py
+      - .github/workflows/prepare-eno1-data.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  separate-and-filter:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Filter EN01 samples and remove only ENO1_YEAST protein rows
+        run: python scripts/prepare_eno1_protein_data.py
+      - name: Verify row and sample preservation; no results changed
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import sys
+          sys.path.insert(0, "scripts")
+          from yeast_protein_qc import metadata
+          from prepare_eno1_protein_data import workbook, header, ANNOTATIONS
+          labels=metadata()
+          with open("pg_matrix.tsv", encoding="utf-8-sig") as f:
+              hdr=f.readline().rstrip("\n\r").split("\t")
+              rows=[line.rstrip("\n\r").split("\t") for line in f]
+          assert hdr[:5]==ANNOTATIONS and set(hdr[5:])==set(labels) and len(hdr)==80
+          assert len(rows)==6675 and all(r[2]!="ENO1_YEAST" and len(r)==80 for r in rows)
+          sheets, keys, roots, records=workbook(Path("EN01.xlsx"))
+          assert len(records)==1 and len(records[0])==3
+          assert len(header(records[0]))==75
+          assert {sid for _,sid in header(records[0])}==set(labels)
+          assert all(r.get(3)=="ENO1_YEAST" for r in records[0][1:])
+          assert Path("ENO1_DATA_CLEANUP_REPORT.md").is_file()
+          print("PASS 6677->6675 protein rows, 2 ENO1 rows preserved separately, EN01 has 75 metadata-matched samples")
+          PY
+      - name: Commit only the two cleaned files and report
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pg_matrix.tsv EN01.xlsx ENO1_DATA_CLEANUP_REPORT.md
+          if ! git diff --cached --quiet; then
+            git commit -m "Separate ENO1_YEAST proteins and filter standalone EN01 sample columns [skip ci]"
+            git push
+          fi
