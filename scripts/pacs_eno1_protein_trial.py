@@ -69,10 +69,14 @@ def read_en01(samples):
                 arr[i, j] = float(value)
             except (ValueError, TypeError):
                 arr[i, j] = np.nan
-    if not np.all(np.isfinite(arr) & (arr > 0)):
-        invalid = [(ids[i], samples[j], arr[i, j])
-                   for i, j in zip(*np.where(~(np.isfinite(arr) & (arr > 0))))]
-        raise ValueError(f"EN01 requires two positive measured intensities in every sample: {invalid[:30]}")
+    valid = np.isfinite(arr) & (arr > 0)
+    # Both study signals must exist; LM_1 has neither protein measured, but is
+    # unchanged in the output and therefore must NOT be imputed or discarded.
+    study_mask = np.array([base.metadata()[sid] in STUDY for sid in samples])
+    if not np.all(valid[:, study_mask]):
+        invalid = [(ids[i], samples[j])
+                   for i, j in zip(*np.where(~valid & study_mask[None, :]))]
+        raise ValueError(f"Missing/invalid yeast protein in STUDY sample: {invalid[:30]}")
     return ids, arr
 
 
@@ -83,12 +87,15 @@ def compute_protein_factors(samples, labels):
     study = np.array([labels[s] in STUDY for s in samples], dtype=bool)
     if study.sum() != 54:
         raise ValueError(f"Expected 54 Study samples, got {study.sum()}")
-    row_sums = arr.sum(axis=1)  # unlogged, across all 75 included samples
+    valid = np.isfinite(arr) & (arr > 0)
+    row_sums = np.where(valid, arr, 0).sum(axis=1)  # all 75, skip missing QC values
     if np.isclose(row_sums[0], row_sums[1], rtol=1e-12):
         raise ValueError("Cannot choose a strictly larger EN01 row sum")
     win = int(np.argmax(row_sums))
-    single_linear = arr[win]
-    combined_linear = arr[0] + arr[1]   # sum BEFORE log2; NOT mean of log2s
+    single_linear = np.where(valid[win], arr[win], np.nan)
+    both_valid = valid.all(axis=0)
+    combined_linear = np.where(both_valid, np.where(valid, arr, 0).sum(axis=0), np.nan)
+    # Sum before log2, never replace the missing LM_1 signal by zero for factor1.
     signals = {
         "single_max_rowsum": np.log2(single_linear),
         "sum_two": np.log2(combined_linear),
@@ -141,6 +148,7 @@ def compute_protein_factors(samples, labels):
         "selected_protein": ids[win],
         "row_ids": ids,
         "row_sums": row_sums.tolist(),
+        "missing_eno1_sample_ids": [sid for j, sid in enumerate(samples) if not both_valid[j]],
         "references": ref,
         "ref_HELP_log2": help_ref,
     }
@@ -182,9 +190,11 @@ def create_report(audit, refs, cvrows, pcarows):
         f"- Samples: {audit['retained_sample_columns']} (LM 6, pooled QC 15, HC 27, S 27).",
         "- No input or older result files are modified by calculation.", "",
         "## Rank two yeast proteins by row sum", "",
-        "Ranking uses the ordinary sum of original **linear** intensities for",
-        "**all 75 retained samples**, not the sum of log2 intensities. Both rows",
-        "are present and strictly positive in all 75 samples.", "",
+        "Ranking uses the sum of valid original **linear** intensities for",
+        "**all 75 retained sample IDs**, omitting missing/nonpositive signals.",
+        "The two yeast protein intensities are positive in all 54 study samples.",
+        f"Samples with missing yeast protein signal(s): {', '.join(refs['missing_eno1_sample_ids']) or 'none'}.",
+        "Missing yeast values are NOT imputed or replaced. Both QC groups are left uncorrected.", "",
         "| Source row identifier (verbatim) | Linear row sum (75 samples) | Chosen for single method |",
         "| --- | ---: | --- |",
     ]
