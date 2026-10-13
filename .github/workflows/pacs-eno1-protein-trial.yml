@@ -73,9 +73,13 @@ jobs:
           assert rank.loc[rank.used_for_single_protein_correction,"protein_id"].iloc[0]==selected
           factors=pd.read_csv(root/"sample_factors.csv")
           assert len(factors)==75
-          assert (factors.two_protein_linear_sum>0).all()
+          study=factors[factors.group.isin(["HC","S"])]
+          assert len(study)==54
+          assert (study.two_protein_linear_sum>0).all()
           assert np.allclose(factors.two_protein_linear_sum,
-                             factors.P00924_linear_intensity+factors.P00925_linear_intensity)
+                             factors.P00924_linear_intensity+factors.P00925_linear_intensity,
+                             equal_nan=True)
+          assert factors.loc[factors.sample_id=="LM_1","two_protein_linear_sum"].isna().all()
           assert (factors.selected_protein==selected).all()
           cv=pd.read_csv(root/"all_stage_cv_summary.csv")
           assert len(cv)==24
