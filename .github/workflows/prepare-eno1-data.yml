@@ -67,7 +67,7 @@ jobs:
           assert len(records)==3
           assert len(records[0])==75
           assert set(records[0][i] for i in range(2,77))==set(labels)
-          assert {r.get(1) for r in records[1:]}=={"ENO1_YEAST","ENO2_YEAST"}
+          assert [r.get(1) for r in records[1:]]==["P00924_ENO1_YEAST","P00925_ENO1_YEAST"]
           assert Path("ENO1_DATA_CLEANUP_REPORT.md").is_file()
           print("PASS 6677->6675 protein rows, ENO1+ENO2 preserved separately in EN01, 75 metadata-matched samples")
           PY

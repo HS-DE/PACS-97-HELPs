@@ -192,7 +192,7 @@ def plan_excel(source, accepted):
         if missing:
             raise ValueError(f"Missing metadata samples from EN01: {missing}")
         names_in_rows = [str(row.get(1, "")).strip() for row in original[1:]]
-        if len(original) != 3 or set(names_in_rows) != {"ENO1_YEAST", "ENO2_YEAST"}:
+        if len(original) != 3 or names_in_rows != ["P00924_ENO1_YEAST", "P00925_ENO1_YEAST"]:
             raise ValueError(
                 f"EN01 should contain the two yeast-enolase rows; "
                 f"observed {len(original)-1} rows with first-column IDs {names_in_rows}"
@@ -303,7 +303,8 @@ def main():
             f"- Output SHA-256: {m['filtered_sha']}", "",
             "## EN01.xlsx", "",
             f"- Sheet: {x['sheet_name']}",
-            "- Protein rows: 2; first-column IDs ENO1_YEAST and ENO2_YEAST; retained.",
+            "- Protein rows: 2; source IDs P00924_ENO1_YEAST and P00925_ENO1_YEAST; retained verbatim.",
+            "- Note: pg_matrix.tsv calls P00925 ENO2_YEAST, while EN01.xlsx calls the same accession P00925_ENO1_YEAST. Names were NOT rewritten.",
             f"- Sample columns: {x['old_samples']} → 75.",
             f"- Removed sample columns: {len(x['removed_samples'])}.",
             "- Preserved the protein identifier column and numeric value strings",
