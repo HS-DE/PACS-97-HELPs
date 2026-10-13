@@ -19,6 +19,27 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Inspect ENO1 protein records and uploaded EN01 worksheet layout
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import sys
+          sys.path.insert(0, "scripts")
+          from prepare_eno1_protein_data import workbook
+          found=[]
+          with Path("pg_matrix.tsv").open("r",encoding="utf-8-sig") as f:
+              header=f.readline().rstrip("\r\n").split("\t")
+              for lineno,line in enumerate(f,2):
+                  cols=line.rstrip("\r\n").split("\t")
+                  protein=cols[header.index("Protein.Names")]
+                  if "ENO" in protein.upper() or "YEAST" in protein.upper():
+                      found.append((lineno,cols[0],protein))
+          print("PROTEIN CANDIDATES:",found[:100],flush=True)
+          names,keys,roots,records=workbook(Path("EN01.xlsx"))
+          print("EN01 SHEETS:",names,flush=True)
+          for sheet,rec in zip(names,records):
+              print("EN01 LAYOUT:",sheet,"rows",len(rec),"first header columns",[(k,v) for k,v in sorted(rec[0].items())[:10]],"protein names",[r.get(3) for r in rec[1:10]],flush=True)
+          PY
       - name: Filter EN01 samples and remove only ENO1_YEAST protein rows
         run: python scripts/prepare_eno1_protein_data.py
       - name: Verify row and sample preservation; no results changed
