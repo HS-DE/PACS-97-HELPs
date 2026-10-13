@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Data-only cleaning: remove exact ENO1_YEAST proteins from pg_matrix.tsv
-and metadata-unlisted sample columns from uploaded EN01.xlsx.
+"""Data-only cleaning: separate ENO1_YEAST and ENO2_YEAST from pg_matrix.tsv,
+and delete metadata-unlisted sample columns from uploaded EN01.xlsx.
 
 No analysis, normalization, conversion or reordering of remaining data.
-Retains both ENO1_YEAST protein rows in the standalone Excel workbook.
+Retains both yeast-enolase rows in the standalone Excel workbook.
 Writes a concise provenance report; all inputs recoverable in Git history.
 """
 import hashlib
@@ -135,13 +135,13 @@ def plan_matrix(source, accepted):
                 cells = line.rstrip("\r\n").split("\t")
                 if len(cells) != len(old_header):
                     raise ValueError(f"Invalid TSV width at line {line_number}")
-                if cells[name_idx] == "ENO1_YEAST":
-                    removed_lines.append((line_number, cells[0]))
+                if cells[name_idx] in {"ENO1_YEAST", "ENO2_YEAST"}:
+                    removed_lines.append((line_number, cells[0], cells[name_idx]))
                 else:
                     out.write(line)
                 count += 1
-        if len(removed_lines) != 2:
-            raise ValueError(f"Expected exactly two Protein.Names=ENO1_YEAST rows, found {len(removed_lines)}: {removed_lines}")
+        if len(removed_lines) != 2 or {r[2] for r in removed_lines} != {"ENO1_YEAST", "ENO2_YEAST"}:
+            raise ValueError(f"Expected one ENO1_YEAST and one ENO2_YEAST row: {removed_lines}")
         if count != 6677:
             raise ValueError(f"Unexpected source protein count {count}; expected 6677")
         with temp.open("r", encoding="utf-8", newline="") as f:
@@ -149,7 +149,7 @@ def plan_matrix(source, accepted):
             verified = 0
             for line in f:
                 fields = line.rstrip("\r\n").split("\t")
-                if len(fields) != len(old_header) or fields[name_idx] == "ENO1_YEAST":
+                if len(fields) != len(old_header) or fields[name_idx] in {"ENO1_YEAST", "ENO2_YEAST"}:
                     raise AssertionError("TSV cleaning output not valid")
                 verified += 1
         if retained_header != old_header or verified != count - 2:
@@ -181,10 +181,9 @@ def plan_excel(source, accepted):
         if not original:
             raise ValueError("Empty EN01 worksheet")
         headings = original[0]
-        header_annotations = [headings.get(i, "") for i in range(1, 6)]
-        if header_annotations != ANNOTATIONS:
-            raise ValueError(f"Unexpected EN01 annotations: {header_annotations}")
-        extra_columns = sorted(k for k in headings if k >= 6)
+        # EN01.xlsx is a small standalone table: sample IDs start in column B,
+        # column A stores each yeast-enolase protein name; A1 may be blank.
+        extra_columns = sorted(k for k in headings if k >= 2)
         extra_names = [str(headings[k]).strip() for k in extra_columns]
         if len(extra_names) != len(set(extra_names)) or not all(extra_names):
             raise ValueError("Duplicate or missing EN01 sample names")
@@ -192,17 +191,17 @@ def plan_excel(source, accepted):
         missing = sorted(set(accepted) - present)
         if missing:
             raise ValueError(f"Missing metadata samples from EN01: {missing}")
-        if len(original) != 3 or any(row.get(3, "") != "ENO1_YEAST" for row in original[1:]):
+        names_in_rows = [str(row.get(1, "")).strip() for row in original[1:]]
+        if len(original) != 3 or set(names_in_rows) != {"ENO1_YEAST", "ENO2_YEAST"}:
             raise ValueError(
-                f"EN01 should contain two ENO1_YEAST protein rows; observed "
-                f"{len(original)-1} rows, Protein.Names values = "
-                f"{[row.get(3, '') for row in original[1:]]}"
+                f"EN01 should contain the two yeast-enolase rows; "
+                f"observed {len(original)-1} rows with first-column IDs {names_in_rows}"
             )
-        included = [n for n in extra_columns if extra_names[extra_columns.index(n)] in accepted]
-        # Keep first 5 annotation columns, then 75 samples in original order.
-        keep_numbers = [1, 2, 3, 4, 5] + included
-        if len(keep_numbers) != 80 or len(set(keep_numbers)) != 80:
-            raise ValueError("Expected EN01 five annotation columns + 75 sample columns")
+        included = [n for n in extra_columns if headings[n].strip() in accepted]
+        # Keep first protein identifier column and all 75 study/QC sample columns.
+        keep_numbers = [1] + included
+        if len(keep_numbers) != 76 or len(set(keep_numbers)) != 76:
+            raise ValueError("Expected EN01 one protein-name column + 75 sample columns")
         map_index = {old: j for j, old in enumerate(keep_numbers, 1)}
         kept_names = [headings[k] for k in included]
         removed_names = [headings[k] for k in extra_columns if k not in included]
@@ -219,7 +218,7 @@ def plan_excel(source, accepted):
                 raise ValueError("EN01 contains tableParts; safe remapping not implemented")
             for row in sheet.find(NS + "sheetData").findall(NS + "row"):
                 rn = row.get("r")
-                row.set("spans", "1:80")
+                row.set("spans", "1:76")
                 for cell in list(row.findall(NS + "c")):
                     old = to_number(ADDR.fullmatch(cell.get("r")).group(1))
                     if old not in map_index:
@@ -228,7 +227,7 @@ def plan_excel(source, accepted):
                         cell.set("r", to_letters(map_index[old]) + rn)
             dimension = sheet.find(NS + "dimension")
             if dimension is not None:
-                dimension.set("ref", "A1:CB3")  # 80 columns = CB
+                dimension.set("ref", "A1:BX3")  # 76 columns = BX
         # Validate changed workbook, including every preserved cell value and sequence.
         fd, name = tempfile.mkstemp(prefix="pacs_eno1_excel_", suffix=".xlsx", dir=ROOT)
         os.close(fd)
@@ -247,12 +246,12 @@ def plan_excel(source, accepted):
                 raise AssertionError("Output XLSX archive damaged")
             _, newkey = sheet_path(zipped)
             filtered = sheet_rows(ET.fromstring(zipped.read(newkey)), shared_strings(zipped))
-            if len(filtered) != 3 or [filtered[0].get(i, "") for i in range(1, 6)] != ANNOTATIONS:
-                raise AssertionError("Filtered EN01 annotations or rows changed")
-            header_ids = [filtered[0].get(i, "") for i in range(6, 81)]
+            if len(filtered) != 3 or [r.get(1, "") for r in filtered[1:]] != names_in_rows:
+                raise AssertionError("Filtered EN01 protein names or rows changed")
+            header_ids = [filtered[0].get(i, "") for i in range(2, 77)]
             if header_ids != kept_names or set(header_ids) != set(accepted):
                 raise AssertionError("Filtered EN01 sample names/order changed")
-            if [[r.get(k, "") for k in range(1, 81)] for r in filtered] != original_projection:
+            if [[r.get(k, "") for k in range(1, 77)] for r in filtered] != original_projection:
                 raise AssertionError("EN01 retained values changed during screening")
         return {
             "temp": temp,
@@ -294,21 +293,21 @@ def main():
             "- Total approved sample IDs: 75; Blank and other IDs removed", "",
             "## pg_matrix.tsv", "",
             f"- Protein rows: {m['old_rows']} → {m['new_rows']}.",
-            "- Removed exactly two rows with Protein.Names == ENO1_YEAST.",
+            "- Removed exactly two yeast-enolase rows, ENO1_YEAST and ENO2_YEAST.",
             "- All other protein rows, sample columns, and original TSV values preserved.",
             "- Removed Protein.Group identifiers and original line numbers:",
         ]
-        report += [f"  - line {line}, Protein.Group: {group}" for line, group in m["removed"]]
+        report += [f"  - line {line}, Protein.Group: {group}, Protein.Names: {name}" for line, group, name in m["removed"]]
         report += [
             f"- Input SHA-256: {m['source_sha']}",
             f"- Output SHA-256: {m['filtered_sha']}", "",
             "## EN01.xlsx", "",
             f"- Sheet: {x['sheet_name']}",
-            "- Protein rows: 2; Protein.Names = ENO1_YEAST; retained.",
+            "- Protein rows: 2; first-column IDs ENO1_YEAST and ENO2_YEAST; retained.",
             f"- Sample columns: {x['old_samples']} → 75.",
             f"- Removed sample columns: {len(x['removed_samples'])}.",
-            "- Preserved first five annotation columns and numeric value strings",
-            "  of all 75 retained samples for both ENO1_YEAST protein rows.",
+            "- Preserved the protein identifier column and numeric value strings",
+            "  of all 75 retained samples for both yeast-enolase protein rows.",
             f"- Input SHA-256: {x['sha_before']}",
             f"- Output SHA-256: {x['sha_after']}", "",
             "### Removed sample IDs", "",

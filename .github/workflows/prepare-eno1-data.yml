@@ -40,7 +40,7 @@ jobs:
           with zipfile.ZipFile("EN01.xlsx") as z:
               sheet,key=sheet_path(z)
               rec=sheet_rows(ET.fromstring(z.read(key)),shared_strings(z))
-          print("EN01 LAYOUT:",sheet,"rows",len(rec),"first header columns",[(k,v) for k,v in sorted(rec[0].items())[:12]],"protein names",[r.get(3) for r in rec[1:10]],flush=True)
+          print("EN01 LAYOUT:",sheet,"rows",len(rec),"first header columns",[(k,v) for k,v in sorted(rec[0].items())[:12]],"protein IDs",[r.get(1) for r in rec[1:10]],flush=True)
           PY
       - name: Filter EN01 samples and remove only ENO1_YEAST protein rows
         run: python scripts/prepare_eno1_protein_data.py
@@ -60,16 +60,16 @@ jobs:
               hdr=f.readline().rstrip("\n\r").split("\t")
               rows=[line.rstrip("\n\r").split("\t") for line in f]
           assert hdr[:5]==ANNOTATIONS and set(hdr[5:])==set(labels) and len(hdr)==80
-          assert len(rows)==6675 and all(r[2]!="ENO1_YEAST" and len(r)==80 for r in rows)
+          assert len(rows)==6675 and all(r[2] not in {"ENO1_YEAST","ENO2_YEAST"} and len(r)==80 for r in rows)
           with zipfile.ZipFile("EN01.xlsx") as z:
               sheet,key=sheet_path(z)
               records=sheet_rows(ET.fromstring(z.read(key)),shared_strings(z))
           assert len(records)==3
-          assert len(records[0])==80
-          assert set(records[0][i] for i in range(6,81))==set(labels)
-          assert all(r.get(3)=="ENO1_YEAST" for r in records[1:])
+          assert len(records[0])==75
+          assert set(records[0][i] for i in range(2,77))==set(labels)
+          assert {r.get(1) for r in records[1:]}=={"ENO1_YEAST","ENO2_YEAST"}
           assert Path("ENO1_DATA_CLEANUP_REPORT.md").is_file()
-          print("PASS 6677->6675 protein rows, 2 ENO1 rows preserved separately, EN01 has 75 metadata-matched samples")
+          print("PASS 6677->6675 protein rows, ENO1+ENO2 preserved separately in EN01, 75 metadata-matched samples")
           PY
       - name: Commit only the two cleaned files and report
         run: |
