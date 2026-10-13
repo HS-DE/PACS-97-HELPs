@@ -281,11 +281,54 @@ def create_report(audit, refs, cvrows, pcarows):
     (OUT / "README.md").write_text("\n".join(lines), encoding="utf-8")
 
 
+def run_comparison():
+    """Same stage-by-stage pipeline as Trial 2, without the obsolete assumption
+    that the two yeast strategies differ only by a global constant."""
+    OUT.mkdir(parents=True, exist_ok=True)
+    df, labels, samples, raw, audit = base.prepare_input()
+    if len(df) != 6675:
+        raise ValueError(f"Expected 6675 endogenous protein groups, got {len(df)}")
+    factors, refs = compute_protein_factors(samples, labels)
+    cv_rows, pca_rows = [], []
+    for method in METHODS:
+        folder = OUT / ("method_" + method)
+        folder.mkdir(parents=True, exist_ok=True)
+        mats, offsets = base.correction_stages(raw, samples, labels, factors, method)
+        for stage in base.STAGES[1:]:
+            base.write_matrix(folder / ("pg_matrix_" + stage + "_linear.tsv"),
+                              df, samples, labels, mats[stage])
+            base.write_matrix(folder / ("pg_matrix_" + stage + "_log2.tsv"),
+                              df, samples, labels, mats[stage], log2_scale=True)
+        base.save_csv(folder / "stage_offsets.csv", [
+            {"sample_id": sid, "group": labels[sid], "stage": stage,
+             "applied_log2_offset": float(offset),
+             "applied_linear_multiplier": float(np.exp2(offset))}
+            for stage in base.STAGES for sid, offset in zip(samples, offsets[stage])
+        ])
+        summaries, per_protein = base.calculate_cv(mats, df, samples, labels, method, folder)
+        cv_rows.extend(summaries)
+        pca_scores, pca_summaries, medians = [], [], []
+        for view, groups in base.VIEWS.items():
+            figures = folder / "figures" / view
+            base.plot_sample_boxes(mats, samples, labels, groups, figures)
+            medians.extend(base.plot_group_medians(mats, samples, labels, groups, view, figures))
+            scores, pca_info = base.pca_three(mats, samples, labels, groups, view, figures)
+            pca_scores.extend(scores)
+            pca_summaries.extend(pca_info)
+            pca_rows.extend([{"method":method, **record} for record in pca_info])
+            base.plot_cv(per_protein, groups, figures)
+            base.plot_cv_medians(summaries, groups, figures)
+            offset_plot(samples, labels, groups, factors, method, figures)
+        base.save_csv(folder / "pca_scores.csv", pca_scores)
+        base.save_csv(folder / "pca_summary.csv", pca_summaries)
+        base.save_csv(folder / "sample_log2_medians.csv", medians)
+    base.save_csv(OUT / "all_stage_cv_summary.csv", cv_rows)
+    base.save_csv(OUT / "all_stage_pca_summary.csv", pca_rows)
+    create_report(audit, refs, cv_rows, pca_rows)
+
+
 def main():
-    base.calculate_factors = compute_protein_factors
-    base.plot_offsets = offset_plot
-    base.make_report = create_report
-    base.main()
+    run_comparison()
     print("TRIAL3 SUCCESS: EN01 protein single-max-row-sum and linear-two-row-sum, Trial2 factor2 unchanged")
 
 
