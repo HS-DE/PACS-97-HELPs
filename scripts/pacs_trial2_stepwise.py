@@ -8,6 +8,8 @@ Neither LM Internal-QC nor pooled QC is corrected. All source protein rows kept.
 """
 import json
 import math
+import os
+import hashlib
 import numpy as np
 import pandas as pd
 import matplotlib
@@ -21,6 +23,9 @@ from yeast_protein_qc import GROUPS, COLORS, metadata
 
 OUT = ROOT / "results"
 old.OUT = OUT
+# Trial 2 uses the reuploaded, metadata-filtered 2026-10-13 HELP workbook.
+# Override only this experiment's HELP source; historical Trial 1 remains intact.
+old.HELP = ROOT / "LH_ratio_tables_2026.10.13—ALL-HELP.xlsx"
 METHODS = ("a", "b")
 STAGES = ("raw", "factor1", "factor1_factor2")
 TITLES = ("Raw", "Factor1", "Factor1 + Factor2")
@@ -362,9 +367,16 @@ def pca_three(mats,samples,labels,groups,view,folder):
 def make_report(info,refs,cv,pca):
     lines=[
         "# PACS Trial 2, new uploaded protein matrix (stepwise)", "",
-        "Previously generated results/ has been archived at results_v1/.",
-        "The new results/ is an independent rerun on the newly uploaded pg_matrix.tsv.",
+        f"Previously generated results/ has been archived at {os.environ.get('PACS_RESULTS_ARCHIVE', 'results_vN')}/.",
+        "The new results/ is an independent Trial 2 rerun on the filtered pg_matrix.tsv.",
         "The root pg_matrix.tsv and older archive files are not changed.", "",
+        "## Input provenance", "",
+        f"- Protein source: pg_matrix.tsv; sha256={hashlib.sha256(PG.read_bytes()).hexdigest()}.",
+        f"- HELP source: {old.HELP.name}; sha256={hashlib.sha256(old.HELP.read_bytes()).hexdigest()}.",
+        f"- Yeast source: {old.YEAST.name}; sha256={hashlib.sha256(old.YEAST.read_bytes()).hexdigest()}.",
+        "Both peptide workbooks were metadata-filtered to 75 samples before this run.",
+        "Previous trial outputs and filtered source workbooks were not modified.",
+        "",
         "## Sample screening", "",
         f"- New protein rows: {info['input_protein_rows']}.",
         f"- Original sample columns: {info['input_sample_columns']}.",
