@@ -1,8 +1,16 @@
 # PACS Trial 2, new uploaded protein matrix (stepwise)
 
-Previously generated results/ has been archived at results_v1/.
-The new results/ is an independent rerun on the newly uploaded pg_matrix.tsv.
+Previously generated results/ has been archived at results_v2/.
+The new results/ is an independent Trial 2 rerun on the filtered pg_matrix.tsv.
 The root pg_matrix.tsv and older archive files are not changed.
+
+## Input provenance
+
+- Protein source: pg_matrix.tsv; sha256=1890ae9651b67e8ec944f8a72f76579e94b9660b1ff37fe0111e9d3ec1f787c9.
+- HELP source: LH_ratio_tables_2026.10.13—ALL-HELP.xlsx; sha256=5523ffca836fd7244610322f781084619541482835f108a92cdb350a6e3a4e53.
+- Yeast source: sample-QC-InternalQC-HELP_yeast.xlsx; sha256=4813ebd8387ee704e55a2c9b2ae5ed8cebd86d3e3db8c4792d320d0e3aaccee8.
+Both peptide workbooks were metadata-filtered to 75 samples before this run.
+Previous trial outputs and filtered source workbooks were not modified.
 
 ## Sample screening
 
