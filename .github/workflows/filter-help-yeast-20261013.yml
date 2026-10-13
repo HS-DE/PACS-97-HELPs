@@ -1,0 +1,52 @@
+name: Filter reuploaded 2026-10-13 HELP and yeast workbooks
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/filter_help_yeast_20261013.py
+      - .github/workflows/filter-help-yeast-20261013.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  filter:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Filter both uploaded Excel sources without recomputation
+        run: python scripts/filter_help_yeast_20261013.py
+      - name: Validate all three HELP sheets and both yeast peptides
+        run: |
+          python - <<'PY'
+          import sys
+          sys.path.insert(0, "scripts")
+          from filter_help_yeast_20261013 import HELP, YEAST, filter_plan
+          from yeast_protein_qc import metadata
+          labels = metadata()
+          specs = ((HELP,["L","H","ratio_LH"],97),(YEAST,None,2))
+          for path, names, n in specs:
+              if names is None:
+                  from filter_help_yeast_20261013 import workbook
+                  names=workbook(path)[0]
+              result=filter_plan(path,labels,names,n)
+              assert len(result["old_ids"])==75
+              assert not result["removed"]
+              assert len(result["peptides"])==n
+              assert len(result["original"])==len(names)
+              print(f"VALIDATED {path.name}: {len(names)} sheets, {n} peptides, 75 samples")
+          PY
+      - name: Commit only filtered workbooks and report
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "LH_ratio_tables_2026.10.13—ALL-HELP.xlsx" "sample-QC-InternalQC-HELP_yeast.xlsx" HELP_YEAST_FILTER_REPORT.md
+          if ! git diff --cached --quiet; then
+            git commit -m "Filter reuploaded HELP and yeast inputs to 75 metadata samples [skip ci]"
+            git push
+          fi
