@@ -36,9 +36,9 @@ jobs:
                        "01_group_background_boxplots_highlight_5proteins.png",
                        "02_five_protein_group_boxplots.png",
                        "03_per_sample_boxplots_highlight_5proteins.png"):
-              assert (base/path).is_file() and (base/path).stat().st_size>500,path
+              assert (base/path).is_file() and (base/path).stat().st_size>0,path
           pngs=list(base.glob("*.png"))
-          assert len(pngs)==3
+          assert len(pngs)==3 and all(p.stat().st_size>10000 for p in pngs)
           import hashlib
           manifest=json.loads((base/"run_manifest.json").read_text())
           assert manifest["no_correction"] and manifest["no_imputation"]
