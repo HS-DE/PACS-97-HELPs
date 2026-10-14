@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from pathlib import Path
 import pacs_trial2 as old
-from pacs_trial1 import ROOT, PG, ANN, finite_positive, cv_by_feature
+from pacs_common import ROOT, PG, ANN, finite_positive, cv_by_feature
 from yeast_protein_qc import GROUPS, COLORS, metadata
 
 OUT = ROOT / "results"
