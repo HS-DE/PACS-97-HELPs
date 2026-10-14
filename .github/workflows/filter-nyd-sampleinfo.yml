@@ -1,0 +1,66 @@
+name: Filter NYD sampleinfo to protein-matrix samples
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/filter-nyd-sampleinfo.yml
+      - scripts/filter_nyd_sampleinfo.py
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  filter:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Inspect sample IDs and source workbook layout
+        run: |
+          python - <<'PY'
+          import csv,zipfile,re,json
+          from xml.etree import ElementTree as ET
+          from pathlib import Path
+          root=Path("NYD_data")
+          with (root/"NYD_pg_matrix.tsv").open(encoding="utf-8-sig",newline="") as f:
+              header=next(csv.reader(f,delimiter="\t"))
+          samples=header[5:]
+          print("PROTEIN HEADER",header[:8],flush=True)
+          print("PG SAMPLE N",len(samples),"UNIQUE",len(set(samples)),"FIRST",samples[:20],flush=True)
+          ns="{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
+          with zipfile.ZipFile(root/"NYD_sampleinfo.xlsx") as z:
+              ss=[]
+              if "xl/sharedStrings.xml" in z.namelist():
+                  strings=ET.fromstring(z.read("xl/sharedStrings.xml"))
+                  ss=["".join(t.text or "" for t in si.iter(ns+"t")) for si in strings.findall(ns+"si")]
+              wb=ET.fromstring(z.read("xl/workbook.xml"))
+              names=[s.get("name") for s in wb.find(ns+"sheets")]
+              print("SHEETS",names,flush=True)
+              for i,sheet in enumerate(names,1):
+                  p=f"xl/worksheets/sheet{i}.xml"
+                  r=ET.fromstring(z.read(p))
+                  data=r.find(ns+"sheetData")
+                  cells=[]
+                  for row in data.findall(ns+"row"):
+                      record={}
+                      for c in row.findall(ns+"c"):
+                          ref=c.get("r","")
+                          col=re.match(r"([A-Z]+)",ref).group(1)
+                          v=c.find(ns+"v")
+                          if c.get("t")=="inlineStr":
+                              val="".join(t.text or "" for t in c.iter(ns+"t"))
+                          elif c.get("t")=="s":
+                              val=ss[int(v.text)] if v is not None and v.text else ""
+                          else: val=v.text if v is not None else ""
+                          record[col]=str(val).strip()
+                      cells.append(record)
+                  colnames=sorted({c for row in cells for c in row})
+                  print("SHEET",sheet,"ROWS",len(cells),"COLS",len(colnames),"HEAD",cells[:8],flush=True)
+                  for col in colnames[:40]:
+                      matches=sum(row.get(col) in samples for row in cells[1:])
+                      nonempty=sum(bool(row.get(col)) for row in cells[1:])
+                      if matches:
+                          print("MATCHING",sheet,col,"matched",matches,"nonempty",nonempty,"extras",[
+                              row.get(col) for row in cells[1:] if row.get(col) and row.get(col) not in samples][:15],flush=True)
+          PY
