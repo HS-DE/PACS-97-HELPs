@@ -162,7 +162,20 @@ def five_log2_factor(samples, labels):
 def update_legacy_readme(path, label):
     """Keep old script prose but correct its literal hardcoded 97 count."""
     original = path.read_text(encoding="utf-8")
-    corrected = re.sub(r"\b97\b", "5", original)
+    # Change ONLY literal peptide-count language, never numeric results
+    # such as 12.97% or SHA identifiers.
+    corrected = original
+    for source, target in (
+        ("97 HELP", "5 HELP"), ("97-HELP", "5-HELP"),
+        ("97 peptides", "5 peptides"), ("97 peptide", "5 peptide"),
+        ("97 sequences", "5 sequences"), ("97 ratios", "5 ratios"),
+        ("median_97HELP", "median_5HELP"),
+    ):
+        corrected = corrected.replace(source, target)
+    corrected = corrected.replace(
+        "all rows (human + yeast) retained.",
+        "all endogenous rows retained; ENO1_YEAST and ENO2_YEAST were removed from the input matrix."
+    )
     notice = (
         f"> **Five-HELP rerun — {label}.** The historical procedure has been "
         "re-executed with exactly the following five HELP sequences: "

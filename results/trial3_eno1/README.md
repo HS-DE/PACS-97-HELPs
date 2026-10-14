@@ -50,7 +50,7 @@ All yeast references are the median across **54 Study samples** (HC and S).
 - factor1_s = median_Study(y) - y_s.
 
 **Unchanged Trial 2 HELP correction**
-- mR_s = median_97HELP(log2(L/H) for valid positive ratios).
+- mR_s = median_5HELP(log2(L/H) for valid positive ratios).
 - ref_mR = median_15_pooled_QC(mR_s).
 - factor2_s = ref_mR - mR_s.
 

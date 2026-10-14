@@ -21,7 +21,7 @@ No HC, S or Internal-QC values contribute to ref_mR.
 
 - HELP: 5 sequences, raw ratio_LH sheet; medians taken on raw ratio values, not log2.
 - Protein matrix: 5 annotation columns plus exactly 75 metadata-matched samples.
-- Protein Group rows: 6675; all rows (human + yeast) retained.
+- Protein Group rows: 6675; all endogenous rows retained; ENO1_YEAST and ENO2_YEAST were removed from the input matrix.
 - Groups: Internal-QC n=6; pooled QC n=15; HC n=27; S n=27.
 - Intentional duplicated Internal-QC pairs retained as given; not 6 independent values.
 - No factor fitting to protein data, no biological-group-based factor selection.
