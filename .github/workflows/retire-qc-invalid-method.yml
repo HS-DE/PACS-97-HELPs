@@ -1,0 +1,85 @@
+name: Retire QC-invalid experiment safely
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/retire_qc_invalid_method.py
+      - .github/workflows/retire-qc-invalid-method.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Extract shared utilities and remove rejected outputs from checkout
+        run: python scripts/retire_qc_invalid_method.py
+      - name: Install required libraries to validate all remaining imports
+        run: python -m pip install numpy pandas matplotlib scikit-learn
+      - name: Validate retained scripts and source QC invariance
+        run: |
+          python -m compileall -q scripts
+          OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 python - <<'PY'
+          import sys,json
+          from pathlib import Path
+          import numpy as np
+          import pandas as pd
+          sys.path.insert(0,"scripts")
+          import pacs_common as common
+          import pacs_trial1b as help_only
+          import pacs_trial2 as yeast_peptide
+          import pacs_trial2_stepwise as stepwise
+          import pacs_eno1_protein_trial as eno1_protein
+          import pacs_help5_reruns as orchestrator
+          from yeast_protein_qc import metadata
+          assert help_only.cv_by_feature is common.cv_by_feature
+          assert yeast_peptide.cv_by_feature is common.cv_by_feature
+          assert stepwise.cv_by_feature is common.cv_by_feature
+          assert eno1_protein.PG==common.PG
+          assert set(orchestrator.METHODS)=={"trial1b","trial2_peptide","trial3_eno1"}
+          for path in ("scripts/pacs_trial1.py",".github/workflows/pacs-trial1.yml",
+                       "results/trial1a","results_v1/pacs_trial1"):
+              assert not Path(path).exists(),path
+          manifest=json.loads(Path("results/run_manifest.json").read_text())
+          assert set(manifest["methods"])==set(orchestrator.METHODS)
+          source=pd.read_csv("pg_matrix.tsv",sep="\t",dtype=str,keep_default_na=False)
+          labels=metadata()
+          assert len(source)==6675 and len(labels)==75
+          help_matrix=pd.read_csv("results/trial1b/pg_matrix_corrected.tsv",
+                                  sep="\t",dtype=str,keep_default_na=False)
+          assert len(help_matrix)==6675
+          for sid in labels:
+              if labels[sid]=="Internal-QC":
+                  assert source[sid].equals(help_matrix[sid]),sid
+          for trial in ("trial2_peptide","trial3_eno1"):
+              for folder in (Path("results")/trial).glob("method_*"):
+                  for stage in ("factor1","factor1_factor2"):
+                      p=folder/f"pg_matrix_{stage}_linear.tsv"
+                      mat=pd.read_csv(p,sep="\t",dtype=str,keep_default_na=False)
+                      assert len(mat)==6675
+                      for sid in labels:
+                          if labels[sid] in ("Internal-QC","pooled QC"):
+                              assert source[sid].equals(mat[sid]),(trial,sid)
+          a=np.array([[1.,2.,3.],[2.,4.,6.]])
+          cv,n,threshold=common.cv_by_feature(a)
+          assert len(cv)==2 and np.isfinite(cv).all() and np.array_equal(n,[3,3])
+          print("PASS: rejected outputs absent, three retained methods import, QC original values unchanged")
+          PY
+      - name: Commit only if all checks succeeded
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A -- scripts .github/workflows results results_v1
+          if ! git diff --cached --quiet; then
+            git commit -m "Remove rejected QC-correcting experiment and retain QC-safe methods [skip ci]"
+            git push
+          fi
