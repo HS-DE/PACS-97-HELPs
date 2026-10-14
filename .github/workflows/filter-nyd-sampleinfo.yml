@@ -16,51 +16,34 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: true
-      - name: Inspect sample IDs and source workbook layout
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Filter NYD metadata using matrix columns 6 onward
+        run: python scripts/filter_nyd_sampleinfo.py
+      - name: Independently verify 16 retained samples
         run: |
           python - <<'PY'
-          import csv,zipfile,re,json
-          from xml.etree import ElementTree as ET
+          import csv,zipfile,sys
           from pathlib import Path
-          root=Path("NYD_data")
-          with (root/"NYD_pg_matrix.tsv").open(encoding="utf-8-sig",newline="") as f:
-              header=next(csv.reader(f,delimiter="\t"))
-          samples=header[5:]
-          print("PROTEIN HEADER",header[:8],flush=True)
-          print("PG SAMPLE N",len(samples),"UNIQUE",len(set(samples)),"FIRST",samples[:20],flush=True)
-          ns="{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
-          with zipfile.ZipFile(root/"NYD_sampleinfo.xlsx") as z:
-              ss=[]
-              if "xl/sharedStrings.xml" in z.namelist():
-                  strings=ET.fromstring(z.read("xl/sharedStrings.xml"))
-                  ss=["".join(t.text or "" for t in si.iter(ns+"t")) for si in strings.findall(ns+"si")]
-              wb=ET.fromstring(z.read("xl/workbook.xml"))
-              names=[s.get("name") for s in wb.find(ns+"sheets")]
-              print("SHEETS",names,flush=True)
-              for i,sheet in enumerate(names,1):
-                  p=f"xl/worksheets/sheet{i}.xml"
-                  r=ET.fromstring(z.read(p))
-                  data=r.find(ns+"sheetData")
-                  cells=[]
-                  for row in data.findall(ns+"row"):
-                      record={}
-                      for c in row.findall(ns+"c"):
-                          ref=c.get("r","")
-                          col=re.match(r"([A-Z]+)",ref).group(1)
-                          v=c.find(ns+"v")
-                          if c.get("t")=="inlineStr":
-                              val="".join(t.text or "" for t in c.iter(ns+"t"))
-                          elif c.get("t")=="s":
-                              val=ss[int(v.text)] if v is not None and v.text else ""
-                          else: val=v.text if v is not None else ""
-                          record[col]=str(val).strip()
-                      cells.append(record)
-                  colnames=sorted({c for row in cells for c in row})
-                  print("SHEET",sheet,"ROWS",len(cells),"COLS",len(colnames),"HEAD",cells[:8],flush=True)
-                  for col in colnames[:40]:
-                      matches=sum(row.get(col) in samples for row in cells[1:])
-                      nonempty=sum(bool(row.get(col)) for row in cells[1:])
-                      if matches:
-                          print("MATCHING",sheet,col,"matched",matches,"nonempty",nonempty,"extras",[
-                              row.get(col) for row in cells[1:] if row.get(col) and row.get(col) not in samples][:15],flush=True)
+          sys.path.insert(0,"scripts")
+          from filter_nyd_sampleinfo import PG,INFO,REPORT,parsed
+          with PG.open(encoding="utf-8-sig",newline="") as f:
+              expected=next(csv.reader(f,delimiter="\t"))[5:]
+          with zipfile.ZipFile(INFO) as z:
+              _,_,_,_,records=parsed(z)
+          assert len(records)==17
+          assert [r["D"] for _,r in records[1:]]==sorted(expected,key=lambda x:[r["D"] for _,r in records[1:]].index(x)) or set(r["D"] for _,r in records[1:])==set(expected)
+          assert all(len(r)==18 for _,r in records)
+          assert REPORT.exists()
+          print("PASS: 16 samples, 18 columns, header preserved")
           PY
+      - name: Commit filtered workbook and audit report only
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add NYD_data/NYD_sampleinfo.xlsx NYD_data/NYD_sampleinfo_filter_report.md
+          if ! git diff --cached --quiet; then
+            git commit -m "Filter NYD sampleinfo to 16 protein matrix samples [skip ci]"
+            git push
+          fi
