@@ -267,8 +267,12 @@ def read_historical_comparison():
                 "delta_5minus97_percentage_points":
                     float(rec["median_cv_pct"] - prior["median_cv_pct"]),
                 "new_protein_rows": 6675,
-                "historical_protein_rows": 6677,
-                "comparison_warning": "Historic 97-HELP matrix included 2 yeast proteins; descriptive only",
+                "historical_protein_rows": 6677 if name == "trial2_peptide" else 6675,
+                "comparison_warning": (
+                    "Different protein sets (6675 vs 6677); descriptive only"
+                    if name == "trial2_peptide" else
+                    "Matched 6675-protein source; isolate 5-vs-97 HELP Factor2"
+                ),
             })
     pd.DataFrame(records).to_csv(OUT / "five_vs_97_historical_cv.csv", index=False)
     return records
@@ -352,11 +356,13 @@ def summary_report(comparison):
         "See [five_vs_97_historical_cv.csv](five_vs_97_historical_cv.csv).",
         "Historical Trial2 97-HELP data are read only from results_v3/;",
         "historical EN01 97-HELP data are read only from results_v4/.",
-        "**Important:** Those older outputs contain 6677 proteins; the current matrix",
-        "contains 6675 after removing two yeast proteins. Therefore the historical",
-        "CV differences are not a perfectly isolated 5-vs-97 HELP comparison.",
-        "Factor1-only results are not expected to change because HELP is used at Factor2,",
-        "apart from any changes in the protein set. Do not claim causal batch reduction.",
+        "**Comparison design:** Prior Trial2 in results_v3 contains 6677 proteins,",
+        "whereas the current data contain 6675 after removing two yeast protein rows.",
+        "Thus Trial2 changes are descriptive rather than a strictly isolated 5-vs-97 test.",
+        "Prior EN01 Trial3 in results_v4 and current Trial3 both use the same 6675",
+        "protein matrix, so Trial3 is directly comparable for the HELP-subset change.",
+        "Factor1-only results should not change within a fixed protein set, because",
+        "the HELP subset affects only Factor2. Do not claim causal batch reduction.",
         "Raw, Factor1, and Factor1+Factor2 are shown together for both Trial2/3.", "",
         "## Files and reproducibility", "",
         "- [five_help_sample_diagnostics.csv](five_help_sample_diagnostics.csv): 5 requested",
