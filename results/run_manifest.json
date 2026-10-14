@@ -21,12 +21,11 @@
     "EN01.xlsx": "08122d5a044689a7863cb85768d96797566d976a76925ecd3a71bdedcef09c45"
   },
   "methods": [
-    "trial1a",
     "trial1b",
     "trial2_peptide",
     "trial3_eno1"
   ],
   "other_parameters_unchanged": true,
-  "description": "Trial1A/1B: raw L/H median. Trial2/3: log2 L/H median.",
+  "description": "QC-safe HELP-only: raw L/H median. Trial2/3: log2 L/H median.",
   "comparison_has_protein_set_change": true
 }
