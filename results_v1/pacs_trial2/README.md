@@ -3,7 +3,7 @@
 This repository experiment is exploratory. It does NOT select a final PACS method.
 Only study samples (HC/S; 54) are corrected. All 6 Internal-QC (LM) and
 15 pooled QC intensities are unchanged across all four correction scenarios.
-Trial 1A / 1B and all original input files remain untouched.
+All original input files and other retained results remain untouched.
 
 ## Design and formulas (log2 scale)
 
