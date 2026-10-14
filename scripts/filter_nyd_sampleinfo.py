@@ -78,7 +78,7 @@ def main():
     removed=[x for x in raw_ids if x not in allowed]
     if len(kept)!=16 or set(kept)!=allowed:
         raise ValueError("Metadata sample set does not cover exactly 16 matrix IDs")
-    risky=["mergeCells","autoFilter","tableParts","conditionalFormatting",
+    risky=["mergeCells","tableParts","conditionalFormatting",
            "dataValidations","hyperlinks","drawing","legacyDrawing","rowBreaks"]
     if any(root.find(NS+x) is not None for x in risky):
         raise ValueError("Workbook contains row-dependent objects requiring separate handling: "+repr([x for x in risky if root.find(NS+x) is not None]))
@@ -98,6 +98,13 @@ def main():
     if nextrow!=17: raise AssertionError("Unexpected filtered row count")
     dim=root.find(NS+"dimension")
     if dim is not None: dim.set("ref","A1:R17")
+    # Preserve the Excel autofilter, but shrink its row range to the 16 samples.
+    filt=root.find(NS+"autoFilter")
+    if filt is not None:
+        oldref=filt.get("ref","").replace("$","")
+        if oldref!="A1:R41":
+            raise ValueError("Unexpected autofilter range: "+repr(oldref))
+        filt.set("ref","A1:R17")
     xml=ET.tostring(root,encoding="utf-8",xml_declaration=True)
     with tempfile.NamedTemporaryFile(dir=ROOT,prefix="clean_nyd_",suffix=".xlsx",delete=False) as f:
         tmp=Path(f.name)
