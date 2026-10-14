@@ -1,0 +1,388 @@
+view,stage,sample_id,group,median_log2_intensity
+all_groups,raw,LM_1,Internal-QC,22.692821924300834
+all_groups,raw,LM_2_1,Internal-QC,19.01736031144542
+all_groups,raw,LM_2_2,Internal-QC,19.01736031144542
+all_groups,raw,LM_3_2,Internal-QC,19.177566508780274
+all_groups,raw,LM_3_3,Internal-QC,19.177566508780274
+all_groups,raw,LM_4,Internal-QC,18.06163488065717
+all_groups,raw,k_26_9_2_24,pooled QC,13.995599344805536
+all_groups,raw,k_26_9_2_30,pooled QC,13.998184923275591
+all_groups,raw,k_26_9_2_32,pooled QC,13.953596274630504
+all_groups,raw,k_26_9_2_38,pooled QC,13.95019590576009
+all_groups,raw,k_26_9_2_39,pooled QC,13.98145133365125
+all_groups,raw,k_26_9_2_44,pooled QC,13.966000672689525
+all_groups,raw,k_26_9_2_51,pooled QC,13.985975316103966
+all_groups,raw,k_26_9_2_52,pooled QC,13.971597438466414
+all_groups,raw,k_26_9_2_58,pooled QC,13.925934534379218
+all_groups,raw,k_26_9_2_69,pooled QC,14.04202256929436
+all_groups,raw,k_26_9_2_84,pooled QC,13.952659356268978
+all_groups,raw,k_26_9_2_88,pooled QC,13.9699976113865
+all_groups,raw,k_26_9_2_93,pooled QC,14.017608768599347
+all_groups,raw,k_26_9_2_99,pooled QC,13.969791210692378
+all_groups,raw,k_26_9_2_100,pooled QC,13.978871305632275
+all_groups,raw,k_26_9_2_3,HC,13.889313811074683
+all_groups,raw,k_26_9_2_7,HC,14.160840474720386
+all_groups,raw,k_26_9_2_8,HC,13.972140628324604
+all_groups,raw,k_26_9_2_13,HC,13.920962083722381
+all_groups,raw,k_26_9_2_18,HC,14.047260092876698
+all_groups,raw,k_26_9_2_21,HC,13.88610139402503
+all_groups,raw,k_26_9_2_23,HC,13.946641317527707
+all_groups,raw,k_26_9_2_33,HC,13.91656525547516
+all_groups,raw,k_26_9_2_34,HC,14.085924682527342
+all_groups,raw,k_26_9_2_37,HC,14.014761509888132
+all_groups,raw,k_26_9_2_43,HC,14.09926971073018
+all_groups,raw,k_26_9_2_46,HC,14.033801521663408
+all_groups,raw,k_26_9_2_48,HC,13.923923849078509
+all_groups,raw,k_26_9_2_57,HC,13.841834574010667
+all_groups,raw,k_26_9_2_59,HC,13.880463606907401
+all_groups,raw,k_26_9_2_61,HC,14.15269680096053
+all_groups,raw,k_26_9_2_62,HC,13.93922106709757
+all_groups,raw,k_26_9_2_75,HC,14.105335618855392
+all_groups,raw,k_26_9_2_76,HC,14.068912600879312
+all_groups,raw,k_26_9_2_78,HC,14.033371377461124
+all_groups,raw,k_26_9_2_86,HC,14.091088224989981
+all_groups,raw,k_26_9_2_90,HC,14.28579231802093
+all_groups,raw,k_26_9_2_91,HC,14.022276736091666
+all_groups,raw,k_26_9_2_94,HC,13.913656125375338
+all_groups,raw,k_26_9_2_95,HC,14.019012942487558
+all_groups,raw,k_26_9_2_96,HC,13.982672779973438
+all_groups,raw,k_26_9_2_102,HC,13.954212840117588
+all_groups,raw,k_26_9_2_2,S,14.039158961378975
+all_groups,raw,k_26_9_2_9,S,13.81333018801988
+all_groups,raw,k_26_9_2_11,S,14.020997295573636
+all_groups,raw,k_26_9_2_14,S,14.551774281751403
+all_groups,raw,k_26_9_2_16,S,13.891242591113114
+all_groups,raw,k_26_9_2_22,S,13.911288988025472
+all_groups,raw,k_26_9_2_26,S,14.097151478778308
+all_groups,raw,k_26_9_2_31,S,14.09253417974679
+all_groups,raw,k_26_9_2_35,S,13.99956404770024
+all_groups,raw,k_26_9_2_36,S,13.770663889925434
+all_groups,raw,k_26_9_2_47,S,13.895991748391102
+all_groups,raw,k_26_9_2_49,S,13.719452996340367
+all_groups,raw,k_26_9_2_54,S,13.838120571925904
+all_groups,raw,k_26_9_2_55,S,14.493280057365183
+all_groups,raw,k_26_9_2_60,S,14.10035434580819
+all_groups,raw,k_26_9_2_63,S,14.071239788903888
+all_groups,raw,k_26_9_2_66,S,14.118884310898228
+all_groups,raw,k_26_9_2_68,S,14.000836221892985
+all_groups,raw,k_26_9_2_74,S,13.970541713553619
+all_groups,raw,k_26_9_2_77,S,13.947573019667006
+all_groups,raw,k_26_9_2_82,S,14.183387261248875
+all_groups,raw,k_26_9_2_83,S,13.762272809687667
+all_groups,raw,k_26_9_2_85,S,14.176757527971679
+all_groups,raw,k_26_9_2_87,S,13.958724886098022
+all_groups,raw,k_26_9_2_92,S,13.971920703302901
+all_groups,raw,k_26_9_2_97,S,13.88546280026965
+all_groups,raw,k_26_9_2_98,S,14.033323032528621
+all_groups,factor1,LM_1,Internal-QC,22.692821924300834
+all_groups,factor1,LM_2_1,Internal-QC,19.01736031144542
+all_groups,factor1,LM_2_2,Internal-QC,19.01736031144542
+all_groups,factor1,LM_3_2,Internal-QC,19.177566508780274
+all_groups,factor1,LM_3_3,Internal-QC,19.177566508780274
+all_groups,factor1,LM_4,Internal-QC,18.06163488065717
+all_groups,factor1,k_26_9_2_24,pooled QC,13.995599344805536
+all_groups,factor1,k_26_9_2_30,pooled QC,13.998184923275591
+all_groups,factor1,k_26_9_2_32,pooled QC,13.953596274630504
+all_groups,factor1,k_26_9_2_38,pooled QC,13.95019590576009
+all_groups,factor1,k_26_9_2_39,pooled QC,13.98145133365125
+all_groups,factor1,k_26_9_2_44,pooled QC,13.966000672689525
+all_groups,factor1,k_26_9_2_51,pooled QC,13.985975316103966
+all_groups,factor1,k_26_9_2_52,pooled QC,13.971597438466414
+all_groups,factor1,k_26_9_2_58,pooled QC,13.925934534379218
+all_groups,factor1,k_26_9_2_69,pooled QC,14.04202256929436
+all_groups,factor1,k_26_9_2_84,pooled QC,13.952659356268978
+all_groups,factor1,k_26_9_2_88,pooled QC,13.9699976113865
+all_groups,factor1,k_26_9_2_93,pooled QC,14.017608768599347
+all_groups,factor1,k_26_9_2_99,pooled QC,13.969791210692378
+all_groups,factor1,k_26_9_2_100,pooled QC,13.978871305632275
+all_groups,factor1,k_26_9_2_3,HC,13.998821682926216
+all_groups,factor1,k_26_9_2_7,HC,13.877136952220711
+all_groups,factor1,k_26_9_2_8,HC,13.85333161387789
+all_groups,factor1,k_26_9_2_13,HC,14.83557780490681
+all_groups,factor1,k_26_9_2_18,HC,13.889773901939304
+all_groups,factor1,k_26_9_2_21,HC,14.304163772258288
+all_groups,factor1,k_26_9_2_23,HC,13.96910488633261
+all_groups,factor1,k_26_9_2_33,HC,13.410818839955173
+all_groups,factor1,k_26_9_2_34,HC,14.116385046889071
+all_groups,factor1,k_26_9_2_37,HC,12.782750194576675
+all_groups,factor1,k_26_9_2_43,HC,13.55693146252236
+all_groups,factor1,k_26_9_2_46,HC,13.691662795670096
+all_groups,factor1,k_26_9_2_48,HC,13.998434030892206
+all_groups,factor1,k_26_9_2_57,HC,14.227013747826279
+all_groups,factor1,k_26_9_2_59,HC,14.404967898528666
+all_groups,factor1,k_26_9_2_61,HC,13.615333850359418
+all_groups,factor1,k_26_9_2_62,HC,14.149702431580335
+all_groups,factor1,k_26_9_2_75,HC,14.359874821116676
+all_groups,factor1,k_26_9_2_76,HC,14.583115992966855
+all_groups,factor1,k_26_9_2_78,HC,13.908240929026231
+all_groups,factor1,k_26_9_2_86,HC,13.231730360863542
+all_groups,factor1,k_26_9_2_90,HC,13.767362681596943
+all_groups,factor1,k_26_9_2_91,HC,14.37691293585452
+all_groups,factor1,k_26_9_2_94,HC,14.304563283176103
+all_groups,factor1,k_26_9_2_95,HC,13.47051020639308
+all_groups,factor1,k_26_9_2_96,HC,13.807365256198173
+all_groups,factor1,k_26_9_2_102,HC,13.27898467074117
+all_groups,factor1,k_26_9_2_2,S,13.233183573623295
+all_groups,factor1,k_26_9_2_9,S,14.082589220927328
+all_groups,factor1,k_26_9_2_11,S,14.914498294283227
+all_groups,factor1,k_26_9_2_14,S,14.811463798227269
+all_groups,factor1,k_26_9_2_16,S,13.887277197350112
+all_groups,factor1,k_26_9_2_22,S,13.309673010370874
+all_groups,factor1,k_26_9_2_26,S,13.988436284536427
+all_groups,factor1,k_26_9_2_31,S,14.089133814501208
+all_groups,factor1,k_26_9_2_35,S,14.66505112169029
+all_groups,factor1,k_26_9_2_36,S,14.756522161923886
+all_groups,factor1,k_26_9_2_47,S,13.389224158552713
+all_groups,factor1,k_26_9_2_49,S,14.681203127856598
+all_groups,factor1,k_26_9_2_54,S,13.796056379911354
+all_groups,factor1,k_26_9_2_55,S,14.391278884200046
+all_groups,factor1,k_26_9_2_60,S,14.4774404961485
+all_groups,factor1,k_26_9_2_63,S,13.450446266738286
+all_groups,factor1,k_26_9_2_66,S,14.098915268450112
+all_groups,factor1,k_26_9_2_68,S,14.621625639722776
+all_groups,factor1,k_26_9_2_74,S,14.756546939530253
+all_groups,factor1,k_26_9_2_77,S,14.335578536148905
+all_groups,factor1,k_26_9_2_82,S,13.848360038184541
+all_groups,factor1,k_26_9_2_83,S,14.736276412371552
+all_groups,factor1,k_26_9_2_85,S,14.149523164790672
+all_groups,factor1,k_26_9_2_87,S,13.520149453505194
+all_groups,factor1,k_26_9_2_92,S,14.49428185506722
+all_groups,factor1,k_26_9_2_97,S,13.597184792292817
+all_groups,factor1,k_26_9_2_98,S,14.05863047649202
+all_groups,factor1_factor2,LM_1,Internal-QC,22.692821924300834
+all_groups,factor1_factor2,LM_2_1,Internal-QC,19.01736031144542
+all_groups,factor1_factor2,LM_2_2,Internal-QC,19.01736031144542
+all_groups,factor1_factor2,LM_3_2,Internal-QC,19.177566508780274
+all_groups,factor1_factor2,LM_3_3,Internal-QC,19.177566508780274
+all_groups,factor1_factor2,LM_4,Internal-QC,18.06163488065717
+all_groups,factor1_factor2,k_26_9_2_24,pooled QC,13.995599344805536
+all_groups,factor1_factor2,k_26_9_2_30,pooled QC,13.998184923275591
+all_groups,factor1_factor2,k_26_9_2_32,pooled QC,13.953596274630504
+all_groups,factor1_factor2,k_26_9_2_38,pooled QC,13.95019590576009
+all_groups,factor1_factor2,k_26_9_2_39,pooled QC,13.98145133365125
+all_groups,factor1_factor2,k_26_9_2_44,pooled QC,13.966000672689525
+all_groups,factor1_factor2,k_26_9_2_51,pooled QC,13.985975316103966
+all_groups,factor1_factor2,k_26_9_2_52,pooled QC,13.971597438466414
+all_groups,factor1_factor2,k_26_9_2_58,pooled QC,13.925934534379218
+all_groups,factor1_factor2,k_26_9_2_69,pooled QC,14.04202256929436
+all_groups,factor1_factor2,k_26_9_2_84,pooled QC,13.952659356268978
+all_groups,factor1_factor2,k_26_9_2_88,pooled QC,13.9699976113865
+all_groups,factor1_factor2,k_26_9_2_93,pooled QC,14.017608768599347
+all_groups,factor1_factor2,k_26_9_2_99,pooled QC,13.969791210692378
+all_groups,factor1_factor2,k_26_9_2_100,pooled QC,13.978871305632275
+all_groups,factor1_factor2,k_26_9_2_3,HC,13.446784495712725
+all_groups,factor1_factor2,k_26_9_2_7,HC,14.383751011895853
+all_groups,factor1_factor2,k_26_9_2_8,HC,14.17970904229134
+all_groups,factor1_factor2,k_26_9_2_13,HC,14.856407812627175
+all_groups,factor1_factor2,k_26_9_2_18,HC,14.04118319487282
+all_groups,factor1_factor2,k_26_9_2_21,HC,14.767677965869616
+all_groups,factor1_factor2,k_26_9_2_23,HC,13.624704569869285
+all_groups,factor1_factor2,k_26_9_2_33,HC,13.460164057157353
+all_groups,factor1_factor2,k_26_9_2_34,HC,13.55640937381941
+all_groups,factor1_factor2,k_26_9_2_37,HC,12.664622639570641
+all_groups,factor1_factor2,k_26_9_2_43,HC,13.512236844900928
+all_groups,factor1_factor2,k_26_9_2_46,HC,13.830634024622267
+all_groups,factor1_factor2,k_26_9_2_48,HC,13.634916188362219
+all_groups,factor1_factor2,k_26_9_2_57,HC,14.546657283995454
+all_groups,factor1_factor2,k_26_9_2_59,HC,14.095752865655376
+all_groups,factor1_factor2,k_26_9_2_61,HC,13.820784408822242
+all_groups,factor1_factor2,k_26_9_2_62,HC,13.565399240763483
+all_groups,factor1_factor2,k_26_9_2_75,HC,13.772440548029795
+all_groups,factor1_factor2,k_26_9_2_76,HC,13.915360420941854
+all_groups,factor1_factor2,k_26_9_2_78,HC,13.932906770183273
+all_groups,factor1_factor2,k_26_9_2_86,HC,13.601105866751833
+all_groups,factor1_factor2,k_26_9_2_90,HC,13.99621262434983
+all_groups,factor1_factor2,k_26_9_2_91,HC,14.09634776808403
+all_groups,factor1_factor2,k_26_9_2_94,HC,14.302097393278885
+all_groups,factor1_factor2,k_26_9_2_95,HC,13.566463790834906
+all_groups,factor1_factor2,k_26_9_2_96,HC,14.16665963797201
+all_groups,factor1_factor2,k_26_9_2_102,HC,13.595850977847551
+all_groups,factor1_factor2,k_26_9_2_2,S,13.307314794025697
+all_groups,factor1_factor2,k_26_9_2_9,S,15.019978773855408
+all_groups,factor1_factor2,k_26_9_2_11,S,15.115324242302606
+all_groups,factor1_factor2,k_26_9_2_14,S,16.078991719422596
+all_groups,factor1_factor2,k_26_9_2_16,S,14.787444540964412
+all_groups,factor1_factor2,k_26_9_2_22,S,13.760358721291322
+all_groups,factor1_factor2,k_26_9_2_26,S,13.98654068845932
+all_groups,factor1_factor2,k_26_9_2_31,S,14.484073266322618
+all_groups,factor1_factor2,k_26_9_2_35,S,15.02026257147914
+all_groups,factor1_factor2,k_26_9_2_36,S,15.74456701725175
+all_groups,factor1_factor2,k_26_9_2_47,S,13.987156816591172
+all_groups,factor1_factor2,k_26_9_2_49,S,15.32663999178645
+all_groups,factor1_factor2,k_26_9_2_54,S,14.72701852796647
+all_groups,factor1_factor2,k_26_9_2_55,S,14.940670652543309
+all_groups,factor1_factor2,k_26_9_2_60,S,14.90717672110394
+all_groups,factor1_factor2,k_26_9_2_63,S,13.938305173940519
+all_groups,factor1_factor2,k_26_9_2_66,S,13.908893684096693
+all_groups,factor1_factor2,k_26_9_2_68,S,14.908612901367974
+all_groups,factor1_factor2,k_26_9_2_74,S,14.821095058947257
+all_groups,factor1_factor2,k_26_9_2_77,S,14.548343580363305
+all_groups,factor1_factor2,k_26_9_2_82,S,14.316897924924078
+all_groups,factor1_factor2,k_26_9_2_83,S,15.693983361602239
+all_groups,factor1_factor2,k_26_9_2_85,S,14.545812442183912
+all_groups,factor1_factor2,k_26_9_2_87,S,13.95606360192328
+all_groups,factor1_factor2,k_26_9_2_92,S,15.014383460243607
+all_groups,factor1_factor2,k_26_9_2_97,S,14.427320949534991
+all_groups,factor1_factor2,k_26_9_2_98,S,14.102008721357752
+study_only,raw,k_26_9_2_3,HC,13.889313811074683
+study_only,raw,k_26_9_2_7,HC,14.160840474720386
+study_only,raw,k_26_9_2_8,HC,13.972140628324604
+study_only,raw,k_26_9_2_13,HC,13.920962083722381
+study_only,raw,k_26_9_2_18,HC,14.047260092876698
+study_only,raw,k_26_9_2_21,HC,13.88610139402503
+study_only,raw,k_26_9_2_23,HC,13.946641317527707
+study_only,raw,k_26_9_2_33,HC,13.91656525547516
+study_only,raw,k_26_9_2_34,HC,14.085924682527342
+study_only,raw,k_26_9_2_37,HC,14.014761509888132
+study_only,raw,k_26_9_2_43,HC,14.09926971073018
+study_only,raw,k_26_9_2_46,HC,14.033801521663408
+study_only,raw,k_26_9_2_48,HC,13.923923849078509
+study_only,raw,k_26_9_2_57,HC,13.841834574010667
+study_only,raw,k_26_9_2_59,HC,13.880463606907401
+study_only,raw,k_26_9_2_61,HC,14.15269680096053
+study_only,raw,k_26_9_2_62,HC,13.93922106709757
+study_only,raw,k_26_9_2_75,HC,14.105335618855392
+study_only,raw,k_26_9_2_76,HC,14.068912600879312
+study_only,raw,k_26_9_2_78,HC,14.033371377461124
+study_only,raw,k_26_9_2_86,HC,14.091088224989981
+study_only,raw,k_26_9_2_90,HC,14.28579231802093
+study_only,raw,k_26_9_2_91,HC,14.022276736091666
+study_only,raw,k_26_9_2_94,HC,13.913656125375338
+study_only,raw,k_26_9_2_95,HC,14.019012942487558
+study_only,raw,k_26_9_2_96,HC,13.982672779973438
+study_only,raw,k_26_9_2_102,HC,13.954212840117588
+study_only,raw,k_26_9_2_2,S,14.039158961378975
+study_only,raw,k_26_9_2_9,S,13.81333018801988
+study_only,raw,k_26_9_2_11,S,14.020997295573636
+study_only,raw,k_26_9_2_14,S,14.551774281751403
+study_only,raw,k_26_9_2_16,S,13.891242591113114
+study_only,raw,k_26_9_2_22,S,13.911288988025472
+study_only,raw,k_26_9_2_26,S,14.097151478778308
+study_only,raw,k_26_9_2_31,S,14.09253417974679
+study_only,raw,k_26_9_2_35,S,13.99956404770024
+study_only,raw,k_26_9_2_36,S,13.770663889925434
+study_only,raw,k_26_9_2_47,S,13.895991748391102
+study_only,raw,k_26_9_2_49,S,13.719452996340367
+study_only,raw,k_26_9_2_54,S,13.838120571925904
+study_only,raw,k_26_9_2_55,S,14.493280057365183
+study_only,raw,k_26_9_2_60,S,14.10035434580819
+study_only,raw,k_26_9_2_63,S,14.071239788903888
+study_only,raw,k_26_9_2_66,S,14.118884310898228
+study_only,raw,k_26_9_2_68,S,14.000836221892985
+study_only,raw,k_26_9_2_74,S,13.970541713553619
+study_only,raw,k_26_9_2_77,S,13.947573019667006
+study_only,raw,k_26_9_2_82,S,14.183387261248875
+study_only,raw,k_26_9_2_83,S,13.762272809687667
+study_only,raw,k_26_9_2_85,S,14.176757527971679
+study_only,raw,k_26_9_2_87,S,13.958724886098022
+study_only,raw,k_26_9_2_92,S,13.971920703302901
+study_only,raw,k_26_9_2_97,S,13.88546280026965
+study_only,raw,k_26_9_2_98,S,14.033323032528621
+study_only,factor1,k_26_9_2_3,HC,13.998821682926216
+study_only,factor1,k_26_9_2_7,HC,13.877136952220711
+study_only,factor1,k_26_9_2_8,HC,13.85333161387789
+study_only,factor1,k_26_9_2_13,HC,14.83557780490681
+study_only,factor1,k_26_9_2_18,HC,13.889773901939304
+study_only,factor1,k_26_9_2_21,HC,14.304163772258288
+study_only,factor1,k_26_9_2_23,HC,13.96910488633261
+study_only,factor1,k_26_9_2_33,HC,13.410818839955173
+study_only,factor1,k_26_9_2_34,HC,14.116385046889071
+study_only,factor1,k_26_9_2_37,HC,12.782750194576675
+study_only,factor1,k_26_9_2_43,HC,13.55693146252236
+study_only,factor1,k_26_9_2_46,HC,13.691662795670096
+study_only,factor1,k_26_9_2_48,HC,13.998434030892206
+study_only,factor1,k_26_9_2_57,HC,14.227013747826279
+study_only,factor1,k_26_9_2_59,HC,14.404967898528666
+study_only,factor1,k_26_9_2_61,HC,13.615333850359418
+study_only,factor1,k_26_9_2_62,HC,14.149702431580335
+study_only,factor1,k_26_9_2_75,HC,14.359874821116676
+study_only,factor1,k_26_9_2_76,HC,14.583115992966855
+study_only,factor1,k_26_9_2_78,HC,13.908240929026231
+study_only,factor1,k_26_9_2_86,HC,13.231730360863542
+study_only,factor1,k_26_9_2_90,HC,13.767362681596943
+study_only,factor1,k_26_9_2_91,HC,14.37691293585452
+study_only,factor1,k_26_9_2_94,HC,14.304563283176103
+study_only,factor1,k_26_9_2_95,HC,13.47051020639308
+study_only,factor1,k_26_9_2_96,HC,13.807365256198173
+study_only,factor1,k_26_9_2_102,HC,13.27898467074117
+study_only,factor1,k_26_9_2_2,S,13.233183573623295
+study_only,factor1,k_26_9_2_9,S,14.082589220927328
+study_only,factor1,k_26_9_2_11,S,14.914498294283227
+study_only,factor1,k_26_9_2_14,S,14.811463798227269
+study_only,factor1,k_26_9_2_16,S,13.887277197350112
+study_only,factor1,k_26_9_2_22,S,13.309673010370874
+study_only,factor1,k_26_9_2_26,S,13.988436284536427
+study_only,factor1,k_26_9_2_31,S,14.089133814501208
+study_only,factor1,k_26_9_2_35,S,14.66505112169029
+study_only,factor1,k_26_9_2_36,S,14.756522161923886
+study_only,factor1,k_26_9_2_47,S,13.389224158552713
+study_only,factor1,k_26_9_2_49,S,14.681203127856598
+study_only,factor1,k_26_9_2_54,S,13.796056379911354
+study_only,factor1,k_26_9_2_55,S,14.391278884200046
+study_only,factor1,k_26_9_2_60,S,14.4774404961485
+study_only,factor1,k_26_9_2_63,S,13.450446266738286
+study_only,factor1,k_26_9_2_66,S,14.098915268450112
+study_only,factor1,k_26_9_2_68,S,14.621625639722776
+study_only,factor1,k_26_9_2_74,S,14.756546939530253
+study_only,factor1,k_26_9_2_77,S,14.335578536148905
+study_only,factor1,k_26_9_2_82,S,13.848360038184541
+study_only,factor1,k_26_9_2_83,S,14.736276412371552
+study_only,factor1,k_26_9_2_85,S,14.149523164790672
+study_only,factor1,k_26_9_2_87,S,13.520149453505194
+study_only,factor1,k_26_9_2_92,S,14.49428185506722
+study_only,factor1,k_26_9_2_97,S,13.597184792292817
+study_only,factor1,k_26_9_2_98,S,14.05863047649202
+study_only,factor1_factor2,k_26_9_2_3,HC,13.446784495712725
+study_only,factor1_factor2,k_26_9_2_7,HC,14.383751011895853
+study_only,factor1_factor2,k_26_9_2_8,HC,14.17970904229134
+study_only,factor1_factor2,k_26_9_2_13,HC,14.856407812627175
+study_only,factor1_factor2,k_26_9_2_18,HC,14.04118319487282
+study_only,factor1_factor2,k_26_9_2_21,HC,14.767677965869616
+study_only,factor1_factor2,k_26_9_2_23,HC,13.624704569869285
+study_only,factor1_factor2,k_26_9_2_33,HC,13.460164057157353
+study_only,factor1_factor2,k_26_9_2_34,HC,13.55640937381941
+study_only,factor1_factor2,k_26_9_2_37,HC,12.664622639570641
+study_only,factor1_factor2,k_26_9_2_43,HC,13.512236844900928
+study_only,factor1_factor2,k_26_9_2_46,HC,13.830634024622267
+study_only,factor1_factor2,k_26_9_2_48,HC,13.634916188362219
+study_only,factor1_factor2,k_26_9_2_57,HC,14.546657283995454
+study_only,factor1_factor2,k_26_9_2_59,HC,14.095752865655376
+study_only,factor1_factor2,k_26_9_2_61,HC,13.820784408822242
+study_only,factor1_factor2,k_26_9_2_62,HC,13.565399240763483
+study_only,factor1_factor2,k_26_9_2_75,HC,13.772440548029795
+study_only,factor1_factor2,k_26_9_2_76,HC,13.915360420941854
+study_only,factor1_factor2,k_26_9_2_78,HC,13.932906770183273
+study_only,factor1_factor2,k_26_9_2_86,HC,13.601105866751833
+study_only,factor1_factor2,k_26_9_2_90,HC,13.99621262434983
+study_only,factor1_factor2,k_26_9_2_91,HC,14.09634776808403
+study_only,factor1_factor2,k_26_9_2_94,HC,14.302097393278885
+study_only,factor1_factor2,k_26_9_2_95,HC,13.566463790834906
+study_only,factor1_factor2,k_26_9_2_96,HC,14.16665963797201
+study_only,factor1_factor2,k_26_9_2_102,HC,13.595850977847551
+study_only,factor1_factor2,k_26_9_2_2,S,13.307314794025697
+study_only,factor1_factor2,k_26_9_2_9,S,15.019978773855408
+study_only,factor1_factor2,k_26_9_2_11,S,15.115324242302606
+study_only,factor1_factor2,k_26_9_2_14,S,16.078991719422596
+study_only,factor1_factor2,k_26_9_2_16,S,14.787444540964412
+study_only,factor1_factor2,k_26_9_2_22,S,13.760358721291322
+study_only,factor1_factor2,k_26_9_2_26,S,13.98654068845932
+study_only,factor1_factor2,k_26_9_2_31,S,14.484073266322618
+study_only,factor1_factor2,k_26_9_2_35,S,15.02026257147914
+study_only,factor1_factor2,k_26_9_2_36,S,15.74456701725175
+study_only,factor1_factor2,k_26_9_2_47,S,13.987156816591172
+study_only,factor1_factor2,k_26_9_2_49,S,15.32663999178645
+study_only,factor1_factor2,k_26_9_2_54,S,14.72701852796647
+study_only,factor1_factor2,k_26_9_2_55,S,14.940670652543309
+study_only,factor1_factor2,k_26_9_2_60,S,14.90717672110394
+study_only,factor1_factor2,k_26_9_2_63,S,13.938305173940519
+study_only,factor1_factor2,k_26_9_2_66,S,13.908893684096693
+study_only,factor1_factor2,k_26_9_2_68,S,14.908612901367974
+study_only,factor1_factor2,k_26_9_2_74,S,14.821095058947257
+study_only,factor1_factor2,k_26_9_2_77,S,14.548343580363305
+study_only,factor1_factor2,k_26_9_2_82,S,14.316897924924078
+study_only,factor1_factor2,k_26_9_2_83,S,15.693983361602239
+study_only,factor1_factor2,k_26_9_2_85,S,14.545812442183912
+study_only,factor1_factor2,k_26_9_2_87,S,13.95606360192328
+study_only,factor1_factor2,k_26_9_2_92,S,15.014383460243607
+study_only,factor1_factor2,k_26_9_2_97,S,14.427320949534991
+study_only,factor1_factor2,k_26_9_2_98,S,14.102008721357752

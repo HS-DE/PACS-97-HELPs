@@ -1,0 +1,49 @@
+trial,method,stage,group,median_cv_5HELP_pct,median_cv_97HELP_pct_historical,delta_5minus97_percentage_points,new_protein_rows,historical_protein_rows,comparison_warning
+trial2_peptide,a,raw,Internal-QC,63.87570968404149,63.66587098644773,0.20983869759376006,6675,6677,Different protein sets (6675 vs 6677); descriptive only
+trial2_peptide,a,factor1,Internal-QC,63.87570968404149,63.66587098644773,0.20983869759376006,6675,6677,Different protein sets (6675 vs 6677); descriptive only
+trial2_peptide,a,factor1_factor2,Internal-QC,63.87570968404149,63.66587098644773,0.20983869759376006,6675,6677,Different protein sets (6675 vs 6677); descriptive only
+trial2_peptide,a,raw,pooled QC,10.40637235928074,10.404008895199032,0.0023634640817071784,6675,6677,Different protein sets (6675 vs 6677); descriptive only
+trial2_peptide,a,factor1,pooled QC,10.40637235928074,10.404008895199032,0.0023634640817071784,6675,6677,Different protein sets (6675 vs 6677); descriptive only
+trial2_peptide,a,factor1_factor2,pooled QC,10.40637235928074,10.404008895199032,0.0023634640817071784,6675,6677,Different protein sets (6675 vs 6677); descriptive only
+trial2_peptide,a,raw,HC,23.041024105698845,23.05706913392431,-0.016045028225462943,6675,6677,Different protein sets (6675 vs 6677); descriptive only
+trial2_peptide,a,factor1,HC,39.24918976163433,39.24634801255469,0.002841749079635747,6675,6677,Different protein sets (6675 vs 6677); descriptive only
+trial2_peptide,a,factor1_factor2,HC,41.86996485804645,37.65461292520638,4.215351932840072,6675,6677,Different protein sets (6675 vs 6677); descriptive only
+trial2_peptide,a,raw,S,28.822953718906238,28.82505510311013,-0.002101384203893275,6675,6677,Different protein sets (6675 vs 6677); descriptive only
+trial2_peptide,a,factor1,S,45.724890137281605,45.73304170393305,-0.00815156665144201,6675,6677,Different protein sets (6675 vs 6677); descriptive only
+trial2_peptide,a,factor1_factor2,S,56.01323716419408,57.06490921274504,-1.0516720485509623,6675,6677,Different protein sets (6675 vs 6677); descriptive only
+trial2_peptide,b,raw,Internal-QC,63.87570968404149,63.66587098644773,0.20983869759376006,6675,6677,Different protein sets (6675 vs 6677); descriptive only
+trial2_peptide,b,factor1,Internal-QC,63.87570968404149,63.66587098644773,0.20983869759376006,6675,6677,Different protein sets (6675 vs 6677); descriptive only
+trial2_peptide,b,factor1_factor2,Internal-QC,63.87570968404149,63.66587098644773,0.20983869759376006,6675,6677,Different protein sets (6675 vs 6677); descriptive only
+trial2_peptide,b,raw,pooled QC,10.40637235928074,10.404008895199032,0.0023634640817071784,6675,6677,Different protein sets (6675 vs 6677); descriptive only
+trial2_peptide,b,factor1,pooled QC,10.40637235928074,10.404008895199032,0.0023634640817071784,6675,6677,Different protein sets (6675 vs 6677); descriptive only
+trial2_peptide,b,factor1_factor2,pooled QC,10.40637235928074,10.404008895199032,0.0023634640817071784,6675,6677,Different protein sets (6675 vs 6677); descriptive only
+trial2_peptide,b,raw,HC,23.041024105698845,23.05706913392431,-0.016045028225462943,6675,6677,Different protein sets (6675 vs 6677); descriptive only
+trial2_peptide,b,factor1,HC,39.2491897616344,39.24634801255472,0.0028417490796783795,6675,6677,Different protein sets (6675 vs 6677); descriptive only
+trial2_peptide,b,factor1_factor2,HC,41.86996485804649,37.654612925206365,4.215351932840122,6675,6677,Different protein sets (6675 vs 6677); descriptive only
+trial2_peptide,b,raw,S,28.822953718906238,28.82505510311013,-0.002101384203893275,6675,6677,Different protein sets (6675 vs 6677); descriptive only
+trial2_peptide,b,factor1,S,45.72489013728169,45.733041703933246,-0.008151566651555697,6675,6677,Different protein sets (6675 vs 6677); descriptive only
+trial2_peptide,b,factor1_factor2,S,56.01323716419402,57.06490921274513,-1.0516720485511115,6675,6677,Different protein sets (6675 vs 6677); descriptive only
+trial3_eno1,single_max_rowsum,raw,Internal-QC,63.87570968404149,63.87570968404149,0.0,6675,6675,Matched 6675-protein source; isolate 5-vs-97 HELP Factor2
+trial3_eno1,single_max_rowsum,factor1,Internal-QC,63.87570968404149,63.87570968404149,0.0,6675,6675,Matched 6675-protein source; isolate 5-vs-97 HELP Factor2
+trial3_eno1,single_max_rowsum,factor1_factor2,Internal-QC,63.87570968404149,63.87570968404149,0.0,6675,6675,Matched 6675-protein source; isolate 5-vs-97 HELP Factor2
+trial3_eno1,single_max_rowsum,raw,pooled QC,10.40637235928074,10.40637235928074,0.0,6675,6675,Matched 6675-protein source; isolate 5-vs-97 HELP Factor2
+trial3_eno1,single_max_rowsum,factor1,pooled QC,10.40637235928074,10.40637235928074,0.0,6675,6675,Matched 6675-protein source; isolate 5-vs-97 HELP Factor2
+trial3_eno1,single_max_rowsum,factor1_factor2,pooled QC,10.40637235928074,10.40637235928074,0.0,6675,6675,Matched 6675-protein source; isolate 5-vs-97 HELP Factor2
+trial3_eno1,single_max_rowsum,raw,HC,23.041024105698845,23.041024105698845,0.0,6675,6675,Matched 6675-protein source; isolate 5-vs-97 HELP Factor2
+trial3_eno1,single_max_rowsum,factor1,HC,49.10168465828235,49.10168465828235,0.0,6675,6675,Matched 6675-protein source; isolate 5-vs-97 HELP Factor2
+trial3_eno1,single_max_rowsum,factor1_factor2,HC,54.57367102071302,50.0293260922786,4.54434492843442,6675,6675,Matched 6675-protein source; isolate 5-vs-97 HELP Factor2
+trial3_eno1,single_max_rowsum,raw,S,28.822953718906238,28.822953718906238,0.0,6675,6675,Matched 6675-protein source; isolate 5-vs-97 HELP Factor2
+trial3_eno1,single_max_rowsum,factor1,S,68.9458182903915,68.9458182903915,0.0,6675,6675,Matched 6675-protein source; isolate 5-vs-97 HELP Factor2
+trial3_eno1,single_max_rowsum,factor1_factor2,S,85.70402696400318,89.53845188305296,-3.8344249190497806,6675,6675,Matched 6675-protein source; isolate 5-vs-97 HELP Factor2
+trial3_eno1,sum_two,raw,Internal-QC,63.87570968404149,63.87570968404149,0.0,6675,6675,Matched 6675-protein source; isolate 5-vs-97 HELP Factor2
+trial3_eno1,sum_two,factor1,Internal-QC,63.87570968404149,63.87570968404149,0.0,6675,6675,Matched 6675-protein source; isolate 5-vs-97 HELP Factor2
+trial3_eno1,sum_two,factor1_factor2,Internal-QC,63.87570968404149,63.87570968404149,0.0,6675,6675,Matched 6675-protein source; isolate 5-vs-97 HELP Factor2
+trial3_eno1,sum_two,raw,pooled QC,10.40637235928074,10.40637235928074,0.0,6675,6675,Matched 6675-protein source; isolate 5-vs-97 HELP Factor2
+trial3_eno1,sum_two,factor1,pooled QC,10.40637235928074,10.40637235928074,0.0,6675,6675,Matched 6675-protein source; isolate 5-vs-97 HELP Factor2
+trial3_eno1,sum_two,factor1_factor2,pooled QC,10.40637235928074,10.40637235928074,0.0,6675,6675,Matched 6675-protein source; isolate 5-vs-97 HELP Factor2
+trial3_eno1,sum_two,raw,HC,23.041024105698845,23.041024105698845,0.0,6675,6675,Matched 6675-protein source; isolate 5-vs-97 HELP Factor2
+trial3_eno1,sum_two,factor1,HC,49.01067295725153,49.01067295725153,0.0,6675,6675,Matched 6675-protein source; isolate 5-vs-97 HELP Factor2
+trial3_eno1,sum_two,factor1_factor2,HC,54.55394505834495,49.95874056192257,4.595204496422383,6675,6675,Matched 6675-protein source; isolate 5-vs-97 HELP Factor2
+trial3_eno1,sum_two,raw,S,28.822953718906238,28.822953718906238,0.0,6675,6675,Matched 6675-protein source; isolate 5-vs-97 HELP Factor2
+trial3_eno1,sum_two,factor1,S,68.60083990478503,68.60083990478503,0.0,6675,6675,Matched 6675-protein source; isolate 5-vs-97 HELP Factor2
+trial3_eno1,sum_two,factor1_factor2,S,85.50883389955351,89.44666738443773,-3.937833484884223,6675,6675,Matched 6675-protein source; isolate 5-vs-97 HELP Factor2

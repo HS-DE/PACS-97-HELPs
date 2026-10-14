@@ -1,0 +1,14 @@
+{
+  "original_pg_matrix": "pg_matrix.tsv",
+  "input_protein_rows": 6675,
+  "output_protein_rows": 6675,
+  "input_sample_columns": 75,
+  "retained_sample_columns": 75,
+  "removed_sample_columns": [],
+  "groups": {
+    "Internal-QC": 6,
+    "pooled QC": 15,
+    "HC": 27,
+    "S": 27
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "archive_previous_results": "results_v4",
+  "selected_HELP_sequences": [
+    "FSVVYAK",
+    "STGSWSTLK",
+    "VTGWGNLK",
+    "VVEESELAR",
+    "VYFAGFPR"
+  ],
+  "selected_count": 5,
+  "original_HELP_count": 97,
+  "sample_count": 75,
+  "protein_rows": 6675,
+  "valid_peptide_count_distribution": {
+    "5": 75
+  },
+  "input_sha256": {
+    "pg_matrix.tsv": "112d59739481b2fbf1d5252d0fc754c4a4494af60c77ff050af153fe423012be",
+    "HELP": "5523ffca836fd7244610322f781084619541482835f108a92cdb350a6e3a4e53",
+    "yeast_peptides": "4813ebd8387ee704e55a2c9b2ae5ed8cebd86d3e3db8c4792d320d0e3aaccee8",
+    "EN01.xlsx": "08122d5a044689a7863cb85768d96797566d976a76925ecd3a71bdedcef09c45"
+  },
+  "methods": [
+    "trial1a",
+    "trial1b",
+    "trial2_peptide",
+    "trial3_eno1"
+  ],
+  "other_parameters_unchanged": true,
+  "description": "Trial1A/1B: raw L/H median. Trial2/3: log2 L/H median.",
+  "comparison_has_protein_set_change": true
+}
