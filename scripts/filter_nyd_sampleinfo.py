@@ -81,7 +81,7 @@ def main():
     risky=["mergeCells","autoFilter","tableParts","conditionalFormatting",
            "dataValidations","hyperlinks","drawing","legacyDrawing","rowBreaks"]
     if any(root.find(NS+x) is not None for x in risky):
-        raise ValueError("Workbook contains row-dependent objects requiring separate handling")
+        raise ValueError("Workbook contains row-dependent objects requiring separate handling: "+repr([x for x in risky if root.find(NS+x) is not None]))
     expected=[r for _,r in records if r.get("D") in allowed or r.get("D")=="文库编号"]
     nextrow=0
     for row in list(data.findall(NS+"row")):
