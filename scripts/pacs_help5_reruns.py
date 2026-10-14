@@ -5,7 +5,7 @@ Original 97-HELP workbooks and historic scripts are left untouched. This
 orchestrator patches ONLY the HELP reader for the previously implemented
 methods; each method retains its exact original formula and QC treatment.
 
-Reruns: Trial 1A, Trial 1B, Trial 2 stepwise yeast-peptide a/b, and
+Reruns: QC-safe HELP-only division, Trial 2 yeast-peptide a/b, and
 the two yeast-protein EN01 strategies. Input pg_matrix.tsv is already
 metadata-filtered with both yeast protein rows removed (6675 proteins).
 """
@@ -21,14 +21,14 @@ from xml.etree import ElementTree as ET
 import numpy as np
 import pandas as pd
 
-import pacs_trial1 as t1
+import pacs_common as common
 import pacs_trial1b as t1b
 import pacs_trial2 as t2
 import pacs_trial2_stepwise as t2step
 from filter_samples import readbook, tab
 from yeast_protein_qc import GROUPS, metadata
 
-ROOT = t1.ROOT
+ROOT = common.ROOT
 OUT = ROOT / "results"
 HELP = ROOT / "LH_ratio_tables_2026.10.13—ALL-HELP.xlsx"
 CHOSEN = (
@@ -38,7 +38,7 @@ CHOSEN = (
     "VVEESELAR",
     "VYFAGFPR",
 )
-METHODS = ("trial1a", "trial1b", "trial2_peptide", "trial3_eno1")
+METHODS = ("trial1b", "trial2_peptide", "trial3_eno1")
 NS = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
 help_cache = None
 
@@ -192,7 +192,7 @@ def ensure_expected_preset():
     # Both source row and sample count are checked before any run.
     with (ROOT / "pg_matrix.tsv").open("r", encoding="utf-8-sig") as f:
         header = f.readline().rstrip("\r\n").split("\t")
-        if len(header) != 80 or header[:5] != t1.ANN:
+        if len(header) != 80 or header[:5] != common.ANN:
             raise ValueError("pg_matrix.tsv must have 5 annotations and 75 samples")
         if set(header[5:]) != set(help_cache["labels"]):
             raise ValueError("Protein matrix sample columns != metadata")
@@ -203,16 +203,6 @@ def ensure_expected_preset():
             count += 1
     if count != 6675:
         raise ValueError(f"Expected 6675 endogenous protein rows, got {count}")
-
-
-def run_1a():
-    t1.OUT = OUT / "trial1a"
-    t1.FIG = t1.OUT / "figures"
-    t1.HELP = HELP
-    t1.load_ratio = five_raw_median
-    print("=== RUN 1A: raw L/H ratio median, correct all groups ===", flush=True)
-    t1.main()
-    update_legacy_readme(t1.OUT / "README.md", "Trial 1A")
 
 
 def run_1b():
@@ -304,13 +294,12 @@ def validate_main_outputs():
                         help_cache["log2_medians"][r["sample_id"]])
             if abs(float(r["candidate_factor2"]) - expected) > 1e-10:
                 raise AssertionError("HELP Factor2 mismatch from exactly-five computation")
-    for name in ("trial1a", "trial1b"):
-        fs = pd.read_csv(OUT / name / "normalization_factors.csv")
-        if fs.n_valid_HELP_ratios.min() < 1 or fs.n_valid_HELP_ratios.max() > 5:
-            raise AssertionError(f"Incorrect five HELP count in {name}")
-        for _, r in fs.iterrows():
-            if abs(float(r["sample_mR"]) - help_cache["raw_medians"][r["sample_id"]]) > 1e-9:
-                raise AssertionError(f"Incorrect five HELP raw median in {name}")
+    fs = pd.read_csv(OUT / "trial1b" / "normalization_factors.csv")
+    if fs.n_valid_HELP_ratios.min() < 1 or fs.n_valid_HELP_ratios.max() > 5:
+        raise AssertionError("Unexpected selected HELP count in HELP-only correction")
+    for _, r in fs.iterrows():
+        if abs(float(r["sample_mR"]) - help_cache["raw_medians"][r["sample_id"]]) > 1e-9:
+            raise AssertionError("Unexpected selected HELP raw median in HELP-only correction")
 
 
 def summary_report(comparison):
@@ -322,7 +311,7 @@ def summary_report(comparison):
         "# PACS five-HELP reruns — same existing methods, only HELP set reduced", "",
         f"Previous results/ archived intact as **{archive}/**; all previous results_vN/ retained.",
         "The five peptides were selected explicitly by the user, not algorithmically optimized on these results.",
-        "This is a controlled re-run of the existing four types of experiments,",
+        "This is a controlled re-run of the existing three types of experiments,",
         "NOT a new batch-correction model or batch-effect audit.", "",
         "## Exactly five HELP sequences, all from ratio_LH sheet", "",
         *[f"{i}. {peptide}" for i, peptide in enumerate(CHOSEN, 1)],
@@ -341,16 +330,15 @@ def summary_report(comparison):
         f"- Yeast peptide source, unchanged: sha256 {sha256(ROOT / 'sample-QC-InternalQC-HELP_yeast.xlsx')}.",
         f"- Yeast protein source, unchanged: sha256 {sha256(ROOT / 'EN01.xlsx')}.",
         "- Metadata: 75 samples, HC=27, S=27, Internal-QC=6, pooled QC=15.", "",
-        "## Four historical algorithms re-executed", "",
+        "## Three retained algorithms re-executed", "",
         "| Folder | Exact inherited procedure | QC treatment |",
         "| --- | --- | --- |",
-        "| [trial1a](trial1a/README.md) | median(raw L/H), pooled-QC ref; divide protein by sample/ref factor; includes multiplied-direction sensitivity | All groups corrected, including QC |",
-        "| [trial1b](trial1b/README.md) | Same as 1A, two PCA views | Internal-QC unchanged, pooled QC corrected |",
+        "| [trial1b](trial1b/README.md) | HELP-only median(raw L/H), pooled-QC reference; two PCA views | Internal-QC unchanged, pooled QC corrected |",
         "| [trial2_peptide](trial2_peptide/README.md) | Yeast peptide Factor1 methods a/b (unchanged) + median(log2 HELP L/H) Factor2; Raw/F1/F1+F2 | Both QC groups unchanged |",
         "| [trial3_eno1](trial3_eno1/README.md) | EN01 protein Factor1: higher row sum vs linear sum of both (unchanged) + median(log2 HELP L/H) Factor2 | Both QC groups unchanged |",
         "",
-        "Do not equate raw-ratio medians used in Trial 1A/1B with median(log2 ratio)",
-        "used in Trial2/3; the old procedures explicitly differed in this respect.", "",
+        "HELP-only correction uses median(raw L/H), whereas two-step Trial2/3",
+        "methods use median(log2 L/H); these are distinct calculations.", "",
         "## Trial 2 and EN01 median protein CV (%)", "",
         "CV on linear protein intensities, HC/S include biological variation;",
         "unchanged QC CV in Trial2/3 cannot independently validate normalization.", "",
@@ -406,7 +394,7 @@ def summary_report(comparison):
         },
         "methods": list(METHODS),
         "other_parameters_unchanged": True,
-        "description": "Trial1A/1B: raw L/H median. Trial2/3: log2 L/H median.",
+        "description": "QC-safe HELP-only: raw L/H median. Trial2/3: log2 L/H median.",
         "comparison_has_protein_set_change": True,
     }
     (OUT / "run_manifest.json").write_text(
@@ -425,14 +413,13 @@ def main():
     print("Valid selected HELP counts:", help_cache["counts"], flush=True)
     print("HELP pooled-QC reference raw/log2:",
           help_cache["raw_ref"], help_cache["log2_ref"], flush=True)
-    run_1a()
     run_1b()
     run_2()
     run_3()
     validate_main_outputs()
     comparison = read_historical_comparison()
     summary_report(comparison)
-    print("PASS: complete five-HELP reruns, 1A 1B Trial2 peptide and Trial3 ENO1",
+    print("PASS: complete five-HELP reruns, HELP-only Trial2 peptide and Trial3 ENO1",
           "archive =", os.environ.get("PACS_RESULTS_ARCHIVE", "unknown"), flush=True)
 
 
