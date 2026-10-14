@@ -1,10 +1,5 @@
 name: PACS Trial 2 stepwise new matrix
 on:
-  push:
-    branches: [main]
-    paths:
-      - scripts/pacs_trial2_stepwise.py
-      - .github/workflows/pacs-trial2-stepwise.yml
   workflow_dispatch:
 permissions:
   contents: write
