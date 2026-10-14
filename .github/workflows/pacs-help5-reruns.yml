@@ -1,0 +1,155 @@
+name: PACS controlled reruns with five HELP peptides
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/pacs_help5_reruns.py
+      - .github/workflows/pacs-help5-reruns.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: pacs-results-main
+  cancel-in-progress: false
+jobs:
+  rerun-four-historical-methods:
+    runs-on: ubuntu-latest
+    timeout-minutes: 95
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install original numerical and plotting dependencies
+        run: python -m pip install numpy pandas matplotlib scikit-learn
+      - name: Archive existing results under the next unused version
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f results/README.md
+          test -f "LH_ratio_tables_2026.10.13—ALL-HELP.xlsx"
+          test -f "EN01.xlsx"
+          max_version=0
+          for folder in results_v*; do
+            if [[ -d "$folder" && "$folder" =~ ^results_v([0-9]+)$ ]]; then
+              version="$(echo "$folder" | sed 's/^results_v//')"
+              if ((version>max_version)); then max_version=$version; fi
+            fi
+          done
+          archive="results_v$((max_version+1))"
+          if [[ -e "$archive" ]]; then
+            echo "Version already exists: $archive" >&2
+            exit 1
+          fi
+          git mv results "$archive"
+          mkdir results
+          echo "PACS_RESULTS_ARCHIVE=$archive" >> "$GITHUB_ENV"
+          test -f "$archive/README.md"
+          echo "Preserved previous results as: $archive"
+      - name: Run 5-HELP variants with unchanged historical algorithms
+        run: |
+          OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 \
+            python scripts/pacs_help5_reruns.py
+      - name: Cross-check all methods, all five ratio inputs, figures and QC invariance
+        run: |
+          python - <<'PY'
+          import math
+          import sys
+          from pathlib import Path
+          import numpy as np
+          import pandas as pd
+          sys.path.insert(0,"scripts")
+          from filter_samples import readbook,tab
+          from yeast_protein_qc import metadata
+          base=Path("results")
+          assert (base/"README.md").exists()
+          assert (base/"run_manifest.json").exists()
+          original=pd.read_csv("pg_matrix.tsv",sep="\t",dtype=str,keep_default_na=False)
+          assert len(original)==6675 and len(original.columns)==80
+          selected=("FSVVYAK","STGSWSTLK","VTGWGNLK","VVEESELAR","VYFAGFPR")
+          ss,books=readbook(Path("LH_ratio_tables_2026.10.13—ALL-HELP.xlsx"))
+          rows=tab(books[2],ss)
+          lookup={r["A"]:r for r in rows[1:]}
+          assert len(lookup)==97 and all(s in lookup for s in selected)
+          headers={v:k for k,v in rows[0].items() if k!="A"}
+          help=pd.read_csv(base/"five_help_sample_diagnostics.csv")
+          assert len(help)==75 and set(help.sample_id)==set(metadata())
+          assert help.n_valid_selected_HELP_ratios.between(1,5).all()
+          for _,row in help.iterrows():
+              sid=row.sample_id
+              values=[]
+              for pep in selected:
+                  try:
+                      x=float(lookup[pep].get(headers[sid],""))
+                  except (ValueError,TypeError):
+                      x=float("nan")
+                  if np.isfinite(x) and x>0: values.append(x)
+              assert len(values)==row.n_valid_selected_HELP_ratios
+              assert np.isclose(row.raw_ratio_median,np.median(values),atol=1e-12)
+              assert np.isclose(row.log2_ratio_median,np.median(np.log2(values)),atol=1e-12)
+          for trial in ("trial1a","trial1b"):
+              p=base/trial
+              assert (p/"README.md").exists()
+              assert (p/"normalization_factors.csv").exists()
+              assert (p/"pg_matrix_corrected.tsv").exists()
+              corrected=pd.read_csv(p/"pg_matrix_corrected.tsv",sep="\t",dtype=str,keep_default_na=False)
+              assert corrected.shape==original.shape
+              factors=pd.read_csv(p/"normalization_factors.csv")
+              assert len(factors)==75 and factors.n_valid_HELP_ratios.between(1,5).all()
+              assert np.allclose(factors.sample_mR.to_numpy(), factors.sample_id.map(help.set_index("sample_id").raw_ratio_median))
+              if trial=="trial1b":
+                  for sid in help.loc[help.group=="Internal-QC","sample_id"]:
+                      assert original[sid].equals(corrected[sid]),f"Internal-QC unexpectedly modified {sid}"
+          for trial,methods in (
+              ("trial2_peptide",("a","b")),
+              ("trial3_eno1",("single_max_rowsum","sum_two"))
+          ):
+              p=base/trial
+              assert (p/"README.md").exists()
+              assert (p/"sample_factors.csv").exists()
+              f=pd.read_csv(p/"sample_factors.csv")
+              assert len(f)==75 and f.n_valid_HELP_ratios.between(1,5).all()
+              assert np.allclose(
+                  f.candidate_factor2.to_numpy(),
+                  f.sample_id.map(
+                      (help.loc[help.group=="pooled QC","log2_ratio_median"].median()
+                       - help.set_index("sample_id").log2_ratio_median)
+                  ).to_numpy(),atol=1e-10)
+              cv=pd.read_csv(p/"all_stage_cv_summary.csv")
+              assert len(cv)==24
+              assert len(list(p.rglob("*.png")))==24
+              assert not list(p.rglob("*.svg"))
+              for group in ("Internal-QC","pooled QC"):
+                  v=cv[cv.group==group]
+                  assert np.allclose(v.median_cv_pct,
+                                     v[v.stage=="raw"].median_cv_pct.iloc[0],atol=1e-11)
+              for method in methods:
+                  folder=p/("method_"+method)
+                  for stage in ("factor1","factor1_factor2"):
+                      linear=folder/("pg_matrix_"+stage+"_linear.tsv")
+                      log=folder/("pg_matrix_"+stage+"_log2.tsv")
+                      assert linear.is_file() and log.is_file()
+                      mat=pd.read_csv(linear,sep="\t",dtype=str,keep_default_na=False)
+                      assert mat.shape==original.shape
+                      for sid in help.loc[help.group.isin(["Internal-QC","pooled QC"]),"sample_id"]:
+                          assert original[sid].equals(mat[sid]),(trial,method,stage,sid)
+                  for view in ("all_groups","study_only"):
+                      assert len(list((folder/"figures"/view).glob("*.png")))==6
+          comparison=pd.read_csv(base/"five_vs_97_historical_cv.csv")
+          assert len(comparison)==48
+          assert len(comparison[comparison.trial=="trial3_eno1"])==24
+          print("PASS: all four methods, exactly five HELP peptides, 6675 proteins, 75 samples, unchanged specified QC and complete figures")
+          PY
+      - name: Commit new results and untouched previous version
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A -- results "$PACS_RESULTS_ARCHIVE"
+          if ! git diff --cached --quiet; then
+            git commit -m "Archive old results as $PACS_RESULTS_ARCHIVE and publish all five-HELP reruns [skip ci]"
+            git push
+          fi
