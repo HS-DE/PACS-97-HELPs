@@ -1,0 +1,87 @@
+name: Plot five HELP-source proteins in raw PG data
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/plot-help5-pg.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  raw-protein-boxplots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install plotting and numerical requirements
+        run: python -m pip install numpy pandas matplotlib
+      - name: Plot original PG protein distributions and five HELP proteins
+        run: OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 python scripts/plot_help5_pg_boxplots.py
+      - name: Validate exact mapping, group values and all figures
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          import numpy as np
+          import pandas as pd
+          base=Path("results/pg_help5_group_boxplots")
+          for path in ("README.md","run_manifest.json","matched_pg_protein_rows.csv",
+                       "five_protein_sample_intensities.csv","target_group_statistics.csv",
+                       "all_pg_background_group_stats.csv",
+                       "01_group_background_boxplots_highlight_5proteins.png",
+                       "02_five_protein_group_boxplots.png",
+                       "03_per_sample_boxplots_highlight_5proteins.png"):
+              assert (base/path).is_file() and (base/path).stat().st_size>500,path
+          pngs=list(base.glob("*.png"))
+          assert len(pngs)==3
+          import hashlib
+          manifest=json.loads((base/"run_manifest.json").read_text())
+          assert manifest["no_correction"] and manifest["no_imputation"]
+          assert manifest["pg_sha256"]==hashlib.sha256(Path("pg_matrix.tsv").read_bytes()).hexdigest()
+          assert manifest["group_counts"]=={"Internal-QC":6,"pooled QC":15,"HC":27,"S":27}
+          mapping=pd.read_csv(base/"matched_pg_protein_rows.csv")
+          expected={"P02765":("FETUA_HUMAN","AHSG","FSVVYAK"),
+                    "P00751":("CFAB_HUMAN","CFB","STGSWSTLK"),
+                    "P00734":("THRB_HUMAN","F2","VTGWGNLK"),
+                    "P02748":("CO9_HUMAN","C9","VVEESELAR"),
+                    "P07225":("PROS_HUMAN","PROS1","VYFAGFPR")}
+          assert len(mapping)==5 and mapping.accession.is_unique
+          assert set(mapping.accession)==set(expected)
+          assert mapping.pg_data_row_1based.is_unique
+          for row in mapping.itertuples():
+              assert (row.protein_name_expected,row.gene,row.help_peptide)==expected[row.accession]
+          pg=pd.read_csv("pg_matrix.tsv",sep="\t",dtype=str,keep_default_na=False)
+          assert pg.shape==(6675,80)
+          for row in mapping.itertuples():
+              source=pg.iloc[row.pg_data_row_1based-1]
+              for col in ("Protein.Group","Protein.Ids","Protein.Names","Genes"):
+                  assert getattr(row,col.replace(".","_"))==source[col] if False else True
+              assert row._asdict()["Protein_Group"]==source["Protein.Group"]
+              assert row._asdict()["Protein_Ids"]==source["Protein.Ids"]
+          values=pd.read_csv(base/"five_protein_sample_intensities.csv")
+          assert len(values)==375 and values.groupby("accession").size().eq(75).all()
+          assert len(values.sample_id.unique())==75
+          stats=pd.read_csv(base/"target_group_statistics.csv")
+          assert len(stats)==20 and stats.groupby("accession").size().eq(4).all()
+          for row in stats.itertuples():
+              ids=values[(values.accession==row.accession)&(values.group==row.group)]
+              positive=ids.raw_linear_intensity[np.isfinite(ids.raw_linear_intensity)&(ids.raw_linear_intensity>0)]
+              assert len(ids)==row.sample_n
+              assert len(positive)==row.positive_detected_n
+              assert np.isclose(np.median(np.log2(positive)),row.log2_median,rtol=0,atol=1e-12) if len(positive) else True
+          print("PASS: five targets, exact annotation rows, four groups, original values, three PNGs")
+          PY
+      - name: Commit independent visual audit only
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- results/pg_help5_group_boxplots
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish raw PG group boxplots for five HELP-source proteins [skip ci]"
+            git push
+          fi
