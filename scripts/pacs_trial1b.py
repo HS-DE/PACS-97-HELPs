@@ -9,7 +9,7 @@ Internal-QC (LM) intensities remain EXACTLY as in the input pg_matrix.tsv.
 
 Two independent plotting views: all four groups and study-only HC/S.
 Only PNG plots are saved. No imputation is used for CV, and PCA-only
-imputation is documented. Original files and Trial 1A are left untouched.
+imputation is documented. Original source files remain unchanged.
 """
 import math
 from pathlib import Path
@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 from sklearn.decomposition import PCA
 
-from pacs_trial1 import (
+from pacs_common import (
     ANN, COLORS, GROUPS, PG, ROOT, cv_by_feature, finite_positive, load_ratio
 )
 from yeast_protein_qc import metadata
@@ -45,7 +45,7 @@ def save(fig, view, stem):
 
 
 def factor_table(labels, samples):
-    medians, counts = load_ratio(labels)  # same validated 97-HELP reader as Trial 1A
+    medians, counts = load_ratio(labels)  # validated HELP reader; smaller sequence sets can override it
     qcs = [medians[s] for s in samples if labels[s] == "pooled QC"]
     if len(qcs) != 15:
         raise ValueError("Expected exactly 15 pooled-QC samples")
@@ -297,8 +297,8 @@ def plot_cv(cv_arrays, summary, view, chosen):
 def write_report(ref, factors, summary, pca_summary, n_proteins):
     lines = [
         "# PACS Trial 1B - Internal-QC remains unchanged", "",
-        "This exploratory test uses the **same division direction** as Trial 1A,",
-        "but does NOT correct any Internal-QC (LM) sample. Trial 1A and source files are unchanged.",
+        "This exploratory correction uses a pooled-QC-referenced HELP factor,",
+        "without correcting any Internal-QC (LM) sample. Source files are unchanged.",
         "All generated figures are **PNG only; no SVG**.", "",
         "## Definition", "",
         "- For each of the 75 samples, sample_mR = median of valid positive raw L/H ratios for 97 HELP peptides.",
@@ -310,7 +310,7 @@ def write_report(ref, factors, summary, pca_summary, n_proteins):
         f"- ref_mR = **{ref:.12g}**; corrected matrix includes {n_proteins} protein-group rows × 75 samples.",
         "- n: Internal-QC 6; pooled QC 15; HC 27; S 27.",
         "- The intentional LM_2_1/LM_2_2 and LM_3_2/LM_3_3 duplicates remain as supplied.",
-        "- No original pg_matrix.tsv, HELP workbook, metadata or Trial 1A result was edited.",
+        "- Original pg_matrix.tsv, HELP workbook and metadata were not edited.",
         "", "## Two visualization versions", "",
         "**All groups**: Internal-QC, pooled QC, HC and S (75 samples).",
         "The LM panel/points are identical before and after correction.",
