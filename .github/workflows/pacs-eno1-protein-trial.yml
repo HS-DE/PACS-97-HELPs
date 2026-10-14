@@ -1,10 +1,5 @@
 name: PACS yeast protein Trial 3 (ENO1 variants)
 on:
-  push:
-    branches: [main]
-    paths:
-      - scripts/pacs_eno1_protein_trial.py
-      - .github/workflows/pacs-eno1-protein-trial.yml
   workflow_dispatch:
 permissions:
   contents: write
