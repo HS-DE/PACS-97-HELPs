@@ -1,10 +1,5 @@
 name: PACS controlled reruns with five HELP peptides
 on:
-  push:
-    branches: [main]
-    paths:
-      - scripts/pacs_help5_reruns.py
-      - .github/workflows/pacs-help5-reruns.yml
   workflow_dispatch:
 permissions:
   contents: write
