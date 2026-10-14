@@ -7,7 +7,7 @@ concurrency:
   group: pacs-results-main
   cancel-in-progress: false
 jobs:
-  rerun-four-historical-methods:
+  rerun-three-retained-methods:
     runs-on: ubuntu-latest
     timeout-minutes: 95
     steps:
@@ -61,6 +61,7 @@ jobs:
           base=Path("results")
           assert (base/"README.md").exists()
           assert (base/"run_manifest.json").exists()
+          assert not (base/"trial1a").exists()
           original=pd.read_csv("pg_matrix.tsv",sep="\t",dtype=str,keep_default_na=False)
           assert len(original)==6675 and len(original.columns)==80
           selected=("FSVVYAK","STGSWSTLK","VTGWGNLK","VVEESELAR","VYFAGFPR")
@@ -84,7 +85,7 @@ jobs:
               assert len(values)==row.n_valid_selected_HELP_ratios
               assert np.isclose(row.raw_ratio_median,np.median(values),atol=1e-12)
               assert np.isclose(row.log2_ratio_median,np.median(np.log2(values)),atol=1e-12)
-          for trial in ("trial1a","trial1b"):
+          for trial in ("trial1b",):
               p=base/trial
               assert (p/"README.md").exists()
               assert (p/"normalization_factors.csv").exists()
@@ -94,9 +95,8 @@ jobs:
               factors=pd.read_csv(p/"normalization_factors.csv")
               assert len(factors)==75 and factors.n_valid_HELP_ratios.between(1,5).all()
               assert np.allclose(factors.sample_mR.to_numpy(), factors.sample_id.map(help.set_index("sample_id").raw_ratio_median))
-              if trial=="trial1b":
-                  for sid in help.loc[help.group=="Internal-QC","sample_id"]:
-                      assert original[sid].equals(corrected[sid]),f"Internal-QC unexpectedly modified {sid}"
+              for sid in help.loc[help.group=="Internal-QC","sample_id"]:
+                  assert original[sid].equals(corrected[sid]),f"Internal-QC unexpectedly modified {sid}"
           for trial,methods in (
               ("trial2_peptide",("a","b")),
               ("trial3_eno1",("single_max_rowsum","sum_two"))
@@ -135,7 +135,7 @@ jobs:
           comparison=pd.read_csv(base/"five_vs_97_historical_cv.csv")
           assert len(comparison)==48
           assert len(comparison[comparison.trial=="trial3_eno1"])==24
-          print("PASS: all four methods, exactly five HELP peptides, 6675 proteins, 75 samples, unchanged specified QC and complete figures")
+          print("PASS: three retained methods, exactly five HELP peptides, 6675 proteins, 75 samples, unchanged specified QC and complete figures")
           PY
       - name: Commit new results and untouched previous version
         shell: bash
