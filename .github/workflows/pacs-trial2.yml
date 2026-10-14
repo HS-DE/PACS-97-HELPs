@@ -1,18 +1,5 @@
 name: PACS Trial 2 - yeast and HELP log2 factors
 on:
-  push:
-    branches: [main]
-    paths:
-      - scripts/pacs_trial2.py
-      - scripts/pacs_trial1.py
-      - scripts/filter_samples.py
-      - scripts/yeast_protein_qc.py
-      - all_sample_metadata.xlsx
-      - all_QC_metadata.xlsx
-      - sample-QC-InternalQC-HELP_yeast.xlsx
-      - LH_ratio_tables_2026.9.22—ALL-HELP.xlsx
-      - pg_matrix.tsv
-      - .github/workflows/pacs-trial2.yml
   workflow_dispatch:
 permissions:
   contents: write
