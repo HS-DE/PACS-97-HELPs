@@ -2,7 +2,7 @@
 
 Previous results/ archived intact as **results_v4/**; all previous results_vN/ retained.
 The five peptides were selected explicitly by the user, not algorithmically optimized on these results.
-This is a controlled re-run of the existing four types of experiments,
+This is a controlled re-run of the existing three types of experiments,
 NOT a new batch-correction model or batch-effect audit.
 
 ## Exactly five HELP sequences, all from ratio_LH sheet
@@ -30,17 +30,16 @@ All five-HELP log2-ratio pooled-QC reference: -5.75303556026.
 - Yeast protein source, unchanged: sha256 08122d5a044689a7863cb85768d96797566d976a76925ecd3a71bdedcef09c45.
 - Metadata: 75 samples, HC=27, S=27, Internal-QC=6, pooled QC=15.
 
-## Four historical algorithms re-executed
+## Three retained algorithms re-executed
 
 | Folder | Exact inherited procedure | QC treatment |
 | --- | --- | --- |
-| [trial1a](trial1a/README.md) | median(raw L/H), pooled-QC ref; divide protein by sample/ref factor; includes multiplied-direction sensitivity | All groups corrected, including QC |
-| [trial1b](trial1b/README.md) | Same as 1A, two PCA views | Internal-QC unchanged, pooled QC corrected |
+| [trial1b](trial1b/README.md) | HELP-only median(raw L/H), pooled-QC reference; two PCA views | Internal-QC unchanged, pooled QC corrected |
 | [trial2_peptide](trial2_peptide/README.md) | Yeast peptide Factor1 methods a/b (unchanged) + median(log2 HELP L/H) Factor2; Raw/F1/F1+F2 | Both QC groups unchanged |
 | [trial3_eno1](trial3_eno1/README.md) | EN01 protein Factor1: higher row sum vs linear sum of both (unchanged) + median(log2 HELP L/H) Factor2 | Both QC groups unchanged |
 
-Do not equate raw-ratio medians used in Trial 1A/1B with median(log2 ratio)
-used in Trial2/3; the old procedures explicitly differed in this respect.
+HELP-only correction uses median(raw L/H), whereas two-step Trial2/3
+methods use median(log2 L/H); these are distinct calculations.
 
 ## Trial 2 and EN01 median protein CV (%)
 
