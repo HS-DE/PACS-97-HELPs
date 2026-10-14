@@ -1,0 +1,62 @@
+# NYD sampleinfo metadata filtering
+
+Based on NYD_pg_matrix.tsv sample columns 6 onward.
+Matching column in sampleinfo: D (文库编号), not E (样本编号).
+
+- Matrix sample IDs: 16
+- Original metadata data rows: 40
+- Retained metadata data rows: 16
+- Removed metadata data rows: 24
+- The 18 metadata columns and retained cell data/order were preserved.
+- NYD_pg_matrix.tsv and NYD_pr_matrix.tsv were not changed.
+
+## Retained library identifiers
+
+- MAP26092326A01
+- MAP26092326B01
+- MAP26092326C01
+- MAP26092326D01
+- MAP26092326E01
+- MAP26092326F01
+- MAP26092326G01
+- MAP26092326H01
+- MAP26092326A03
+- MAP26092326B03
+- MAP26092326C03
+- MAP26092326D03
+- MAP26092326E03
+- MAP26092326F03
+- MAP26092326G03
+- MAP26092326H03
+
+## Removed library identifiers
+
+- MAP26092315A08
+- MAP26092315B08
+- MAP26092315C08
+- MAP26092315D08
+- MAP26092315E08
+- MAP26092315F08
+- MAP26092315G08
+- MAP26092315H08
+- MAP26092315A12
+- MAP26092315B12
+- MAP26092315C12
+- MAP26092315D12
+- MAP26092315E12
+- MAP26092315F12
+- MAP26092315G12
+- MAP26092315H12
+- MAP26092326A02
+- MAP26092326B02
+- MAP26092326C02
+- MAP26092326D02
+- MAP26092326E02
+- MAP26092326F02
+- MAP26092326G02
+- MAP26092326H02
+
+## Input/output SHA-256
+
+- Original: 2934a7676a1d96b04c0a0857fc5d3e528e53c2a8ce2ae4840f77ce90b1554e4c
+- Filtered: e4edfb270609c167de11a3eea9733b307acc1f4747fbe131902153b86fd5356b
