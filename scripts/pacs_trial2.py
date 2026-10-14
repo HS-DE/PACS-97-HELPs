@@ -30,7 +30,7 @@ import pandas as pd
 from sklearn.decomposition import PCA
 
 from filter_samples import ci, readbook, tab
-from pacs_trial1 import ANN, PG, ROOT, HELP, cv_by_feature, finite_positive
+from pacs_common import ANN, PG, ROOT, HELP, cv_by_feature, finite_positive
 from yeast_protein_qc import COLORS, GROUPS, metadata
 
 OUT = ROOT / "results" / "pacs_trial2"
@@ -466,7 +466,7 @@ def write_report(yea, yeb, ref_a, ref_b, constant, ref_help, results):
         "This repository experiment is exploratory. It does NOT select a final PACS method.",
         "Only study samples (HC/S; 54) are corrected. All 6 Internal-QC (LM) and",
         "15 pooled QC intensities are unchanged across all four correction scenarios.",
-        "Trial 1A / 1B and all original input files remain untouched.", "",
+        "All original input files and previously published QC-safe results remain untouched.", "",
         "## Design and formulas (log2 scale)", "",
         "Let y1_s = log2(AADALLLK intensity), y2_s = log2(VNQIGTLSESIK intensity).",
         "Both peptides are required to be finite and positive in all 54 study samples.",
