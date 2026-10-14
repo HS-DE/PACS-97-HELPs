@@ -1,0 +1,6 @@
+accession,protein_name_expected,gene,help_peptide,pg_data_row_1based,pg_tsv_line_1based,Protein.Group,Protein.Ids,Protein.Names,Genes,First.Protein.Description,protein_name_match,gene_name_match,positive_detected_75
+P02765,FETUA_HUMAN,AHSG,FSVVYAK,976,977,P02765,P02765,FETUA_HUMAN,AHSG,Alpha-2-HS-glycoprotein,True,True,75
+P00751,CFAB_HUMAN,CFB,STGSWSTLK,875,876,P00751,P00751;P00751-2,CFAB_HUMAN,CFB,Complement factor B,True,True,75
+P00734,THRB_HUMAN,F2,VTGWGNLK,864,865,P00734,P00734,THRB_HUMAN,F2,Prothrombin,True,True,75
+P02748,CO9_HUMAN,C9,VVEESELAR,969,970,P02748,P02748,CO9_HUMAN,C9,Complement component C9,True,True,75
+P07225,PROS_HUMAN,PROS1,VYFAGFPR,1121,1122,P07225,P07225,PROS_HUMAN,PROS1,Vitamin K-dependent protein S,True,True,75
