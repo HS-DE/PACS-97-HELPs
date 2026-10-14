@@ -3,8 +3,8 @@
 > **Five-HELP rerun — Trial 1B.** The historical procedure has been re-executed with exactly the following five HELP sequences: FSVVYAK, STGSWSTLK, VTGWGNLK, VVEESELAR, VYFAGFPR. The original 97-row workbook was not modified. Only the HELP ratio reader was replaced; all other algorithm choices and QC handling are inherited from the historical script. The protein source is the current 6675-row matrix.
 
 
-This exploratory test uses the **same division direction** as Trial 1A,
-but does NOT correct any Internal-QC (LM) sample. Trial 1A and source files are unchanged.
+This exploratory HELP-only correction uses a pooled-QC-referenced L/H ratio
+to scale pooled QC, HC and S. Internal-QC (LM) remains exactly unchanged.
 All generated figures are **PNG only; no SVG**.
 
 ## Definition
@@ -18,7 +18,7 @@ All generated figures are **PNG only; no SVG**.
 - ref_mR = **0.0185423054179**; corrected matrix includes 6675 protein-group rows × 75 samples.
 - n: Internal-QC 6; pooled QC 15; HC 27; S 27.
 - The intentional LM_2_1/LM_2_2 and LM_3_2/LM_3_3 duplicates remain as supplied.
-- No original pg_matrix.tsv, HELP workbook, metadata or Trial 1A result was edited.
+- Original pg_matrix.tsv, HELP workbook and metadata were not edited.
 
 ## Two visualization versions
 
