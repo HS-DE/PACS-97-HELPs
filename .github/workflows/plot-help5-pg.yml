@@ -57,12 +57,10 @@ jobs:
               assert (row.protein_name_expected,row.gene,row.help_peptide)==expected[row.accession]
           pg=pd.read_csv("pg_matrix.tsv",sep="\t",dtype=str,keep_default_na=False)
           assert pg.shape==(6675,80)
-          for row in mapping.itertuples():
-              source=pg.iloc[row.pg_data_row_1based-1]
+          for _,row in mapping.iterrows():
+              source=pg.iloc[int(row["pg_data_row_1based"])-1]
               for col in ("Protein.Group","Protein.Ids","Protein.Names","Genes"):
-                  assert getattr(row,col.replace(".","_"))==source[col] if False else True
-              assert row._asdict()["Protein_Group"]==source["Protein.Group"]
-              assert row._asdict()["Protein_Ids"]==source["Protein.Ids"]
+                  assert row[col]==source[col],(row["gene"],col)
           values=pd.read_csv(base/"five_protein_sample_intensities.csv")
           assert len(values)==375 and values.groupby("accession").size().eq(75).all()
           assert len(values.sample_id.unique())==75
