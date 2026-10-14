@@ -20,7 +20,10 @@ jobs:
         with:
           python-version: '3.12'
       - name: Extract shared utilities and remove rejected outputs from checkout
-        run: python scripts/retire_qc_invalid_method.py
+        run: |
+          python scripts/retire_qc_invalid_method.py
+          # The runner keeps ROOT from the moved common module.
+          sed -i 's/ROOT = t1.ROOT/ROOT = common.ROOT/' scripts/pacs_help5_reruns.py
       - name: Install required libraries to validate all remaining imports
         run: python -m pip install numpy pandas matplotlib scikit-learn
       - name: Validate retained scripts and source QC invariance
