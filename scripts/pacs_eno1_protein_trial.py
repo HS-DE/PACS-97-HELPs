@@ -30,7 +30,7 @@ import matplotlib.pyplot as plt
 
 import pacs_trial2_stepwise as base
 from filter_samples import readbook, tab
-from pacs_trial1 import ROOT, PG
+from pacs_common import ROOT, PG
 from yeast_protein_qc import GROUPS
 
 OUT = ROOT / "results"
