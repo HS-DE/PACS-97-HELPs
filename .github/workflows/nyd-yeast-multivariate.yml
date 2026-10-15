@@ -1,0 +1,108 @@
+name: NYD yeast peptide and protein multivariate diagnostics
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/nyd-yeast-multivariate.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  visualize-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install scientific analysis dependencies
+        run: python -m pip install numpy scipy scikit-learn matplotlib
+      - name: Render distinct peptide/protein PCA correlations and clusters
+        run: |
+          OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 \
+            python scripts/nyd_yeast_multivariate.py
+      - name: Verify mathematical definitions, data sources, sample IDs and all plots
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import csv, hashlib, json, math
+          from collections import Counter
+          import numpy as np
+          src=Path("NYD_data/40samples")
+          out=src/"YEAST_PCA_correlation_clustering"
+          m=json.loads((out/"run_manifest.json").read_text())
+          assert m["different_peptides_summed_together"] is False
+          assert m["sample_count"]==40
+          assert m["batch_counts"]=={"T001":16,"T002":8,"T003":8,"T004":8}
+          assert m["peptide_features"]==["AADALLLK","VNQIGTLSESIK"]
+          assert m["protein_features"]==["P00924"]
+          assert m["sample_Pearson_correlation_with_one_protein"]=="undefined"
+          assert m["pca_protein_only_one_component"] is True
+          assert len(m["figures"])==6
+          assert len(list(out.glob("*.png")))==6
+          for filename in m["figures"]:
+              assert (out/filename).stat().st_size>20000,filename
+          for f in ("YEAST.xlsx","NYD_sampleinfo2.xlsx"):
+              assert hashlib.sha256((src/f).read_bytes()).hexdigest()==m["source_sha256"][f]
+          def rd(path):
+              with path.open(encoding="utf-8-sig",newline="") as f:
+                  return list(csv.DictReader(f))
+          prepared=rd(src/"YEAST_batch_CV_results/yeast_per_sample_charge_sums.csv")
+          table=rd(out/"feature_matrix_40samples.csv")
+          scores=rd(out/"peptide_pca_scores.csv")
+          loads=rd(out/"peptide_pca_loadings.csv")
+          prot=rd(out/"protein_1D_pca_scores.csv")
+          corr=rd(out/"peptide_feature_pearson_by_batch.csv")
+          pc=rd(out/"peptide_sample_cluster_order.csv")
+          pr=rd(out/"protein_sample_cluster_order.csv")
+          distances=rd(out/"protein_sample_euclidean_distance_long.csv")
+          assert len(prepared)==40 and len(table)==40 and len(scores)==40
+          assert len(loads)==2 and len(prot)==40 and len(corr)==5
+          assert len(pc)==40 and len(pr)==40 and len(distances)==1600
+          assert all(row["PC2"]=="NOT_DEFINED_SINGLE_FEATURE" for row in prot)
+          original={r["sample_id"]:r for r in prepared}
+          assert {r["sample_id"] for r in table}==set(original)
+          for row in table:
+              p=original[row["sample_id"]]
+              assert row["batch"]==p["batch"]
+              assert math.isclose(2**float(row["AADALLLK_log2"]),float(p["AADALLLK_sum_linear"]),rel_tol=1e-11)
+              assert math.isclose(2**float(row["VNQIGTLSESIK_log2"]),float(p["VNQIGTLSESIK_sum_linear"]),rel_tol=1e-11)
+              assert math.isclose(2**float(row["P00924_protein_log2"]),float(p["P00924_protein_linear"]),rel_tol=1e-11)
+              assert math.isclose(float(p["AADALLLK_sum_linear"]),
+                      float(p["AADALLLK_z1"])+float(p["AADALLLK_z2"]),rel_tol=1e-12)
+              assert math.isclose(float(p["VNQIGTLSESIK_sum_linear"]),
+                      float(p["VNQIGTLSESIK_z2"])+float(p["VNQIGTLSESIK_z3"]),rel_tol=1e-12)
+          ordered=sorted(table,key=lambda r:r["sample_id"])
+          z=np.array([[float(r["AADALLLK_zscore_log2"]),float(r["VNQIGTLSESIK_zscore_log2"])] for r in ordered])
+          eigs=np.linalg.eigvalsh(np.cov(z,rowvar=False))[::-1]
+          ratios=eigs/eigs.sum()
+          assert np.allclose(ratios,m["pca_peptide_explained_variance_ratio"],atol=1e-10)
+          assert np.isclose(sum(m["pca_peptide_explained_variance_ratio"]),1.0)
+          for r in corr:
+              s=[x for x in ordered if r["group"]=="All samples" or x["batch"]==r["group"]]
+              xy=np.array([[float(x["AADALLLK_log2"]),float(x["VNQIGTLSESIK_log2"])] for x in s])
+              val=float(np.corrcoef(xy,rowvar=False)[0,1])
+              assert math.isclose(val,float(r["Pearson_r_AADALLLK_vs_VNQIGTLSESIK"]),rel_tol=1e-10,abs_tol=1e-10)
+              assert len(s)==int(r["n_samples"])
+          for table_order in (pc,pr):
+              assert len({r["sample_id"] for r in table_order})==40
+              assert {r["sample_id"] for r in table_order}==set(original)
+          assert not (out/"sample_pair_Pearson_protein.csv").exists()
+          # No observed sample pair Pearson correlation is estimable from a single feature.
+          assert (out/"README.md").read_text().count("undefined")>=2
+          print("PASS: source Excel matched, 2 distinct peptide columns, 1 protein, 6 PNG, PCA ratios and Pearson independently checked.")
+          PY
+      - name: Commit only independent multivariate results folder
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- NYD_data/40samples/YEAST_PCA_correlation_clustering
+          if ! git diff --cached --quiet; then
+            git commit -m "Add NYD yeast peptide/protein PCA correlation and clustering with single-feature limitations [skip ci]"
+            git push
+          fi
