@@ -1,0 +1,85 @@
+{
+  "input_sha256": {
+    "pg_matrix.tsv": "112d59739481b2fbf1d5252d0fc754c4a4494af60c77ff050af153fe423012be",
+    "LH_ratio_tables_2026.10.13—ALL-HELP.xlsx": "5523ffca836fd7244610322f781084619541482835f108a92cdb350a6e3a4e53",
+    "all_QC_metadata.xlsx": "5dc7ee9296a1ed6422e3d3e4390c36dac8da884727f4b276d3db54764c25177e",
+    "all_sample_metadata.xlsx": "86e90f10a3ae3a099f52baa77a422dc234322a134fe2235c09bccf071e6863fe"
+  },
+  "protein_rows": 6675,
+  "samples": 75,
+  "reference_peptides": [
+    "STGSWSTLK",
+    "VYFAGFPR"
+  ],
+  "reference_proteins": [
+    "P00751",
+    "P07225"
+  ],
+  "log2_conversion_before_all_medians": true,
+  "Light_Heavy_scale": "median of log2 source intensity / study median of per-sample log2 medians",
+  "factor2_scaled": "f2i1 / ratio_of_log2_medians",
+  "sample_scaling_medians_from_HC_S_only": 54,
+  "plate_reference_f1": "same as prior two_refs b, 5 pooled QC per Plate",
+  "correction_groups": {
+    "f1": [
+      "HC",
+      "S",
+      "pooled QC"
+    ],
+    "f2": [
+      "HC",
+      "S"
+    ],
+    "Internal-QC": []
+  },
+  "ab1": {
+    "variant": "ab1",
+    "factor1_plate_reference": {
+      "1": -5.528954832630816,
+      "2": -5.434023609539958,
+      "3": -5.541065009665779
+    },
+    "factor1_global_reference": -5.528954832630816,
+    "median_s_after_a_study_log2": -5.49114851010398,
+    "median_l_or_h_study_global_log2": 19.376715627357356,
+    "scale_min_54_study": 0.9574078981267915,
+    "scale_median_54_study": 1.0,
+    "scale_max_54_study": 1.0376034123812938,
+    "f2_unscaled_min": -0.6294021736869668,
+    "f2_unscaled_max": 0.834723472551409,
+    "f2_scaled_min": -0.6065922357006253,
+    "f2_scaled_max": 0.8718577256199581
+  },
+  "ab2": {
+    "variant": "ab2",
+    "factor1_plate_reference": {
+      "1": -5.528954832630816,
+      "2": -5.434023609539958,
+      "3": -5.541065009665779
+    },
+    "factor1_global_reference": -5.528954832630816,
+    "median_s_after_a_study_log2": -5.49114851010398,
+    "median_l_or_h_study_global_log2": 24.850343043396983,
+    "scale_min_54_study": 0.9962006427406502,
+    "scale_median_54_study": 1.0,
+    "scale_max_54_study": 1.0055376323777077,
+    "f2_unscaled_min": -0.6294021736869668,
+    "f2_unscaled_max": 0.834723472551409,
+    "f2_scaled_min": -0.6288500503163489,
+    "f2_scaled_max": 0.8338192183042762
+  },
+  "ratio_L_over_H_log2_consistency": [
+    {
+      "peptide": "STGSWSTLK",
+      "max_abs_difference_log2": 6.217248937900877e-15,
+      "median_abs_difference_log2": 1.7763568394002505e-15
+    },
+    {
+      "peptide": "VYFAGFPR",
+      "max_abs_difference_log2": 7.105427357601002e-15,
+      "median_abs_difference_log2": 1.7763568394002505e-15
+    }
+  ],
+  "cv_evaluation": "sample SD / mean on back-transformed linear intensities",
+  "no_imputation": true
+}

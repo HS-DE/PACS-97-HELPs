@@ -1,0 +1,18 @@
+{
+  "variant": "ab1",
+  "factor1_plate_reference": {
+    "1": -5.528954832630816,
+    "2": -5.434023609539958,
+    "3": -5.541065009665779
+  },
+  "factor1_global_reference": -5.528954832630816,
+  "median_s_after_a_study_log2": -5.49114851010398,
+  "median_l_or_h_study_global_log2": 19.376715627357356,
+  "scale_min_54_study": 0.9574078981267915,
+  "scale_median_54_study": 1.0,
+  "scale_max_54_study": 1.0376034123812938,
+  "f2_unscaled_min": -0.6294021736869668,
+  "f2_unscaled_max": 0.834723472551409,
+  "f2_scaled_min": -0.6065922357006253,
+  "f2_scaled_max": 0.8718577256199581
+}
