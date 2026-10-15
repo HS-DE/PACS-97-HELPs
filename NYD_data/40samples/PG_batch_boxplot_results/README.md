@@ -37,6 +37,18 @@ within a sample for independent samples.
 | T003 | 8 | 26662/34112 | 78.16% | 14.614 | 14.506 |
 | T004 | 8 | 28543/34112 | 83.67% | 14.473 | 14.468 |
 
+## QC flag: sample-specific anomaly in T003
+
+One sample should be examined before attributing visual shifts to the batch:
+
+- MAP26092326E01 (T003): sample median log2 PG intensity = **15.738**;
+  finite-positive detection = **48.71%** (2,077 of 4,264 protein groups).
+- The other seven T003 sample medians range approximately **14.423–14.575**.
+- The anomalously high median co-occurs with low detection: the median of
+  detected proteins can be biased upward if many low-intensity proteins are absent.
+  These descriptive observations do not establish the reason (technical failure,
+  sample loading, filtering or biology). No samples were removed.
+
 ## Exported audit tables
 
 - sample_pg_intensity_summary.csv: 40 sample rows, protein detection, medians and quartiles.
