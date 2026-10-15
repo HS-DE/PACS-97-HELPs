@@ -1,0 +1,79 @@
+name: NYD raw PG batch boxplot report
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/nyd-pg-batch-boxplots.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  make-batch-boxplots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install plotting dependencies
+        run: python -m pip install numpy matplotlib
+      - name: Create raw PG batch boxplots
+        run: OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 python scripts/nyd_pg_batch_boxplots.py
+      - name: Verify metadata, intensity summaries, plots, and sources
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import csv,hashlib,json,math,statistics
+          import numpy as np
+          folder=Path("NYD_data/40samples/PG_batch_boxplot_results")
+          originals=Path("NYD_data/40samples")
+          required=[
+              "README.md","run_manifest.json",
+              "sample_pg_intensity_summary.csv","batch_pg_intensity_summary.csv",
+              "01_batch_all_pg_boxplots.png",
+              "02_40_sample_pg_boxplots.png",
+              "03_batch_sample_median_boxplots.png",
+          ]
+          for fname in required:
+              assert (folder/fname).is_file() and (folder/fname).stat().st_size>0, fname
+          assert len(list(folder.glob("*.png")))==3
+          assert all(f.stat().st_size>15000 for f in folder.glob("*.png"))
+          manifest=json.loads((folder/"run_manifest.json").read_text())
+          assert manifest["no_imputation"] and manifest["no_normalization"]
+          assert manifest["n_samples"]==40
+          assert manifest["batch_sizes"]=={"T001":16,"T002":8,"T003":8,"T004":8}
+          assert manifest["pg_sha256"]==hashlib.sha256((originals/"NYD_pg_matrix2.tsv").read_bytes()).hexdigest()
+          assert manifest["metadata_sha256"]==hashlib.sha256((originals/"NYD_sampleinfo2.xlsx").read_bytes()).hexdigest()
+          def table(name):
+              with (folder/name).open("r",encoding="utf-8-sig",newline="") as f:
+                  return list(csv.DictReader(f))
+          sample=table("sample_pg_intensity_summary.csv")
+          batch=table("batch_pg_intensity_summary.csv")
+          assert len(sample)==40 and len(batch)==4
+          assert len({r["sample_id"] for r in sample})==40
+          for b,n in manifest["batch_sizes"].items():
+              selected=[x for x in sample if x["batch"]==b]
+              assert len(selected)==n
+              info=next(x for x in batch if x["batch"]==b)
+              median=float(np.median([float(x["median_log2_raw"]) for x in selected]))
+              assert math.isclose(median,float(info["median_of_sample_medians_log2"]),rel_tol=0,abs_tol=1e-12)
+              assert int(info["n_samples"])==n
+              assert int(info["valid_positive_pg_values"])==sum(int(x["n_positive"]) for x in selected)
+          assert int(manifest["positive_intensity_values"])==sum(int(r["n_positive"]) for r in sample)
+          assert all(0<float(r["positive_fraction"])<=1 for r in sample)
+          print("PASS: all 40 PG samples, four batches, sums, 3 PNGs, SHA provenance.")
+          PY
+      - name: Commit result directory only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- NYD_data/40samples/PG_batch_boxplot_results
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish raw NYD 40-sample PG batch boxplots and audits [skip ci]"
+            git push
+          fi
