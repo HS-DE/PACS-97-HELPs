@@ -189,7 +189,8 @@ def build_factors(branch,seqs,names,info,rawlog,ratios,refs):
       "plate_reference_per_plate":plate_values,"plate_reference_global":reference_plate_global,
       "sample_reference_global":sample_reference_global,
       "n_plate_qc_per_plate":5,"n_study_sample_factors":len(idx_study),
-      "ref_kind":("HELP_LH_ratio_log2" if branch.startswith(("a_","b_")) else
+      "ref_kind":("HELP_LH_ratio_log2" if branch in
+                  ("a_plate_ratio","b_plate_ratio_plus_sample","b2_sample_ratio_only") else
                   "PG_protein_log2"),
       "sample_factor_source":("HELP_LH_ratio_log2" if branch in ("b_plate_ratio_plus_sample","b2_sample_ratio_only") else
                               "PG_protein_log2" if branch=="d_sample_protein_only" else None),
@@ -336,13 +337,16 @@ def plot_pca(raw,corrected,names,info,path):
 
 def plot_factor(factors,seqs,branch,path):
     df=pd.DataFrame(factors)
-    order=df.sort_values(["group","plate","sample_id"],kind="stable")
+    df["group_order"]=df["group"].map({g:i for i,g in enumerate(GROUPS)})
+    order=df.sort_values(["group_order","plate","sample_id"],kind="stable")
     fig,axes=plt.subplots(2,1,figsize=(15,8),layout="constrained")
     for ax,k in zip(axes,("f1_plate_log2","f2_sample_log2")):
+        offset=0
         for g in GROUPS:
             sub=order[order.group==g]
-            ax.scatter(np.arange(len(sub))+1+{"Internal-QC":0,"pooled QC":6,"HC":21,"S":48}[g],
+            ax.scatter(np.arange(len(sub))+1+offset,
                        sub[k],s=34,color=PAL[g],label=f"{g} (n={len(sub)})",alpha=.8)
+            offset+=len(sub)
         ax.axhline(0,c="#718093",lw=.8)
         ax.set_ylabel(k);beautify(ax)
     axes[0].legend(frameon=False,ncol=4,loc="upper center",bbox_to_anchor=(.5,1.16))
