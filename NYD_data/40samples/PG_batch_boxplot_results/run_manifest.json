@@ -1,0 +1,24 @@
+{
+  "source_pg": "NYD_data/40samples/NYD_pg_matrix2.tsv",
+  "source_meta": "NYD_data/40samples/NYD_sampleinfo2.xlsx",
+  "pg_sha256": "39f912d004f8cd3a51a8d879a97d43b308b32f3ee195646b51e32dcbc60d7167",
+  "metadata_sha256": "82f2637934e097d9e0b28742e93ce66b7388b877b80810e0a97108b95d5e321c",
+  "protein_groups": 4264,
+  "n_samples": 40,
+  "batch_sizes": {
+    "T001": 16,
+    "T002": 8,
+    "T003": 8,
+    "T004": 8
+  },
+  "positive_intensity_values": 139947,
+  "invalid_or_nonpositive_values": 30613,
+  "scale": "log2(raw linear PG intensity), positive finite entries only",
+  "no_imputation": true,
+  "no_normalization": true,
+  "figures": [
+    "01_batch_all_pg_boxplots.png",
+    "02_40_sample_pg_boxplots.png",
+    "03_batch_sample_median_boxplots.png"
+  ]
+}
