@@ -1,0 +1,35 @@
+{
+  "input_sources": {
+    "PG": "NYD_data/40samples/NYD_pg_matrix2.tsv",
+    "PR": "NYD_data/40samples/NYD_pr_matrix2.tsv",
+    "META": "NYD_data/40samples/NYD_sampleinfo2.xlsx"
+  },
+  "input_sha256": {
+    "PG": "39f912d004f8cd3a51a8d879a97d43b308b32f3ee195646b51e32dcbc60d7167",
+    "PR": "e07c4279e6b70bd59191339d3ffff3c4bccc240a2986339db5c8dc307d9f4929",
+    "META": "82f2637934e097d9e0b28742e93ce66b7388b877b80810e0a97108b95d5e321c",
+    "YEAST": "d7ab0fe868bd167a82d95f31fd4be703c84050bff76597c8af682961018956ab"
+  },
+  "normalization": "per-sample median of log2 finite-positive intensities, centered on median of all 40 sample medians",
+  "sample_count": 40,
+  "batch_sizes": {
+    "T001": 16,
+    "T002": 8,
+    "T003": 8,
+    "T004": 8
+  },
+  "normalization_factors_derived_from": "respective endogenous PG/PR matrix, excluding yeast P00924/ENO1_YEAST rows",
+  "yeast_used_for_normalization": false,
+  "sample_vs_batch_reference": "global 40-sample median, NOT batch-specific",
+  "no_imputation": true,
+  "pg_pr_calibrated_independently": true,
+  "rounding_output": "15 significant digits",
+  "figures": [
+    "01_pg_40sample_boxplots_before_after.png",
+    "01_pr_40sample_boxplots_before_after.png",
+    "03_pg_pr_sample_medians_by_batch_before_after.png",
+    "04_yeast_cv_before_after.png",
+    "05_pg_batch_feature_cv_before_after.png",
+    "05_pr_batch_feature_cv_before_after.png"
+  ]
+}
