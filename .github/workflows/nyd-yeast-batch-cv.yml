@@ -1,10 +1,5 @@
 name: NYD 40-sample YEAST batch CV report
 on:
-  push:
-    branches: [main]
-    paths:
-      - scripts/nyd_yeast_batch_cv.py
-      - .github/workflows/nyd-yeast-batch-cv.yml
   workflow_dispatch:
 permissions:
   contents: write
@@ -32,10 +27,12 @@ jobs:
           res=root/"YEAST_batch_CV_results"
           for file in ("README.md","run_manifest.json","yeast_per_sample_charge_sums.csv",
                        "yeast_batch_cv_long.csv","yeast_batch_cv_wide.csv",
-                       "01_batch_cv_bars_heatmap.png","02_batch_cv_violin_box_scatter.png",
-                       "03_batch_log2_intensity_boxplots.png"):
+                       "01_batch_cv_bars_heatmap.png","02_feature_specific_violin_panels.png",
+                       "03_batch_log2_intensity_boxplots.png",
+                       "violin_AADALLLK.png","violin_VNQIGTLSESIK.png","violin_P00924_protein.png"):
               assert (res/file).is_file() and (res/file).stat().st_size>100, file
-          assert len(list(res.glob("*.png")))==3
+          assert len(list(res.glob("*.png")))==6
+          assert not (res/"02_batch_cv_violin_box_scatter.png").exists()
           assert all(p.stat().st_size>10000 for p in res.glob("*.png"))
           manifest=json.loads((res/"run_manifest.json").read_text())
           assert manifest["no_imputation"] and manifest["no_normalization"]
