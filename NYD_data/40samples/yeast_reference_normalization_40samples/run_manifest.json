@@ -1,0 +1,56 @@
+{
+  "method": "Experimental yeast spike-in reference normalization, NOT the MacCoss 2026 method",
+  "source_sha256": {
+    "PG": "39f912d004f8cd3a51a8d879a97d43b308b32f3ee195646b51e32dcbc60d7167",
+    "PR": "e07c4279e6b70bd59191339d3ffff3c4bccc240a2986339db5c8dc307d9f4929",
+    "YEAST": "d7ab0fe868bd167a82d95f31fd4be703c84050bff76597c8af682961018956ab",
+    "META": "82f2637934e097d9e0b28742e93ce66b7388b877b80810e0a97108b95d5e321c"
+  },
+  "sample_n": 40,
+  "batch_sizes": {
+    "T001": 16,
+    "T002": 8,
+    "T003": 8,
+    "T004": 8
+  },
+  "yeast_used_for_factor": true,
+  "yeast_CV_after_is_independent": false,
+  "peptides_summed_together": false,
+  "charge_states_summed_within_peptide": true,
+  "protein_factor": "40-sample median yeast P00924 / sample P00924",
+  "peptide_factor": "geometric mean of (40-sample median peptide / sample peptide) for each of two unique yeast peptides",
+  "ref_yeast_log2": {
+    "AADALLLK": 25.93238548122549,
+    "VNQIGTLSESIK": 20.083842663184672,
+    "P00924_protein": 27.013169490398617
+  },
+  "no_imputation": true,
+  "batch_reference": "All 40 samples; no per-batch factor",
+  "corrected_matrices": {
+    "PG": "NYD_pg_matrix2_yeast_protein_normalized.tsv",
+    "PR": "NYD_pr_matrix2_yeast_two_peptide_normalized.tsv"
+  },
+  "matrix_summary": {
+    "pg": {
+      "source_rows": 4264,
+      "nonyeast_rows": 4262,
+      "excluded_yeast_rows": 2,
+      "factor_min": 0.7421633902117378,
+      "factor_max": 1.649915944495387
+    },
+    "pr": {
+      "source_rows": 47937,
+      "nonyeast_rows": 47814,
+      "excluded_yeast_rows": 123,
+      "factor_min": 0.8460919736633966,
+      "factor_max": 1.3779503771491883
+    }
+  },
+  "figures": [
+    "01_pg_before_after.png",
+    "02_pr_before_after.png",
+    "03_yeast_scaling_factors_by_batch.png",
+    "04_yeast_cv_CIRCULAR.png",
+    "05_endogenous_feature_CV_before_after.png"
+  ]
+}

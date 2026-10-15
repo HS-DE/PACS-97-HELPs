@@ -1,0 +1,16 @@
+﻿batch,analyte,n_samples,raw_yeast_CV_pct,corrected_yeast_CV_pct,caution
+All_40,AADALLLK,40,11.925517552995407,9.757046303898173,CIRCULAR: analyzed yeast is input to the scaling factor
+All_40,VNQIGTLSESIK,40,15.914166696518125,9.491580856941525,CIRCULAR: analyzed yeast is input to the scaling factor
+All_40,P00924_protein,40,15.509327274715755,7.037687168761149e-14,CIRCULAR: analyzed yeast is input to the scaling factor
+T001,AADALLLK,16,9.098400967243409,9.10179146942225,CIRCULAR: analyzed yeast is input to the scaling factor
+T001,VNQIGTLSESIK,16,15.177258518734716,8.492229512256724,CIRCULAR: analyzed yeast is input to the scaling factor
+T001,P00924_protein,16,7.203587010011118,8.193356499836951e-14,CIRCULAR: analyzed yeast is input to the scaling factor
+T002,AADALLLK,8,5.328825765937118,8.814546818498274,CIRCULAR: analyzed yeast is input to the scaling factor
+T002,VNQIGTLSESIK,8,14.294643025024662,7.7337211910447765,CIRCULAR: analyzed yeast is input to the scaling factor
+T002,P00924_protein,8,6.488612715775446,7.00738482276533e-14,CIRCULAR: analyzed yeast is input to the scaling factor
+T003,AADALLLK,8,11.80488813972715,9.35296364488038,CIRCULAR: analyzed yeast is input to the scaling factor
+T003,VNQIGTLSESIK,8,10.037950024477064,9.06333048004874,CIRCULAR: analyzed yeast is input to the scaling factor
+T003,P00924_protein,8,14.053507518855554,5.761657159170728e-14,CIRCULAR: analyzed yeast is input to the scaling factor
+T004,AADALLLK,8,8.638364620996393,3.2567235212335297,CIRCULAR: analyzed yeast is input to the scaling factor
+T004,VNQIGTLSESIK,8,6.980803376993633,3.2333467449754814,CIRCULAR: analyzed yeast is input to the scaling factor
+T004,P00924_protein,8,7.224712927725922,6.548210601042478e-14,CIRCULAR: analyzed yeast is input to the scaling factor
