@@ -1,0 +1,90 @@
+name: Raw 97-HELP Light Heavy ratio sample boxplots
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/plot_all_HELP_L_H_ratio_boxplots.py
+      - .github/workflows/plot-all-help-lh-ratio.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: all-help-75-sample-boxplots
+  cancel-in-progress: false
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install plotting dependencies
+        run: python -m pip install numpy pandas matplotlib
+      - name: Generate three raw 75-sample HELP boxplots
+        run: OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 python scripts/plot_all_HELP_L_H_ratio_boxplots.py
+      - name: Verify input hashes, plotted values, groups and four PNGs
+        run: |
+          python - <<'PY'
+          import csv,hashlib,json,math
+          from pathlib import Path
+          p=Path("results/help97_l_h_ratio_sample_boxplots")
+          files=[
+             "README.md","run_manifest.json",
+             "all_HELP_sample_box_summaries.csv","two_HELP_positions_by_sample.csv",
+             "00_combined_three_layer_overview.png",
+             "01_all_HELP_L_75sample_boxplots_highlight_two.png",
+             "02_all_HELP_H_75sample_boxplots_highlight_two.png",
+             "03_all_HELP_ratio_75sample_boxplots_highlight_two.png",
+          ]
+          for name in files:
+              fp=p/name
+              assert fp.is_file() and fp.stat().st_size>100,name
+          assert len(list(p.glob("*.png")))==4
+          assert all(fp.stat().st_size>15000 for fp in p.glob("*.png"))
+          m=json.loads((p/"run_manifest.json").read_text())
+          assert m["sample_count"]==75 and m["HELP_count"]==97
+          assert m["no_normalization"] and m["no_imputation"] and m["log2_display_only"]
+          assert m["group_counts"]=={"Internal-QC":6,"pooled QC":15,"HC":27,"S":27}
+          fname=Path(m["source"])
+          assert m["source_sha256"]==hashlib.sha256(fname.read_bytes()).hexdigest()
+          for sheet in ("L","H","ratio_LH"):
+              assert m["sheet_valid_counts"][sheet]["total"]==75*97
+          def load(name):
+              with (p/name).open(encoding="utf-8-sig",newline="") as file:
+                  return list(csv.DictReader(file))
+          boxes=load("all_HELP_sample_box_summaries.csv")
+          points=load("two_HELP_positions_by_sample.csv")
+          assert len(boxes)==225 and len(points)==450
+          ids=set(x["sample_id"] for x in boxes)
+          assert len(ids)==75
+          assert {(b["sheet"],b["sample_id"]) for b in boxes}=={
+                 (s,i) for s in ("L","H","ratio_LH") for i in ids}
+          assert {(x["sheet"],x["sample_id"],x["peptide"]) for x in points}=={
+                 (s,i,t) for s in ("L","H","ratio_LH") for i in ids
+                 for t in ("STGSWSTLK","VYFAGFPR")}
+          background={(x["sheet"],x["sample_id"]):x for x in boxes}
+          for x in points:
+              b=background[(x["sheet"],x["sample_id"])]
+              assert x["group"]==b["group"] and x["plate"]==b["plate"]
+              assert int(x["n_valid_HELP"])==int(b["valid_of_97"])
+              assert math.isclose(float(x["log2_value"]),math.log2(float(x["raw_value"])),rel_tol=0,abs_tol=1e-12)
+              assert math.isclose(float(x["difference_to_box_median_log2"]),
+                                  float(x["log2_value"])-float(b["median_log2"]),abs_tol=1e-12)
+              assert 0<=float(x["percentile_among_valid_HELP"])<=100
+          print("PASS: source SHA256, 97 HELP x 75 samples x 3 sheets, 450 exact highlighted locations, 4 figures")
+          PY
+      - name: Publish new results independently of historical trials
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- results/help97_l_h_ratio_sample_boxplots
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish raw 97-HELP Light Heavy ratio sample boxplots [skip ci]"
+            git push
+          fi
