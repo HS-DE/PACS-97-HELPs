@@ -164,37 +164,10 @@ def plots(samples,stat):
     fig.colorbar(image,ax=bx,fraction=.048,pad=.03,label="CV (%)")
     fig.suptitle("NYD YEAST | 40 samples across 4 batches",fontsize=16,fontweight="bold")
     save(fig,"01_batch_cv_bars_heatmap.png")
-    # Chart 2: violin + box + scatter, 3 analyte CVs per batch
-    fig,ax=plt.subplots(figsize=(11,7),layout="constrained")
-    data=[[cv[b,f] for f in FEATURES] for b in groups]
-    vio=ax.violinplot(data,positions=np.arange(1,5),widths=.7,
-                      showmedians=False,showextrema=False)
-    for artist,col in zip(vio["bodies"],BCOLORS):
-        artist.set_facecolor(col);artist.set_alpha(.23);artist.set_edgecolor(col)
-    boxes=ax.boxplot(data,positions=np.arange(1,5),widths=.22,patch_artist=True,
-                     showfliers=False,manage_ticks=False,
-                     medianprops={"color":"#263B4A","linewidth":2})
-    for box,col in zip(boxes["boxes"],BCOLORS):
-        box.set_facecolor(col);box.set_alpha(.35)
-    for ix,b in enumerate(groups,1):
-        for offset,feat in zip((-.13,0,.13),FEATURES):
-            ax.scatter(ix+offset,cv[b,feat],s=115,c=COLORS[feat],
-                       edgecolor="white",linewidth=.9,zorder=5)
-        ax.text(ix,max(data[ix-1])+maximum*.035,
-                f"Median={statistics.median(data[ix-1]):.2f}%",
-                ha="center",fontsize=10,fontweight="bold")
-    handles=[Line2D([],[],marker="o",color="none",markerfacecolor=COLORS[f],
-                    markeredgecolor="white",markersize=11,label=f) for f in FEATURES]
-    ax.legend(handles=handles,loc="upper left",bbox_to_anchor=(1,1),frameon=False)
-    ax.set_xticks(range(1,5),[f"{b}\n(n={BATCHES[b]} samples)" for b in groups])
-    ax.set_xlim(.5,4.5);ax.set_ylim(0,maximum*1.29)
-    ax.set_ylabel("CV (%)")
-    ax.set_title("Batch CV · violin / box / three measured analytes",
-                 loc="left",fontweight="bold",fontsize=15)
-    style(ax)
-    fig.text(.07,.012,"Each batch has just 3 feature-level CV values; violin shape is descriptive, not a population estimate.",
-             fontsize=9,color="#6B7685")
-    save(fig,"02_batch_cv_violin_box_scatter.png")
+    # Chart 2: One independent intensity violin per analyte and batch,
+    # annotated with its batch CV computed on unlogged linear intensities.
+    from nyd_yeast_feature_violins import generate
+    generate(samples,stat,OUT)
     # Chart 3: sample-level raw-signal boxplots, log2 only on DISPLAY
     fig,axes=plt.subplots(1,3,figsize=(17,6),layout="constrained")
     for ax,feat in zip(axes,FEATURES):
@@ -237,6 +210,11 @@ def main():
         "cv_definition":"100 * sample sd(ddof=1) / arithmetic mean (linear)",
         "cv_min_n":"max(3,ceil(70% of batch sample count))",
         "log2_only_for_display":True,"no_imputation":True,"no_normalization":True,
+        "violin_definition":"per-analyte sample-level log2 intensities, annotated with original-scale CV",
+        "figures":["01_batch_cv_bars_heatmap.png",
+                   "02_feature_specific_violin_panels.png",
+                   "03_batch_log2_intensity_boxplots.png",
+                   "violin_AADALLLK.png","violin_VNQIGTLSESIK.png","violin_P00924_protein.png"],
         "missing_precursor_or_protein_entries":missing}
     (OUT/"run_manifest.json").write_text(json.dumps(manifest,ensure_ascii=False,indent=2),encoding="utf-8")
     lines=["# NYD YEAST: 40-sample batch CV and visualizations","",
@@ -261,10 +239,15 @@ def main():
        "## Figures","",
        "### 1. CV grouped bars and heatmap","",
        "![Batch CV summary](01_batch_cv_bars_heatmap.png)","",
-       "### 2. CV violin / boxplot / scatter","",
-       "![Batch CV violin](02_batch_cv_violin_box_scatter.png)","",
-       "Note: Each violin summarizes just three CV values per batch. Its smoothed",
-       "shape is not a statistically robust distribution estimate.","",
+       "### 2. Separate intensity violins for each peptide and protein","",
+       "The background violin displays **sample-level log2 intensity** for a",
+       "single analyte within each batch. Dots are samples and a narrow boxplot",
+       "summarizes their distribution; top labels give **CV computed on the",
+       "original linear intensities**, not the log2 values.","",
+       "![Three separate per-analyte violins](02_feature_specific_violin_panels.png)","",
+       "- [AADALLLK peptide](violin_AADALLLK.png)",
+       "- [VNQIGTLSESIK peptide](violin_VNQIGTLSESIK.png)",
+       "- [P00924 protein](violin_P00924_protein.png)","",
        "### 3. Sample-level log2 intensity boxplots (four batches)","",
        "![Sample intensity boxplots](03_batch_log2_intensity_boxplots.png)","",
        "## Output CSVs","",
