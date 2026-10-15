@@ -1,0 +1,53 @@
+{
+  "source": "NYD_data/40samples/YEAST.xlsx + NYD_sampleinfo2.xlsx",
+  "prepared_intensities": "NYD_data/40samples/YEAST_batch_CV_results/yeast_per_sample_charge_sums.csv",
+  "source_sha256": {
+    "YEAST.xlsx": "d7ab0fe868bd167a82d95f31fd4be703c84050bff76597c8af682961018956ab",
+    "NYD_sampleinfo2.xlsx": "82f2637934e097d9e0b28742e93ce66b7388b877b80810e0a97108b95d5e321c"
+  },
+  "peptide_features": [
+    "AADALLLK",
+    "VNQIGTLSESIK"
+  ],
+  "protein_features": [
+    "P00924"
+  ],
+  "sample_count": 40,
+  "batch_counts": {
+    "T001": 16,
+    "T002": 8,
+    "T003": 8,
+    "T004": 8
+  },
+  "charge_states_aggregated_within_each_unique_peptide": {
+    "AADALLLK": [
+      1,
+      2
+    ],
+    "VNQIGTLSESIK": [
+      2,
+      3
+    ]
+  },
+  "different_peptides_summed_together": false,
+  "data_preprocessing": "log2 intensity then per-feature centered+sampleSD-scaled (z-score)",
+  "pca_peptide_explained_variance_ratio": [
+    0.563995073057487,
+    0.43600492694251314
+  ],
+  "pca_protein_only_one_component": true,
+  "sample_Pearson_correlation_with_one_protein": "undefined",
+  "peptide_correlation_kind": "Pearson between two peptide features across samples (overall and per batch)",
+  "protein_feature_correlation": "1x1 trivial self-correlation; companion sample heatmap shows Euclidean distance",
+  "clustering": "average hierarchical linkage on Euclidean distance of standardized log2 features",
+  "no_imputation": true,
+  "no_normalization": true,
+  "figures": [
+    "01_peptide_2feature_PCA.png",
+    "02_peptide_feature_correlation.png",
+    "03_peptide_sample_cluster_heatmap.png",
+    "04_protein_1D_PCA.png",
+    "05_protein_correlation_limit_and_distance.png",
+    "06_protein_sample_cluster_heatmap.png"
+  ]
+}
