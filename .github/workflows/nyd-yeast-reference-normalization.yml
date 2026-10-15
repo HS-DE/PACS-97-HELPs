@@ -1,0 +1,109 @@
+name: NYD yeast internal-standard normalization experiment
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/nyd-yeast-reference-normalization.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install analysis dependencies
+        run: python -m pip install numpy matplotlib
+      - name: Compute PG yeast-protein and PR two-peptide independent reference scaling
+        run: |
+          OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 \
+            python scripts/nyd_yeast_reference_normalization.py
+      - name: Independently verify yeast reference factors and entire normalized matrices
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import csv,hashlib,json,math,statistics
+          base=Path("NYD_data/40samples")
+          out=base/"yeast_reference_normalization_40samples"
+          m=json.loads((out/"run_manifest.json").read_text())
+          assert m["peptides_summed_together"] is False
+          assert m["yeast_used_for_factor"] is True and m["yeast_CV_after_is_independent"] is False
+          assert m["no_imputation"] is True and m["sample_n"]==40
+          assert m["batch_sizes"]=={"T001":16,"T002":8,"T003":8,"T004":8}
+          assert len(list(out.glob("*.png")))==5
+          assert all(f.stat().st_size>15000 for f in out.glob("*.png"))
+          for type_,source in (("PG","NYD_pg_matrix2.tsv"),
+                               ("PR","NYD_pr_matrix2.tsv"),
+                               ("YEAST","YEAST.xlsx"),("META","NYD_sampleinfo2.xlsx")):
+              assert m["source_sha256"][type_]==hashlib.sha256((base/source).read_bytes()).hexdigest()
+          def table(name):
+              with (out/name).open(encoding="utf-8-sig",newline="") as f:
+                  return list(csv.DictReader(f))
+          fac=table("yeast_reference_factors.csv")
+          assert len(fac)==40 and len({r["sample_id"] for r in fac})==40
+          pvals=[float(r["P00924_protein_raw_linear"]) for r in fac]
+          av=[float(r["AADALLLK_raw_linear"]) for r in fac]
+          bv=[float(r["VNQIGTLSESIK_raw_linear"]) for r in fac]
+          medians=[statistics.median([math.log2(a) for a in vector]) for vector in (av,bv,pvals)]
+          for r in fac:
+              rat_a=2**medians[0]/float(r["AADALLLK_raw_linear"])
+              rat_b=2**medians[1]/float(r["VNQIGTLSESIK_raw_linear"])
+              rat_p=2**medians[2]/float(r["P00924_protein_raw_linear"])
+              assert math.isclose(rat_a,float(r["AADALLLK_reference_ratio"]),rel_tol=1e-12)
+              assert math.isclose(rat_b,float(r["VNQIGTLSESIK_reference_ratio"]),rel_tol=1e-12)
+              assert math.isclose(math.sqrt(rat_a*rat_b),
+                                  float(r["PR_two_distinct_peptides_factor"]),rel_tol=1e-12)
+              assert math.isclose(rat_p,float(r["PG_yeast_protein_factor"]),rel_tol=1e-12)
+          mapping={r["sample_id"]:r for r in fac}
+          for type_,srcfile,outfile,field in (
+              ("PG","NYD_pg_matrix2.tsv",m["corrected_matrices"]["PG"],"PG_yeast_protein_factor"),
+              ("PR","NYD_pr_matrix2.tsv",m["corrected_matrices"]["PR"],"PR_two_distinct_peptides_factor")):
+              with (base/srcfile).open(encoding="utf-8-sig",newline="") as f, \
+                   (out/outfile).open(encoding="utf-8-sig",newline="") as g:
+                  src=csv.reader(f,delimiter="\t")
+                  dst=csv.reader(g,delimiter="\t")
+                  header=next(src); header2=next(dst)
+                  assert header==header2
+                  cols=[(i,float(mapping[name][field])) for i,name in enumerate(header) if name in mapping]
+                  assert len(cols)==40
+                  count=0
+                  for raw,new in zip(src,dst):
+                      assert len(raw)==len(new)==len(header)
+                      for col,factor in cols:
+                          try:
+                              x=float(raw[col])
+                              assert math.isfinite(x) and x>0
+                          except (ValueError,AssertionError):
+                              assert raw[col]==new[col],"Missing, zero or invalid source value changed"
+                              continue
+                          assert math.isclose(float(new[col]),x*factor,rel_tol=5e-14,abs_tol=1e-13)
+                      count+=1
+                  assert next(src,None) is None and next(dst,None) is None
+                  assert count==m["matrix_summary"][type_.lower()]["source_rows"]
+                  print("PASS",type_,"measurements for",count,"rows, 40 sample factors each")
+          yeastcv=table("yeast_CV_CIRCULAR.csv")
+          assert len(yeastcv)==15
+          for r in yeastcv:
+              assert r["caution"].startswith("CIRCULAR")
+              if r["analyte"]=="P00924_protein":
+                  assert float(r["corrected_yeast_CV_pct"])<1e-10
+          endo=table("endogenous_batch_CV.csv")
+          assert len(endo)==16
+          assert all(float(x["median_feature_cv_pct"])>0 for x in endo)
+          assert len(table("endogenous_sample_stats.csv"))==80
+          print("PASS all 40 yeast reference factors; all PG/PR observations unchanged or scaled; circularity flagged.")
+          PY
+      - name: Publish only isolated experiment output
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- NYD_data/40samples/yeast_reference_normalization_40samples
+          git commit -m "Publish exploratory yeast reference PG/PR normalization and independent endogenous CV diagnostics [skip ci]"
+          git push
