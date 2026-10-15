@@ -56,7 +56,9 @@ def main():
         FILES[5],
     )
 
-    if new_peptide!=peptide_csv or new_protein!=protein_csv:
+    # CSV stores leaf ranks as strings; compare normalized records, not Python types.
+    norm=lambda rows:[{**r,"cluster_leaf_order":str(r["cluster_leaf_order"])} for r in rows]
+    if norm(new_peptide)!=peptide_csv or norm(new_protein)!=protein_csv:
         raise AssertionError("Sample cluster order changed unexpectedly in layout-only redraw")
     for filename in TARGETS:
         path=OUT/filename
