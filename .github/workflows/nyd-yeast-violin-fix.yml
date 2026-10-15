@@ -1,0 +1,67 @@
+name: Correct NYD yeast feature-specific violin plots
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/nyd-yeast-violin-fix.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  correct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install matplotlib and numpy
+        run: python -m pip install numpy matplotlib
+      - name: Replace invalid pooled-feature violin with separate analyte charts
+        run: OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 python scripts/nyd_yeast_feature_violins.py
+      - name: Validate source CV intact, individual features and correct label semantics
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import csv,hashlib,math,statistics,json,sys
+          from collections import Counter
+          import numpy as np
+          sys.path.insert(0,"scripts")
+          from nyd_yeast_feature_violins import read_csv,records_and_cv,FEATURES,GROUPS,OUTPUT,OUTFILES,COMBINED,OLD,FIELD
+          data=read_csv("yeast_per_sample_charge_sums.csv")
+          cv=read_csv("yeast_batch_cv_long.csv")
+          values,computed=records_and_cv(data,cv)
+          assert len(data)==40 and len(cv)==12
+          assert Counter(x["batch"] for x in data)=={"T001":16,"T002":8,"T003":8,"T004":8}
+          assert len(list(OUTPUT.glob("*.png")))==6
+          assert not (OUTPUT/OLD).exists()
+          for file in (COMBINED,*OUTFILES.values()):
+              target=OUTPUT/file
+              assert target.is_file() and target.stat().st_size>25000,file
+          for feature in FEATURES:
+              for batch in GROUPS:
+                  source=[float(s[FIELD[feature]]) for s in data if s["batch"]==batch]
+                  from_data=100*statistics.stdev(source)/statistics.mean(source)
+                  assert math.isclose(computed[batch,feature],from_data,rel_tol=1e-10)
+                  assert np.isfinite(values[batch,feature]).all()
+          text=(OUTPUT/"README.md").read_text()
+          assert "one intensity violin per unique peptide / protein" in text
+          assert OLD not in text
+          man=json.loads((OUTPUT/"run_manifest.json").read_text())
+          assert man["no_imputation"] and man["no_normalization"] and len(man["figures"])==6
+          for orig in ("YEAST.xlsx","NYD_sampleinfo2.xlsx"):
+              p=Path("NYD_data/40samples")/orig
+              assert man["sources"][orig]==hashlib.sha256(p.read_bytes()).hexdigest()
+          print("PASS: 3 analytes x 4 batch intensity violins, original linear CVs unchanged, old invalid plot removed")
+          PY
+      - name: Commit figure corrections without touching original matrices or CV tables
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A -- NYD_data/40samples/YEAST_batch_CV_results
+          git diff --cached --name-status
+          git commit -m "Replace pooled-feature CV violin with separate yeast peptide/protein intensity violins [skip ci]"
+          git push
