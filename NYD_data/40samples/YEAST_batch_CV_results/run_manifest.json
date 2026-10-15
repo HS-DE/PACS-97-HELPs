@@ -30,5 +30,14 @@
   "log2_only_for_display": true,
   "no_imputation": true,
   "no_normalization": true,
-  "missing_precursor_or_protein_entries": []
+  "missing_precursor_or_protein_entries": [],
+  "violin_definition": "One violin per batch per analyte, from sample-level log2 intensity; annotated with CV calculated on linear sample intensities",
+  "figures": [
+    "01_batch_cv_bars_heatmap.png",
+    "02_feature_specific_violin_panels.png",
+    "03_batch_log2_intensity_boxplots.png",
+    "violin_AADALLLK.png",
+    "violin_VNQIGTLSESIK.png",
+    "violin_P00924_protein.png"
+  ]
 }

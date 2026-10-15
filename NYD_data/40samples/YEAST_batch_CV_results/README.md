@@ -29,12 +29,21 @@ Missing/invalid original values: **0**.
 
 ![Batch CV summary](01_batch_cv_bars_heatmap.png)
 
-### 2. CV violin / boxplot / scatter
+### 2. Corrected: one intensity violin per unique peptide / protein
 
-![Batch CV violin](02_batch_cv_violin_box_scatter.png)
+Each violin is based on **sample-level log2 intensity for a single analyte in a single batch**;
+the color indicates batch. Each chart overlays the narrow boxplot and every measured sample,
+as in the supplied R visualization. The labels **CV=...%** are the independently verified
+**linear-intensity** CV estimates; each x-axis label gives the batch sample size.
+These are NOT violins of the four batch CV values or a pooled mixture of three analytes.
 
-Note: Each violin summarizes just three CV values per batch. Its smoothed
-shape is not a statistically robust distribution estimate.
+![Three analytes separately, each across four batches](02_feature_specific_violin_panels.png)
+
+Individual PNG figures:
+
+- [AADALLLK charge-summed peptide](violin_AADALLLK.png)
+- [VNQIGTLSESIK charge-summed peptide](violin_VNQIGTLSESIK.png)
+- [P00924 protein](violin_P00924_protein.png)
 
 ### 3. Sample-level log2 intensity boxplots (four batches)
 
