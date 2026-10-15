@@ -1,0 +1,34 @@
+{
+  "sources": {
+    "YEAST.xlsx": "d7ab0fe868bd167a82d95f31fd4be703c84050bff76597c8af682961018956ab",
+    "NYD_sampleinfo2.xlsx": "82f2637934e097d9e0b28742e93ce66b7388b877b80810e0a97108b95d5e321c"
+  },
+  "batch_sizes": {
+    "T001": 16,
+    "T002": 8,
+    "T003": 8,
+    "T004": 8
+  },
+  "unique_peptides": [
+    "AADALLLK",
+    "VNQIGTLSESIK"
+  ],
+  "protein_accession": "P00924",
+  "precursors": {
+    "AADALLLK": [
+      1,
+      2
+    ],
+    "VNQIGTLSESIK": [
+      2,
+      3
+    ]
+  },
+  "sample_level_peptides": "sum of observed positive charge-state intensities on linear scale",
+  "cv_definition": "100 * sample sd(ddof=1) / arithmetic mean (linear)",
+  "cv_min_n": "max(3,ceil(70% of batch sample count))",
+  "log2_only_for_display": true,
+  "no_imputation": true,
+  "no_normalization": true,
+  "missing_precursor_or_protein_entries": []
+}
