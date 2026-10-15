@@ -1,0 +1,120 @@
+name: PACS ab1 Light and ab2 Heavy HELP scaling
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/pacs_ab1_ab2_lh_scaled_trial.py
+      - .github/workflows/pacs-ab1-ab2-trial.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: pacs-ab1-ab2-log2-scaled
+  cancel-in-progress: false
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install scientific dependencies
+        run: python -m pip install numpy pandas matplotlib
+      - name: Execute original-b-based Light and Heavy scaling experiments
+        run: |
+          OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 \
+            python scripts/pacs_ab1_ab2_lh_scaled_trial.py
+      - name: Independently verify scaling factors, output matrices and QC
+        run: |
+          OPENBLAS_NUM_THREADS=2 python - <<'PY'
+          import json,math
+          from pathlib import Path
+          import numpy as np
+          import pandas as pd
+          root=Path("results/two_reference_plate_normalization_ab1_ab2")
+          inp=pd.read_csv("pg_matrix.tsv",sep="\t",dtype=str,
+                          keep_default_na=False,low_memory=False)
+          ids=inp.columns[5:].tolist()
+          raw=inp[ids].apply(pd.to_numeric,errors="coerce").to_numpy(float)
+          with np.errstate(divide="ignore",invalid="ignore"):
+              rawlog=np.where(np.isfinite(raw)&(raw>0),np.log2(raw),np.nan)
+          assert inp.shape==(6675,80) and len(ids)==75
+          manifest=json.loads((root/"run_manifest.json").read_text())
+          assert manifest["log2_conversion_before_all_medians"]
+          assert manifest["sample_scaling_medians_from_HC_S_only"]==54
+          assert manifest["reference_peptides"]==["STGSWSTLK","VYFAGFPR"]
+          previous=pd.read_csv("results/two_reference_plate_normalization_v1/two_refs/b_plate_ratio_plus_sample/sample_factors.csv")
+          prev=previous.set_index("sample_id").loc[ids]
+          old_raw=pd.read_csv("results/two_reference_plate_normalization_v1/two_refs/b_plate_ratio_plus_sample/group_cv_summary.csv")
+          assert len(old_raw)==4
+          for method in ("ab1","ab2"):
+              folder=root/method
+              factor=pd.read_csv(folder/"sample_factors_and_LH.csv").set_index("sample_id").loc[ids]
+              assert len(factor)==75
+              assert np.allclose(factor.f1_plate_log2,prev.f1_plate_log2,atol=1e-12)
+              assert np.allclose(factor.f2i_1_unscaled_log2,prev.f2_sample_log2,atol=1e-12)
+              study=factor.group.isin(["HC","S"]).to_numpy()
+              lm=(factor.group=="Internal-QC").to_numpy()
+              qc=(factor.group=="pooled QC").to_numpy()
+              assert study.sum()==54 and lm.sum()==6 and qc.sum()==15
+              expected=np.zeros(len(ids))
+              expected[study]=(factor.loc[study,"f2i_1_unscaled_log2"] /
+                                factor.loc[study,"f2l_or_f2h_scale"]).to_numpy()
+              assert np.allclose(factor.f2_final_scaled_log2,expected,atol=1e-12)
+              assert np.allclose(factor.total_factor_log2,
+                                 factor.f1_plate_log2+factor.f2_final_scaled_log2,atol=1e-12)
+              assert np.allclose(factor.loc[lm,"total_factor_log2"],0,atol=0)
+              assert np.allclose(factor.loc[qc,"f2_final_scaled_log2"],0,atol=0)
+              src="L" if method=="ab1" else "H"
+              one=np.stack([factor["raw_log2_"+src+"_"+pep].to_numpy()
+                           for pep in ("STGSWSTLK","VYFAGFPR")])
+              per=np.median(one,axis=0)
+              glob=np.median(per[study])
+              assert np.allclose(factor.loc[study,"median_li_or_hi_log2"],
+                                 per[study],atol=1e-12)
+              assert np.allclose(factor.loc[study,"f2l_or_f2h_scale"],
+                                 per[study]/glob,atol=1e-12)
+              after=np.stack([factor["after_a_log2_ratio_"+pep].to_numpy()
+                             for pep in ("STGSWSTLK","VYFAGFPR")])
+              med=np.median(after[:,study],axis=0)
+              assert np.allclose(factor.loc[study,"f2i_1_unscaled_log2"],
+                                 np.median(med)-med,atol=1e-12)
+              mat=pd.read_csv(folder/"corrected_pg_log2.tsv",sep="\t",
+                              dtype=str,keep_default_na=False,low_memory=False)
+              assert mat.shape==inp.shape and mat.columns.tolist()==inp.columns.tolist()
+              logged=mat[ids].apply(pd.to_numeric,errors="coerce").to_numpy(float)
+              assert np.allclose(logged,rawlog+factor.total_factor_log2.to_numpy()[None,:],
+                                 rtol=1e-12,atol=1e-11,equal_nan=True)
+              assert np.allclose(logged[:,lm],rawlog[:,lm],
+                                 rtol=1e-12,atol=1e-11,equal_nan=True)
+              assert np.allclose(logged[:,qc],
+                                 rawlog[:,qc]+factor.f1_plate_log2.to_numpy()[None,qc],
+                                 rtol=1e-12,atol=1e-11,equal_nan=True)
+              cv=pd.read_csv(folder/"group_cv_summary.csv")
+              assert set(cv.group)=={"HC","S","pooled QC","Internal-QC"}
+              pca=pd.read_csv(folder/"pca_summary.csv")
+              assert len(pca)==4
+              pngs=list(folder.glob("*.png"))
+              assert len(pngs)==5 and all(p.stat().st_size>10000 for p in pngs)
+              assert (folder/"protein_group_cv.csv").is_file()
+              print("VERIFIED",method,"54 Study, 15 pooled QC, 6 Internal-QC, 5 plots")
+          top=pd.read_csv(root/"all_branches_group_cv.csv")
+          assert len(top)==8
+          assert len(list(root.glob("00_*.png")))==2
+          assert (root/"README.md").is_file()
+          print("PASS: exact b f1/f2i1 inheritance, log2 Light/Heavy scaling, 2 corrected matrices, 12 plots")
+          PY
+      - name: Commit independent new experiment artifacts
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- results/two_reference_plate_normalization_ab1_ab2
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish ab1 Light and ab2 Heavy log2 scaling and visualizations [skip ci]"
+            git push
+          fi
