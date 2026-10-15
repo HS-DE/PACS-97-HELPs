@@ -87,7 +87,7 @@ jobs:
               assert math.isclose(float(item["normalized_intensity"]),
                     float(item["raw_intensity"])*float(item["applied_factor"]),rel_tol=1e-14)
           for item in stats:
-              r=[x for x in sample if x["analyte"]==item["analyte"] and
+              r=[x for x in sample if x["yeast_analyte"]==item["analyte"] and
                  (item["batch"]=="All_40" or x["batch"]==item["batch"])]
               for fld,field in (("raw_cv_pct","raw_intensity"),("normalized_cv_pct","normalized_intensity")):
                   y=[float(x[field]) for x in r]
