@@ -1,0 +1,66 @@
+name: NYD yeast workbook structure inspection
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/nyd-yeast-inspect.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect source Excel worksheets and rows using Python stdlib
+        run: |
+          python - <<'PY'
+          import zipfile,re
+          from xml.etree import ElementTree as ET
+          from pathlib import Path
+          N='{http://schemas.openxmlformats.org/spreadsheetml/2006/main}'
+          P='{http://schemas.openxmlformats.org/package/2006/relationships}'
+          R='{http://schemas.openxmlformats.org/officeDocument/2006/relationships}'
+          def colnum(ref):
+              x=re.match(r'([A-Z]+)',ref).group(1)
+              n=0
+              for c in x:n=n*26+ord(c)-64
+              return n
+          def show(path):
+              print('\n#####',path,'size',path.stat().st_size,flush=True)
+              with zipfile.ZipFile(path) as z:
+                  names=z.namelist()
+                  ss=[]
+                  if 'xl/sharedStrings.xml' in names:
+                      t=ET.fromstring(z.read('xl/sharedStrings.xml'))
+                      ss=[''.join(v.text or '' for v in e.iter(N+'t')) for e in t.findall(N+'si')]
+                  root=ET.fromstring(z.read('xl/workbook.xml'))
+                  links=ET.fromstring(z.read('xl/_rels/workbook.xml.rels'))
+                  rels={e.get('Id'):e.get('Target') for e in links}
+                  for sheet in root.find(N+'sheets'):
+                      tag=sheet.get('name');target=rels[sheet.get(R+'id')]
+                      key=target.lstrip('/') if target.startswith('/') else 'xl/'+target
+                      if key not in names:key='xl/'+target.removeprefix('xl/')
+                      data=ET.fromstring(z.read(key))
+                      rows=[]
+                      for row in data.findall('.//'+N+'sheetData/'+N+'row'):
+                          cells={}
+                          for c in row.findall(N+'c'):
+                              ref=c.get('r');typ=c.get('t');v=c.find(N+'v')
+                              if typ=='inlineStr':
+                                  inline=c.find(N+'is')
+                                  value=''.join(x.text or '' for x in inline.iter(N+'t')) if inline is not None else ''
+                              else:
+                                  value=v.text if v is not None else ''
+                                  if typ=='s' and value:value=ss[int(value)]
+                              if value not in ('',None):cells[colnum(ref)]=(ref,value)
+                          rows.append((int(row.get('r')),cells))
+                      print('SHEET',tag,'xml',key,'rows',len(rows),'max_column',max((max(c) for _,c in rows if c),default=0),'DIM',data.find(N+'dimension').get('ref') if data.find(N+'dimension') is not None else '',flush=True)
+                      for ix,(number,cells) in enumerate(rows):
+                          if ix < 25 or ix >= len(rows)-5:
+                              first=sorted(cells.items())[:12]
+                              last=sorted(cells.items())[-3:]
+                              print(' ROW',number,'CELLS',[(c[1][0],str(c[1][1])[:120]) for c in first],'LAST',[(c[1][0],str(c[1][1])[:45]) for c in last] if len(cells)>12 else '',flush=True)
+          for name in ('YEAST.xlsx','NYD_sampleinfo2.xlsx'):
+              show(Path('NYD_data/40samples')/name)
+          PY
