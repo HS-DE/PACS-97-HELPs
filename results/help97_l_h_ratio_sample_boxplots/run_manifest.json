@@ -1,0 +1,48 @@
+{
+  "source": "LH_ratio_tables_2026.10.13—ALL-HELP.xlsx",
+  "source_sha256": "5523ffca836fd7244610322f781084619541482835f108a92cdb350a6e3a4e53",
+  "sample_count": 75,
+  "HELP_count": 97,
+  "group_counts": {
+    "Internal-QC": 6,
+    "pooled QC": 15,
+    "HC": 27,
+    "S": 27
+  },
+  "plots": [
+    "01_all_HELP_L_75sample_boxplots_highlight_two.png",
+    "02_all_HELP_H_75sample_boxplots_highlight_two.png",
+    "03_all_HELP_ratio_75sample_boxplots_highlight_two.png",
+    "00_combined_three_layer_overview.png"
+  ],
+  "sheet_valid_counts": {
+    "L": {
+      "valid": 7227,
+      "nonpositive_missing_or_invalid": 48,
+      "total": 7275
+    },
+    "H": {
+      "valid": 7274,
+      "nonpositive_missing_or_invalid": 1,
+      "total": 7275
+    },
+    "ratio_LH": {
+      "valid": 7226,
+      "nonpositive_missing_or_invalid": 49,
+      "total": 7275
+    }
+  },
+  "selected_peptides": [
+    "STGSWSTLK",
+    "VYFAGFPR"
+  ],
+  "ratio_L_equals_ratio_L_H_for_selected_max_abs_log2_error": {
+    "STGSWSTLK": 6.217248937900877e-15,
+    "VYFAGFPR": 7.105427357601002e-15
+  },
+  "log2_display_only": true,
+  "no_normalization": true,
+  "no_imputation": true,
+  "sample_sort": "group -> plate -> sample id",
+  "marker_percentile": "fraction of positive valid HELP values <= selected HELP value * 100"
+}
