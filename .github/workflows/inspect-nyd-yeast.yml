@@ -1,0 +1,21 @@
+name: Inspect NYD yeast batch workbook layout
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/inspect_nyd_yeast_layout.py
+      - .github/workflows/inspect-nyd-yeast.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Inspect source Excel spreadsheet layout
+        run: python scripts/inspect_nyd_yeast_layout.py
