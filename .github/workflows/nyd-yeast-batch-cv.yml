@@ -1,0 +1,85 @@
+name: NYD 40-sample YEAST batch CV report
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/nyd_yeast_batch_cv.py
+      - .github/workflows/nyd-yeast-batch-cv.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  analyze-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install scientific plot dependencies
+        run: python -m pip install numpy matplotlib
+      - name: Compute two unique-peptide charge sums and protein batch CV
+        run: OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 python scripts/nyd_yeast_batch_cv.py
+      - name: Independently verify all results before commit
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import csv,hashlib,math,json,statistics
+          root=Path("NYD_data/40samples")
+          res=root/"YEAST_batch_CV_results"
+          for file in ("README.md","run_manifest.json","yeast_per_sample_charge_sums.csv",
+                       "yeast_batch_cv_long.csv","yeast_batch_cv_wide.csv",
+                       "01_batch_cv_bars_heatmap.png","02_batch_cv_violin_box_scatter.png",
+                       "03_batch_log2_intensity_boxplots.png"):
+              assert (res/file).is_file() and (res/file).stat().st_size>100, file
+          assert len(list(res.glob("*.png")))==3
+          assert all(p.stat().st_size>10000 for p in res.glob("*.png"))
+          manifest=json.loads((res/"run_manifest.json").read_text())
+          assert manifest["no_imputation"] and manifest["no_normalization"]
+          assert manifest["batch_sizes"]=={"T001":16,"T002":8,"T003":8,"T004":8}
+          for fname in ("YEAST.xlsx","NYD_sampleinfo2.xlsx"):
+              assert manifest["sources"][fname]==hashlib.sha256((root/fname).read_bytes()).hexdigest()
+          def get(name):
+              with (res/name).open(encoding="utf-8-sig",newline="") as f:
+                  return list(csv.DictReader(f))
+          samples=get("yeast_per_sample_charge_sums.csv")
+          long=get("yeast_batch_cv_long.csv")
+          wide=get("yeast_batch_cv_wide.csv")
+          assert len(samples)==40 and len(long)==12 and len(wide)==4
+          assert len({r["sample_id"] for r in samples})==40
+          for r in samples:
+              for name,suffixes in (("AADALLLK",("z1","z2")),
+                                    ("VNQIGTLSESIK",("z2","z3"))):
+                  parts=[float(r[name+"_"+t]) for t in suffixes]
+                  assert math.isclose(sum(parts),float(r[name+"_sum_linear"]),rel_tol=1e-12)
+          for r in long:
+              selected=[p for p in samples if p["batch"]==r["batch"]]
+              field="P00924_protein_linear" if r["analyte"]=="P00924_protein" else r["analyte"]+"_sum_linear"
+              vals=[float(p[field]) for p in selected]
+              assert all(math.isfinite(x) and x>0 for x in vals)
+              avg=statistics.mean(vals)
+              sd=statistics.stdev(vals)
+              actual=sd/avg*100
+              assert math.isclose(actual,float(r["CV_pct"]),rel_tol=1e-11)
+              assert int(r["n_positive_detected"])==len(vals)
+          for r in wide:
+              b=r["batch"]
+              for f in ("AADALLLK","VNQIGTLSESIK","P00924_protein"):
+                  cv=next(float(x["CV_pct"]) for x in long if x["batch"]==b and x["analyte"]==f)
+                  assert math.isclose(float(r[f]),cv,rel_tol=1e-12)
+          print("PASS: 40 samples, two linear charge sums, 1 protein, 12 independently verified CVs, 3 PNGs")
+          PY
+      - name: Commit standalone NYD yeast CV report
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- NYD_data/40samples/YEAST_batch_CV_results
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish 40-sample NYD yeast peptide/protein batch CV analysis [skip ci]"
+            git push
+          fi
