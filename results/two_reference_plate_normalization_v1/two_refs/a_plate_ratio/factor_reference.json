@@ -1,0 +1,23 @@
+{
+  "selected_sequences": [
+    "STGSWSTLK",
+    "VYFAGFPR"
+  ],
+  "associated_proteins": [
+    "P00751",
+    "P07225"
+  ],
+  "branch": "a_plate_ratio",
+  "description": "Plate-level correction from pooled QC HELP ratios",
+  "plate_reference_per_plate": {
+    "1": -5.528954832630816,
+    "2": -5.434023609539958,
+    "3": -5.541065009665779
+  },
+  "plate_reference_global": -5.528954832630816,
+  "sample_reference_global": null,
+  "n_plate_qc_per_plate": 5,
+  "n_study_sample_factors": 54,
+  "ref_kind": "HELP_LH_ratio_log2",
+  "sample_factor_source": null
+}

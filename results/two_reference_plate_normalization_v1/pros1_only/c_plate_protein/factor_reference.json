@@ -1,0 +1,21 @@
+{
+  "selected_sequences": [
+    "VYFAGFPR"
+  ],
+  "associated_proteins": [
+    "P07225"
+  ],
+  "branch": "c_plate_protein",
+  "description": "Plate-level correction from pooled QC PG protein intensities",
+  "plate_reference_per_plate": {
+    "1": 22.69645183423497,
+    "2": 22.83176494181203,
+    "3": 22.776871935997512
+  },
+  "plate_reference_global": 22.776871935997512,
+  "sample_reference_global": null,
+  "n_plate_qc_per_plate": 5,
+  "n_study_sample_factors": 54,
+  "ref_kind": "PG_protein_log2",
+  "sample_factor_source": null
+}

@@ -1,0 +1,21 @@
+{
+  "selected_sequences": [
+    "VYFAGFPR"
+  ],
+  "associated_proteins": [
+    "P07225"
+  ],
+  "branch": "b_plate_ratio_plus_sample",
+  "description": "Plate HELP ratio then study sample HELP ratio correction",
+  "plate_reference_per_plate": {
+    "1": -5.24862819128752,
+    "2": -5.148712232226512,
+    "3": -5.2369867739431335
+  },
+  "plate_reference_global": -5.2369867739431335,
+  "sample_reference_global": -5.19901846405878,
+  "n_plate_qc_per_plate": 5,
+  "n_study_sample_factors": 54,
+  "ref_kind": "HELP_LH_ratio_log2",
+  "sample_factor_source": "HELP_LH_ratio_log2"
+}

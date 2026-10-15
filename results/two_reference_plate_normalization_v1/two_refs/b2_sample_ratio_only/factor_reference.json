@@ -1,0 +1,19 @@
+{
+  "selected_sequences": [
+    "STGSWSTLK",
+    "VYFAGFPR"
+  ],
+  "associated_proteins": [
+    "P00751",
+    "P07225"
+  ],
+  "branch": "b2_sample_ratio_only",
+  "description": "Study sample HELP ratio correction directly from Raw",
+  "plate_reference_per_plate": {},
+  "plate_reference_global": null,
+  "sample_reference_global": -5.477733647478893,
+  "n_plate_qc_per_plate": 5,
+  "n_study_sample_factors": 54,
+  "ref_kind": "HELP_LH_ratio_log2",
+  "sample_factor_source": "HELP_LH_ratio_log2"
+}

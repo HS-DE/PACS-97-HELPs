@@ -1,0 +1,5 @@
+reference_set,branch,group,sample_n,n_proteins_with_cv,median_cv_pct,q1_cv_pct,q3_cv_pct
+two_refs,b_plate_ratio_plus_sample,Internal-QC,6,651,63.87570968404151,34.73830322554902,124.16313995719779
+two_refs,b_plate_ratio_plus_sample,pooled QC,15,5912,11.021531478675495,6.388914937142771,19.399502552300635
+two_refs,b_plate_ratio_plus_sample,HC,27,5496,30.33481542996379,22.17768096957831,43.97421943590104
+two_refs,b_plate_ratio_plus_sample,S,27,5755,35.871980170551396,28.365477754721898,47.72472714647928

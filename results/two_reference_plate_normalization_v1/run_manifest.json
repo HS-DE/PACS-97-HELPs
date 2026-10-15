@@ -1,0 +1,85 @@
+{
+  "input_sha256": {
+    "pg_matrix.tsv": "112d59739481b2fbf1d5252d0fc754c4a4494af60c77ff050af153fe423012be",
+    "LH_ratio_tables_2026.10.13—ALL-HELP.xlsx": "5523ffca836fd7244610322f781084619541482835f108a92cdb350a6e3a4e53",
+    "all_QC_metadata.xlsx": "5dc7ee9296a1ed6422e3d3e4390c36dac8da884727f4b276d3db54764c25177e",
+    "all_sample_metadata.xlsx": "86e90f10a3ae3a099f52baa77a422dc234322a134fe2235c09bccf071e6863fe"
+  },
+  "protein_rows": 6675,
+  "samples": 75,
+  "plate_sample_counts": {
+    "1": 27,
+    "2": 27,
+    "3": 21
+  },
+  "plate_group_counts": {
+    "HC": {
+      "1": 10,
+      "2": 10,
+      "3": 7
+    },
+    "Internal-QC": {
+      "1": 2,
+      "2": 2,
+      "3": 2
+    },
+    "S": {
+      "1": 10,
+      "2": 10,
+      "3": 7
+    },
+    "pooled QC": {
+      "1": 5,
+      "2": 5,
+      "3": 5
+    }
+  },
+  "source_refs": {
+    "STGSWSTLK": {
+      "id": "P00751",
+      "row": 874,
+      "names": "CFAB_HUMAN",
+      "genes": "CFB"
+    },
+    "VYFAGFPR": {
+      "id": "P07225",
+      "row": 1120,
+      "names": "PROS_HUMAN",
+      "genes": "PROS1"
+    }
+  },
+  "reference_sets": {
+    "two_refs": [
+      "STGSWSTLK",
+      "VYFAGFPR"
+    ],
+    "pros1_only": [
+      "VYFAGFPR"
+    ]
+  },
+  "branches": {
+    "a_plate_ratio": "Plate-level correction from pooled QC HELP ratios",
+    "b_plate_ratio_plus_sample": "Plate HELP ratio then study sample HELP ratio correction",
+    "b2_sample_ratio_only": "Study sample HELP ratio correction directly from Raw",
+    "c_plate_protein": "Plate-level correction from pooled QC PG protein intensities",
+    "d_sample_protein_only": "Study sample PG protein correction directly from Raw"
+  },
+  "log2_for_factors_and_outputs": true,
+  "CV": "100 * sample SD(linear intensities, ddof=1) / arithmetic mean(linear intensities)",
+  "plate_QC_aggregation": "median of 5 QC x number-of-references log2 measurements within Plate; global median of 3 Plate medians",
+  "study_sample_aggregation": "median of 1 or 2 log2 reference measurements within each Study sample; global median across 54 Study sample medians",
+  "plate_affected_groups": [
+    "HC",
+    "S",
+    "pooled QC"
+  ],
+  "sample_factor_affected_groups": [
+    "HC",
+    "S"
+  ],
+  "Internal-QC": "Unchanged except universal output conversion from linear to log2",
+  "b2_interpretation": "Direct Raw + sample HELP ratio offset, not plate-corrected source",
+  "ratio_after_b": "Only f1 changes HELP ratios; f2 applied to protein matrix only",
+  "per_target_independent_HC_S_biology": "Not protected by this exploratory model",
+  "no_imputation": true
+}

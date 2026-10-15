@@ -1,0 +1,17 @@
+{
+  "selected_sequences": [
+    "VYFAGFPR"
+  ],
+  "associated_proteins": [
+    "P07225"
+  ],
+  "branch": "d_sample_protein_only",
+  "description": "Study sample PG protein correction directly from Raw",
+  "plate_reference_per_plate": {},
+  "plate_reference_global": null,
+  "sample_reference_global": 22.992075697415373,
+  "n_plate_qc_per_plate": 5,
+  "n_study_sample_factors": 54,
+  "ref_kind": "PG_protein_log2",
+  "sample_factor_source": "PG_protein_log2"
+}
