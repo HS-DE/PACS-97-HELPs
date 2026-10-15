@@ -204,61 +204,122 @@ def make_peptide_correlation(raw,log):
     save(fig,FILES[1])
     return records
 
-def reordered_cluster(features,raw,feature_labels,title,outfile,metric="euclidean"):
-    # columns are samples, rows are analytes. Distance is Euclidean in
-    # z-scored log2 protein/peptide feature space, not Pearson sample corr.
-    if features.ndim!=2 or features.shape[0]!=40:
-        raise ValueError("Sample-feature orientation invalid")
-    distances=pdist(features,metric=metric)
-    if not len(distances) or np.any(~np.isfinite(distances)):
-        raise ValueError("Invalid sample distances")
-    # average linkage avoids Ward's exaggeration for one-dimensional data.
-    hierarchical=linkage(distances,method="average",optimal_ordering=True)
-    ordered=leaves_list(hierarchical)
-    order=[raw[int(i)]["sample_id"] for i in ordered]
-    bnames=[raw[int(i)]["batch"] for i in ordered]
-    matrix=features[ordered,:].T
+def reordered_cluster(features, raw, feature_labels, title, outfile, metric="euclidean"):
+    """Hierarchical heatmap with dedicated, non-overlapping title/legend/colorbar.
 
-    from matplotlib import gridspec
-    fig=plt.figure(figsize=(18.5,7.8 if features.shape[1]==2 else 6.8))
-    gs=fig.add_gridspec(4,1,height_ratios=[2.15,.21,
-                       .68 if features.shape[1]==1 else 1.12,.26],hspace=.1)
-    axd=fig.add_subplot(gs[0])
-    dendrogram(hierarchical,ax=axd,truncate_mode=None,no_labels=True,
-               color_threshold=0,above_threshold_color="#64768B")
-    axd.set_xticks([]);axd.set_ylabel("Euclidean\nlinkage height",fontsize=9)
-    axd.spines["top"].set_visible(False)
-    axd.spines["right"].set_visible(False)
-    axstripe=fig.add_subplot(gs[1])
-    # scipy dendrogram leaf order must control the heatmap, not display sort.
-    assigned_colors=[BATCH_COLORS[b] for b in bnames]
+    The dendrogram, batch annotation, and feature heatmap also share the
+    *same x-coordinate system*: one leaf = 10 dendrogram coordinate units.
+    This preserves true leaf-to-heatmap column alignment.
+    """
+    if features.ndim != 2 or features.shape[0] != 40:
+        raise ValueError("Sample-feature orientation invalid")
+    distances = pdist(features, metric=metric)
+    if not len(distances) or np.any(~np.isfinite(distances)):
+        raise ValueError("Invalid Euclidean distances")
+
+    hierarchical = linkage(distances, method="average", optimal_ordering=True)
+    ordered = leaves_list(hierarchical)
+    order = [raw[int(i)]["sample_id"] for i in ordered]
+    bnames = [raw[int(i)]["batch"] for i in ordered]
+    matrix = features[ordered, :].T
+
     from matplotlib.colors import ListedColormap
-    imcolors=ListedColormap([BATCH_COLORS[b] for b in BATCHES])
-    arr=np.asarray([[BATCHES.index(b) for b in bnames]])
-    axstripe.imshow(arr,aspect="auto",cmap=imcolors,interpolation="nearest",
-                    vmin=-.5,vmax=len(BATCHES)-.5)
-    axstripe.set_yticks([]);axstripe.set_xticks([])
-    axh=fig.add_subplot(gs[2])
-    vmax=max(2,float(np.max(np.abs(matrix)))*1.03)
-    hm=axh.imshow(matrix,cmap="RdBu_r",vmin=-vmax,vmax=vmax,
-                  aspect="auto",interpolation="nearest")
-    axh.set_yticks(range(len(feature_labels)),feature_labels,fontsize=11)
-    axh.set_xticks(np.arange(40),order,rotation=90,fontsize=6)
-    axh.tick_params(axis="x",length=0)
-    axfoot=fig.add_subplot(gs[3]);axfoot.axis("off")
-    handles=[Patch(facecolor=BATCH_COLORS[b],label=f"{b} (n={BATCH_N[b]})")
-             for b in BATCHES]
-    axfoot.legend(handles=handles,ncol=4,loc="center",frameon=False,fontsize=10)
-    cbar=fig.colorbar(hm,ax=[axh],shrink=.67,pad=.012)
-    cbar.set_label("Feature z-score of log2 intensity",fontsize=9)
-    fig.suptitle(title,fontsize=15,fontweight="bold",y=.998)
-    fig.subplots_adjust(left=.12,right=.89,top=.85,bottom=.15)
-    # Save without layout-managed scientific warning.
-    save(fig,outfile)
-    return [{"cluster_leaf_order":i+1,"sample_id":sample_id,
-             "batch":b,"sample_linkage":"average",
-             "sample_distance":"Euclidean (standardized log2 input)"}
-            for i,(sample_id,b) in enumerate(zip(order,bnames))]
+    from matplotlib.patches import Patch
+    n_features = len(feature_labels)
+    fig = plt.figure(figsize=(20, 10.2 if n_features == 2 else 9.2))
+    # Legend occupies its own row at the TOP rather than beneath 40 long
+    # vertically rotated sample IDs. The bottom 25% is kept free for labels.
+    gs = fig.add_gridspec(
+        4, 2,
+        width_ratios=(38, 1.5),
+        height_ratios=(0.25, 2.4, 0.19, 1.05 if n_features == 2 else 0.65),
+        left=0.095, right=0.90, top=0.895, bottom=0.255,
+        wspace=0.17, hspace=0.16,
+    )
+
+    # 1: Dedicated legend row: cannot collide with x-axis sample labels.
+    ax_legend = fig.add_subplot(gs[0, :])
+    ax_legend.axis("off")
+    legend = ax_legend.legend(
+        handles=[Patch(facecolor=BATCH_COLORS[b],
+                       label=f"{b} (n={BATCH_N[b]})") for b in BATCHES],
+        ncol=4, loc="center", bbox_to_anchor=(0.5, 0.5),
+        frameon=False, fontsize=11,
+    )
+
+    # 2: Dendrogram: 40 leaves at x=5,15,...,395; align shared axes exactly.
+    ax_dend = fig.add_subplot(gs[1, 0])
+    plotted = dendrogram(
+        hierarchical, ax=ax_dend, no_labels=True, color_threshold=0,
+        above_threshold_color="#64768B",
+    )
+    if list(plotted["leaves"]) != [int(x) for x in ordered]:
+        raise AssertionError("Dendrogram order differs from heatmap leaf order")
+    ax_dend.set_xlim(0, 400)
+    ax_dend.set_xticks([])
+    ax_dend.set_ylabel("Euclidean\nlinkage height", fontsize=10)
+    ax_dend.spines["top"].set_visible(False)
+    ax_dend.spines["right"].set_visible(False)
+    ax_dend.spines["bottom"].set_visible(False)
+
+    # 3: Per-leaf batch annotation on the identical 0..400 horizontal scale.
+    ax_batch = fig.add_subplot(gs[2, 0], sharex=ax_dend)
+    batch_row = np.array([[BATCHES.index(b) for b in bnames]])
+    ax_batch.imshow(
+        batch_row, cmap=ListedColormap([BATCH_COLORS[b] for b in BATCHES]),
+        vmin=-0.5, vmax=3.5, interpolation="nearest",
+        aspect="auto", extent=(0, 400, 1, 0),
+    )
+    ax_batch.set_xlim(0, 400)
+    ax_batch.set_xticks([])
+    ax_batch.set_yticks([])
+    for sp in ax_batch.spines.values():
+        sp.set_visible(False)
+
+    # 4: Feature matrix: use dendrogram coordinates for exact x alignment.
+    ax_heat = fig.add_subplot(gs[3, 0], sharex=ax_dend)
+    limit = max(2.0, float(np.max(np.abs(matrix))) * 1.03)
+    img = ax_heat.imshow(
+        matrix, cmap="RdBu_r", vmin=-limit, vmax=limit,
+        aspect="auto", interpolation="nearest",
+        extent=(0, 400, n_features - 0.5, -0.5),
+    )
+    ax_heat.set_xlim(0, 400)
+    ax_heat.set_yticks(np.arange(n_features), feature_labels, fontsize=11)
+    ax_heat.set_xticks(np.arange(40) * 10 + 5)
+    ax_heat.set_xticklabels(order, rotation=90, fontsize=7)
+    ax_heat.tick_params(axis="x", length=0, pad=3)
+    ax_heat.tick_params(axis="y", length=0, pad=7)
+
+    # Dedicated colorbar column, independent of all three data axes.
+    ax_cbar = fig.add_subplot(gs[3, 1])
+    cbar = fig.colorbar(img, cax=ax_cbar)
+    cbar.set_label("Feature z-score of log2 intensity", fontsize=10)
+
+    fig.suptitle(title, fontsize=15, fontweight="bold", y=0.978)
+
+    # Geometrical audit of the *rendered* layout before saving the PNG.
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    legend_bounds = legend.get_window_extent(renderer)
+    heat_bounds = ax_heat.get_tightbbox(renderer)
+    if legend_bounds.overlaps(heat_bounds):
+        raise AssertionError("Batch legend still overlaps the sample heatmap labels")
+    fig_bounds = fig.bbox
+    if (heat_bounds.x0 < -1 or heat_bounds.y0 < -1
+            or heat_bounds.x1 > fig_bounds.x1 + 1):
+        raise AssertionError("Heatmap and rotated labels exceed figure bounds")
+    if ax_cbar.get_window_extent(renderer).overlaps(ax_heat.get_window_extent(renderer)):
+        raise AssertionError("Colorbar intersects the heatmap body")
+
+    save(fig, outfile)
+    return [
+        {"cluster_leaf_order": i + 1, "sample_id": sample_id, "batch": batch,
+         "sample_linkage": "average",
+         "sample_distance": "Euclidean (standardized log2 input)"}
+        for i, (sample_id, batch) in enumerate(zip(order, bnames))
+    ]
+
 
 def make_protein_1d(raw,z):
     if z.shape!=(40,1):
