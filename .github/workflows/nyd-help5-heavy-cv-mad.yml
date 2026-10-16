@@ -1,0 +1,159 @@
+name: NYD five HELP Heavy CV MAD normalization
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/nyd_HELP5_Heavy_CV_MAD_normalization.py
+      - .github/workflows/nyd-help5-heavy-cv-mad.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: nyd-help5-39-heavy-cv-mad
+  cancel-in-progress: false
+jobs:
+  calculate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install data and figure packages
+        run: python -m pip install numpy pandas matplotlib
+      - name: Select five low-CV low-MAD Heavy HELP and correct all 39 PG samples
+        run: |
+          OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 \
+            python scripts/nyd_HELP5_Heavy_CV_MAD_normalization.py
+      - name: Independently validate 97 screening results, 5 factors, full matrix, CV and PCA
+        run: |
+          OPENBLAS_NUM_THREADS=2 python - <<'PY'
+          import csv,hashlib,json,math,statistics
+          from pathlib import Path
+          import numpy as np
+          import pandas as pd
+          from sys import path
+          path.insert(0,"scripts")
+          from filter_samples import readbook,tab
+
+          root=Path("NYD_data/40samples")
+          out=root/"HELP5_Heavy_CV_MAD_normalization_without_T003_outlier"
+          m=json.loads((out/"run_manifest.json").read_text())
+          assert m["n_original_samples"]==40 and m["n_retained_samples"]==39
+          assert m["excluded_sample_id"]=="MAP26092326E01"
+          assert m["excluded_before_CV_MAD_detection_and_reference"]
+          assert m["number_HELP_in_Heavy"]==97 and m["n_selected_HELP"]==5
+          assert m["no_extra_weights"] and m["equal_weight_per_HELP"]==.2
+          assert m["no_imputation_or_factor_capping"]
+          assert m["PCA"]["fitted_on"]=="Raw PG log2 only"
+          assert m["PCA_display"].startswith("Raw and Corrected separate")
+          for name,h in m["source_sha256"].items():
+              assert hashlib.sha256((root/name).read_bytes()).hexdigest()==h
+          metric=pd.read_csv(out/"HELP97_Heavy_CV_MAD_detection_ranking.csv")
+          assert len(metric)==97 and metric.HELP_sequence.nunique()==97
+          assert metric.n_total_samples.eq(39).all()
+          assert np.allclose(metric.detection_rate,metric.n_detected_positive/39,atol=1e-15)
+          fully=metric[metric.full_detection_39_of_39]
+          assert len(fully)==m["n_fully_detected_HELP"]
+          th=float(np.median(fully.relative_MAD_pct))
+          assert math.isclose(th,m["relative_MAD_guardrail_pct"],abs_tol=1e-12)
+          assert np.array_equal(metric.passes_low_MAD_guardrail.to_numpy(),
+                                ((metric.n_detected_positive==39)&
+                                 (metric.relative_MAD_pct<=th)).to_numpy())
+          possible=fully[fully.relative_MAD_pct<=th].sort_values(
+              ["CV_pct_original_linear_Heavy","relative_MAD_pct","HELP_sequence"])
+          chosen=possible.HELP_sequence.head(5).tolist()
+          assert chosen==m["selected_HELP_in_CV_rank_order"]
+          assert metric.loc[metric.selected_top5,"HELP_sequence"].tolist()!=[] 
+          assert set(metric.loc[metric.selected_top5,"HELP_sequence"])==set(chosen)
+
+          refs=pd.read_csv(out/"selected_5_HELP_reference_medians.csv")
+          factors=pd.read_csv(out/"sample_five_HELP_h_and_negative_factors.csv")
+          assert refs.HELP_sequence.tolist()==chosen and len(refs)==5
+          assert len(factors)==39 and factors.sample_id.nunique()==39
+          assert "MAP26092326E01" not in set(factors.sample_id)
+          assert factors.groupby("batch").size().to_dict()=={"T001":16,"T002":8,"T003":7,"T004":8}
+          samples=factors.sample_id.tolist()
+          ss,sheets=readbook(root/"Heavy.xlsx")
+          rows=tab(sheets[0],ss)
+          header={v:k for k,v in rows[0].items() if k!="A"}
+          mapping={r["A"]:r for r in rows[1:]}
+          assert len(mapping)==97 and set(header)==set(samples)|{"MAP26092326E01"}
+          contributions=[]
+          for i,seq in enumerate(chosen):
+              vals=np.array([float(mapping[seq][header[s]]) for s in samples])
+              assert np.isfinite(vals).all() and (vals>0).all()
+              log=np.log2(vals)
+              reference=float(np.median(log))
+              assert np.isclose(reference,refs.iloc[i].median_ref_log2_Heavy,atol=1e-12)
+              assert np.allclose(factors[f"{seq}_Heavy_log2"].to_numpy(float),log,atol=1e-12)
+              assert np.allclose(factors[f"{seq}_reference_log2"].to_numpy(float),reference,atol=1e-12)
+              d=log-reference
+              assert np.allclose(factors[f"{seq}_delta_sample_minus_reference_log2"].to_numpy(float),d,atol=1e-12)
+              contributions.append(d)
+              cv=float(np.std(vals,ddof=1)/np.mean(vals)*100)
+              mad=float(np.median(np.abs(vals-np.median(vals))))
+              relmad=100*mad/np.median(vals)
+              assert np.isclose(cv,refs.iloc[i].CV_pct_original_linear_Heavy,atol=1e-10)
+              assert np.isclose(mad,refs.iloc[i].MAD_original_linear_Heavy,atol=1e-7)
+              assert np.isclose(relmad,refs.iloc[i].relative_MAD_pct,atol=1e-10)
+          h=np.mean(contributions,axis=0)
+          assert np.allclose(h,factors.h_mean_5HELP_log2_relative_all_samples,atol=1e-12)
+          assert np.allclose(-h,factors.factor_minus_h_log2,atol=1e-12)
+          assert np.allclose(np.exp2(-h),factors.multiplier_linear_2_power_minus_h,atol=1e-12)
+          assert factors.n_selected_HELP_used.eq(5).all()
+          raw=pd.read_csv(root/"NYD_pg_matrix2.tsv",sep="\t",dtype=str,keep_default_na=False)
+          output=pd.read_csv(out/"corrected_NYD_pg_matrix2_log2.tsv",sep="\t",dtype=str,keep_default_na=False)
+          assert raw.shape==(4264,45) and output.shape==(4264,44)
+          assert output.columns[:5].tolist()==raw.columns[:5].tolist()
+          assert set(output.columns[5:])==set(samples)
+          assert "MAP26092326E01" not in output.columns
+          assert output[raw.columns[:5]].equals(raw[raw.columns[:5]])
+          source=raw[samples].apply(pd.to_numeric,errors="coerce").to_numpy(float)
+          values=np.full(source.shape,np.nan)
+          good=np.isfinite(source)&(source>0)
+          values[good]=np.log2(source[good])
+          corrected=output[samples].apply(pd.to_numeric,errors="coerce").to_numpy(float)
+          fi=factors.set_index("sample_id").loc[samples,"factor_minus_h_log2"].to_numpy(float)
+          assert np.allclose(corrected,values+fi[None,:],rtol=1e-12,atol=1e-10,equal_nan=True)
+          assert np.array_equal(np.isfinite(corrected),np.isfinite(values))
+
+          cv=pd.read_csv(out/"batch_protein_CV_summary.csv")
+          assert len(cv)==8
+          prior=pd.read_csv(root/"STGSWSTLK_Heavy_single_reference_normalization_without_T003_outlier"/"batch_protein_CV_summary.csv")
+          for batch in ("T001","T002","T003","T004"):
+              obs=cv[(cv.batch==batch)&(cv.stage=="Raw")]
+              old=prior[(prior.batch==batch)&(prior.stage=="Raw")]
+              assert len(obs)==len(old)==1
+              assert np.isclose(obs.iloc[0].median_protein_cv_pct,
+                                old.iloc[0].median_protein_cv_pct,atol=1e-10)
+          assert len(pd.read_csv(out/"per_protein_batch_CV_long.csv"))==2*4*4264
+          comparisons=pd.read_csv(out/"Raw_single_HELP_vs_5HELP_batch_CV_comparison.csv")
+          assert len(comparisons)==4
+          pca=pd.read_csv(out/"PCA_Raw_fitted_sample_coordinates.csv")
+          assert len(pca)==39 and set(pca.sample_id)==set(samples)
+          assert m["PCA"]["n_selected_proteins"]>100
+          assert len(m["figures"])==10
+          for name in m["figures"]:
+              f=out/name
+              assert f.is_file() and f.stat().st_size>15000,name
+          assert len(list(out.glob("*.png")))==10
+          assert (out/"README.md").stat().st_size>1200
+          print("PASS: 97 peptide CV/MAD, strict 100% and low-relative-MAD guardrail, "
+                "selected five, original reference median and h recomputed, "
+                "full 4264x39 matrix and CV/PCA verified, 10 PNG")
+          PY
+      - name: Commit new reproducible five-HELP results
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- NYD_data/40samples/HELP5_Heavy_CV_MAD_normalization_without_T003_outlier
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish five selected NYD HELP Heavy h factors, negative-offset PG calibration and PCA [skip ci]"
+            git push
+          fi
