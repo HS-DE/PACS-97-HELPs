@@ -186,7 +186,7 @@ def plot_pgs(raw,corrected,records,names,targets):
             "STGSWSTLK Heavy calibrated · raw log2 protein + sample factor")
     fig.suptitle("NYD 39-sample PG distributions (T003 outlier excluded) · blue CFB/P00751 · yellow PROS1/P07225",
                  fontweight="bold",fontsize=16)
-    save(fig,"01_PG_40samples_Raw_vs_corrected_highlight_CFB_PROS1.png")
+    save(fig,"01_PG_39samples_Raw_vs_corrected_highlight_CFB_PROS1.png")
 
 def plot_heavy(median_hi,median_h,f,records,names):
     fig,(ax,bx)=plt.subplots(2,1,figsize=(19,9.8),sharex=True,layout="constrained")
@@ -456,7 +456,7 @@ def main():
         r={"sample_id":s,"batch":records[j]["batch"],
            "Heavy_STGSWSTLK_original_linear":float(heavy[j]),
            "median_hi_log2_single_value":float(median_hi[j]),
-           "median_h_log2_all_40":median_h,
+           "median_h_log2_all_39":median_h,
            "fi_log2":float(factors[j]),
            "multiplier_linear":float(np.exp2(factors[j])),
            "STGSWSTLK_Heavy_after_factor_diagnostic_log2":float(median_hi[j]+factors[j]),
@@ -504,7 +504,7 @@ def main():
         "batch_sizes":BATCH_COUNTS,"PCA":pca_audit,
         "PG_targets":{acc:{"gene":par["gene"],"data_row_1based":targets[acc]+1} for acc,par in PROTEINS.items()},
         "plots":[
-            "01_PG_40samples_Raw_vs_corrected_highlight_CFB_PROS1.png",
+            "01_PG_39samples_Raw_vs_corrected_highlight_CFB_PROS1.png",
             "02_STGSWSTLK_Heavy_per_sample_offsets.png",
             "03_batch_protein_CV_raw_vs_corrected.png",
             "04_PCA_Raw_fitted_common_coordinates.png",
@@ -547,7 +547,7 @@ def main():
         lines.append(f"| {b} | {BATCH_COUNTS[b]} | {before:.2f}% | {after:.2f}% | {after-before:+.2f} |")
     lines+=["","## Visualization 1: raw and corrected all-protein sample boxplots","",
             "CFB / P00751 is a blue diamond; PROS1 / P07225 is a yellow circle.",
-            "![40 PG samples raw vs corrected](01_PG_40samples_Raw_vs_corrected_highlight_CFB_PROS1.png)","",
+            "![40 PG samples raw vs corrected](01_PG_39samples_Raw_vs_corrected_highlight_CFB_PROS1.png)","",
             "## Visualization 2: STGSWSTLK Heavy reference and fi factors","",
             "![Heavy reference factors](02_STGSWSTLK_Heavy_per_sample_offsets.png)","",
             "## Visualization 3: per-batch protein CV","",
