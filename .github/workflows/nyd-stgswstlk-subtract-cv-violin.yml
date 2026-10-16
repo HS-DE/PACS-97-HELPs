@@ -1,0 +1,91 @@
+name: NYD subtract-factor median CV violin plots
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/nyd_STGSWSTLK_subtract_factor_CV_violin.py
+      - .github/workflows/nyd-stgswstlk-subtract-cv-violin.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: nyd-stgswstlk-subtract-cv-violin
+  cancel-in-progress: false
+jobs:
+  violin-plot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install plotting dependencies
+        run: python -m pip install numpy pandas matplotlib
+      - name: Create two violin + boxplot PNGs using EXISTING protein CV data
+        run: OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 python scripts/nyd_STGSWSTLK_subtract_factor_CV_violin.py
+      - name: Independently check medians, counts, source distributions and figures
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import numpy as np
+          import pandas as pd
+          root=Path("NYD_data/40samples/STGSWSTLK_Heavy_subtract_factor_39samples")
+          branches=("global_subtract_fi","batch_subtract_fi")
+          batches=("T001","T002","T003","T004")
+          expected={"T001":(22.55927460503227,26.431399617918338),
+                    "T002":(16.57163077669857,18.676613123603047),
+                    "T003":(16.236967208760674,17.782982420792013),
+                    "T004":(17.776581368637007,22.54106098655969)}
+          for b in branches:
+              directory=root/b
+              img=directory/"08_per_protein_CV_violin_Raw_vs_Corrected_median_labels.png"
+              assert img.is_file() and img.stat().st_size>30000
+              # PNG header / width / height must represent a substantial figure.
+              with img.open("rb") as f:header=f.read(24)
+              assert header[:8]==bytes((137,80,78,71,13,10,26,10))
+              w=int.from_bytes(header[16:20],"big")
+              h=int.from_bytes(header[20:24],"big")
+              assert w>=1800 and h>=850
+              label=pd.read_csv(directory/"08_violin_median_CV_values.csv")
+              detail=pd.read_csv(directory/"per_protein_batch_CV_long.csv")
+              old=pd.read_csv(directory/"batch_protein_CV_summary.csv")
+              assert len(label)==8 and len(detail)==2*4*4264
+              for batch in batches:
+                  for stage,index in (("Raw",0),("Corrected",1)):
+                      hit=label[(label.batch==batch)&(label.stage==stage)]
+                      assert len(hit)==1
+                      shown=float(hit.iloc[0].median_CV_pct)
+                      assert abs(shown-expected[batch][index])<1e-10
+                      vals=detail[(detail.batch==batch)&(detail.stage==stage)].cv_pct
+                      valid=vals[np.isfinite(vals.to_numpy(float))]
+                      assert len(valid)==hit.iloc[0].n_proteins_with_valid_CV
+                      assert abs(np.median(valid)-shown)<1e-10
+                      ref=old[(old.batch==batch)&(old.stage==stage)].iloc[0]
+                      assert abs(shown-float(ref.median_protein_cv_pct))<1e-10
+              print("PASS",b,"violin+boxplot median labels",w,h)
+          readme=(root/"README.md").read_text()
+          assert "## Added violin plots with median CV labels" in readme
+          assert "global_subtract_fi/08_per_protein_CV_violin" in readme
+          assert "batch_subtract_fi/08_per_protein_CV_violin" in readme
+          print("PASS two standalone violin PNGs, exact eight medians and no original CV changes")
+          PY
+      - name: Commit only two new plots, their median tables and README addendum
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          base=NYD_data/40samples/STGSWSTLK_Heavy_subtract_factor_39samples
+          git add -- \
+            "$base/README.md" \
+            "$base/global_subtract_fi/08_per_protein_CV_violin_Raw_vs_Corrected_median_labels.png" \
+            "$base/global_subtract_fi/08_violin_median_CV_values.csv" \
+            "$base/batch_subtract_fi/08_per_protein_CV_violin_Raw_vs_Corrected_median_labels.png" \
+            "$base/batch_subtract_fi/08_violin_median_CV_values.csv"
+          if ! git diff --cached --quiet; then
+            git commit -m "Add Raw vs minus-fi CV violins with annotated batch median CV [skip ci]"
+            git push
+          fi
