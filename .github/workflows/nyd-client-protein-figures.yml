@@ -75,7 +75,7 @@ jobs:
           assert np.allclose(matrices[0][1],matrices[1][1],atol=1e-10)
           readme=(root/"README.md").read_text()
           assert "Pearson correlations are unchanged" in readme
-          assert "fi" not in readme and "STGSWSTLK" not in readme
+          assert "factor" not in readme.lower() and "STGSWSTLK" not in readme
           print("PASS 12 PNG, 39x39 correlations, 2 methods, no target/factor display")
           PY
       - name: Publish only new client visualization package
