@@ -328,7 +328,7 @@ def qc_per_plate(stages,names,info):
 def plot_qc_plate(records):
     df=pd.DataFrame(records)
     fig,ax=plt.subplots(figsize=(11,6.5),layout="constrained")
-    for name in METHODS+("HELP-heavy QC LOO","Yeast protein sum QC LOO","Yeast protein single QC LOO","Yeast peptides (2) QC LOO"):
+    for name in METHODS+("HELP-heavy only QC LOO","Yeast protein sum QC LOO","Yeast protein single QC LOO","Yeast peptides (2) QC LOO"):
         sub=df[df.method==name]
         if not len(sub):continue
         ax.plot([int(s) for s in sub.plate],sub.median_cv_pct,marker="o",
