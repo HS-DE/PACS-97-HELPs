@@ -1,0 +1,150 @@
+name: NYD STGSWSTLK single-Heavy calibration
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/nyd_STGSWSTLK_heavy_single_normalization.py
+      - .github/workflows/nyd-stgswstlk-single-heavy.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: nyd-single-STGSWSTLK-40samples
+  cancel-in-progress: false
+jobs:
+  calculate-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install scientific packages
+        run: python -m pip install numpy matplotlib
+      - name: Calibrate all samples from single STGSWSTLK Heavy
+        run: |
+          OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 \
+            python scripts/nyd_STGSWSTLK_heavy_single_normalization.py
+      - name: Independently verify input Heavy, log2 additive shifts, batch CV and shared-frame PCA
+        run: |
+          OPENBLAS_NUM_THREADS=2 python - <<'PY'
+          from pathlib import Path
+          import csv,hashlib,json,math,statistics
+          import numpy as np
+          from sys import path
+          path.insert(0,"scripts")
+          from filter_samples import readbook,tab
+          root=Path("NYD_data/40samples")
+          out=root/"STGSWSTLK_Heavy_single_reference_normalization"
+          manifest=json.loads((out/"run_manifest.json").read_text())
+          assert manifest["n_samples"]==40 and manifest["n_protein_groups"]==4264
+          assert manifest["n_HELP_peptides_in_source"]==97
+          assert manifest["one_selected_peptide"]=="STGSWSTLK"
+          assert manifest["batch_sizes"]=={"T001":16,"T002":8,"T003":8,"T004":8}
+          assert manifest["no_imputation"] and manifest["normalization_on_log2"]
+          for filename,h in manifest["sources"].items():
+              assert hashlib.sha256((root/filename).read_bytes()).hexdigest()==h
+          def read_csv(file):
+              with (out/file).open(encoding="utf-8-sig",newline="") as f:
+                  return list(csv.DictReader(f))
+          factors=read_csv("sample_STGSWSTLK_Heavy_factors.csv")
+          assert len(factors)==40
+          ids=[r["sample_id"] for r in factors]
+          assert len(set(ids))==40
+          assert all(x["batch"] in manifest["batch_sizes"] for x in factors)
+          # Verify exact original Heavy intensities without relying on analysis script.
+          strings,sheets=readbook(root/"Heavy.xlsx")
+          rows=tab(sheets[0],strings)
+          header={s:c for c,s in rows[0].items() if c!="A"}
+          matching=[row for row in rows[1:] if row.get("A")=="STGSWSTLK"]
+          assert len(matching)==1
+          heavy=np.array([float(matching[0][header[s]]) for s in ids])
+          h=np.log2(heavy)
+          median=float(np.median(h))
+          offsets=median-h
+          assert np.allclose(offsets,[float(x["fi_log2"]) for x in factors],atol=1e-12)
+          assert np.allclose(np.exp2(offsets),[float(x["multiplier_linear"]) for x in factors],atol=1e-12)
+          assert np.allclose(h+offsets,median,rtol=0,atol=1e-12)
+          assert np.allclose(h,[float(x["median_hi_log2_single_value"]) for x in factors],atol=1e-12)
+          assert all(np.isclose(float(r["median_h_log2_all_40"]),median) for r in factors)
+          with (root/"NYD_pg_matrix2.tsv").open(encoding="utf-8-sig",newline="") as f:
+              original=list(csv.DictReader(f,delimiter="\t"))
+          with (out/"corrected_NYD_pg_matrix2_log2.tsv").open(newline="") as f:
+              reader=csv.DictReader(f,delimiter="\t")
+              assert len(reader.fieldnames)==45
+              assert set(reader.fieldnames[5:])==set(ids)
+              corrected=list(reader)
+          assert len(original)==len(corrected)==4264
+          for i,(before,after) in enumerate(zip(original,corrected)):
+              assert all(before[key]==after[key] for key in
+                         ("Protein.Group","Protein.Ids","Protein.Names","Genes","First.Protein.Description"))
+              for j,s in enumerate(ids):
+                  val=before[s]
+                  try: f=float(val)
+                  except (TypeError,ValueError):f=float("nan")
+                  c=after[s]
+                  if not math.isfinite(f) or f<=0:
+                      assert c=="",(i,s,val,c)
+                  else:
+                      assert math.isclose(float(c),math.log2(f)+offsets[j],
+                                          rel_tol=1e-12,abs_tol=1e-10),(i,s)
+          for target in ("P00751","P07225"):
+              matched=[i for i,row in enumerate(original) if row["Protein.Group"]==target]
+              assert len(matched)==1
+              i=matched[0]
+              gene={"P00751":"CFB","P07225":"PROS1"}[target]
+              for j,r in enumerate(factors):
+                  assert math.isclose(float(r[f"{gene}_{target}_Raw_PG_log2"]),
+                         math.log2(float(original[i][r["sample_id"]])),rel_tol=1e-12)
+                  assert math.isclose(float(r[f"{gene}_{target}_Corrected_PG_log2"]),
+                         float(corrected[i][r["sample_id"]]),rel_tol=1e-12)
+          summary=read_csv("batch_protein_CV_summary.csv")
+          assert len(summary)==8
+          assert {(r["stage"],r["batch"]) for r in summary}=={
+            (stage,b) for stage in ("Raw","Corrected") for b in ("T001","T002","T003","T004")}
+          assert all(int(r["n_proteins_with_valid_cv"])>100 for r in summary)
+          # Independently spot-check CV calculations for multiple proteins and batches.
+          long=read_csv("per_protein_batch_CV_long.csv")
+          bykey={(r["stage"],r["batch"],int(r["protein_row_1based"])):r for r in long}
+          assert len(long)==2*4*4264
+          for stage in ("Raw","Corrected"):
+              for batch in ("T001","T002","T003","T004"):
+                  samp=[s for j,s in enumerate(ids) if factors[j]["batch"]==batch]
+                  for k in (100,563,797,1800,3200):
+                      row=original[k] if stage=="Raw" else corrected[k]
+                      values=[]
+                      for s in samp:
+                          try: v=float(row[s])
+                          except (ValueError,TypeError): continue
+                          if stage=="Corrected":v=2**v
+                          if math.isfinite(v) and v>0:values.append(v)
+                      needed=max(3,math.ceil(.70*len(samp)))
+                      observed=float(bykey[(stage,batch,k+1)]["cv_pct"])
+                      if len(values)>=needed and statistics.mean(values)>=1e-8:
+                          cv=100*statistics.stdev(values)/statistics.mean(values)
+                          assert math.isclose(cv,observed,rel_tol=1e-10,abs_tol=1e-8)
+          pca=read_csv("PCA_Raw_fitted_sample_coordinates.csv")
+          assert len(pca)==40 and {r["sample_id"] for r in pca}==set(ids)
+          assert manifest["PCA"]["fitted_on"]=="Raw PG log2 only"
+          assert manifest["PCA"]["n_selected_proteins"]>=100
+          assert all(math.isfinite(float(r["projected_movement_distance"])) for r in pca)
+          assert len(list(out.glob("*.png")))==6
+          assert all(p.stat().st_size>15000 for p in out.glob("*.png"))
+          assert (out/"README.md").stat().st_size>1000
+          print("PASS: 40 original Heavy values, exact median and fi, complete PG matrix, "
+                "4 batches CV independent checks, 6 PNG, Raw-fit shared-coordinate PCA")
+          PY
+      - name: Commit only new results, retaining all originals
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- NYD_data/40samples/STGSWSTLK_Heavy_single_reference_normalization
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish single STGSWSTLK Heavy calibration, QC, and shared-PCA visuals [skip ci]"
+            git push
+          fi
