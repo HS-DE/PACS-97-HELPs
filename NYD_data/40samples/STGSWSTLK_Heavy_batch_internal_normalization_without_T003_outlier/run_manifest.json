@@ -1,0 +1,65 @@
+{
+  "n_original_samples": 40,
+  "n_retained_samples": 39,
+  "excluded_sample_id": "MAP26092326E01",
+  "excluded_before_medians": true,
+  "source_sha256": {
+    "NYD_pg_matrix2.tsv": "39f912d004f8cd3a51a8d879a97d43b308b32f3ee195646b51e32dcbc60d7167",
+    "Heavy.xlsx": "7670f3d5d939d18bcf4163523d2197c74eba96eb46a52eebb227e2abbac03af0",
+    "NYD_sampleinfo2.xlsx": "82f2637934e097d9e0b28742e93ce66b7388b877b80810e0a97108b95d5e321c"
+  },
+  "previous_global_CV_sha256": "f4a66c689630b99e89f9ca2093d9e0938e9ffcee3305dafdac8fb07c3922753d",
+  "n_protein_groups": 4264,
+  "batch_counts": {
+    "T001": 16,
+    "T002": 8,
+    "T003": 7,
+    "T004": 8
+  },
+  "selected_HELP": "STGSWSTLK Heavy only",
+  "median_ref": "median(log2 STGSWSTLK Heavy), independently calculated within each batch",
+  "fi": "median_ref_batch - log2 STGSWSTLK Heavy per sample",
+  "corrected": "raw PG log2 intensity + fi for 39 retained samples",
+  "batch_references_log2": {
+    "T001": 21.122744278499212,
+    "T002": 21.163280893507395,
+    "T003": 20.91881450490014,
+    "T004": 21.23099536075814
+  },
+  "reference_not_global": true,
+  "median_of_each_batch_factors_is_zero": true,
+  "no_other_HELP_or_weight": true,
+  "no_imputation_for_PG_or_CV": true,
+  "original_input_files_and_old_results_unchanged": true,
+  "CV_measured_on_linear_intensity": true,
+  "within_batch_CV_equal_to_prior_global_result": true,
+  "PCA_Raw_fit": {
+    "fitted_on": "Raw PG log2 only",
+    "corrected_data": "Projected onto original Raw components; not a second PCA fit",
+    "feature_selection": "Raw detection >=70% of 39 retained samples and Raw SD>1e-8",
+    "n_selected_proteins": 3307,
+    "missing_imputation": "Each selected protein's Raw median, identical for Raw and Corrected",
+    "centering": "Each selected protein's Raw mean after Raw-only missing imputation",
+    "PC1_raw_explained_variance_pct": 18.735929392931155,
+    "PC2_raw_explained_variance_pct": 13.96061659531278,
+    "PC_axis_orientation": "Raw loading with largest absolute magnitude is positive"
+  },
+  "common_PCA_axis_limits": {
+    "x_min": -22.103346714830273,
+    "x_max": 61.01708370876908,
+    "y_min": -14.900465597904152,
+    "y_max": 33.2502953179003
+  },
+  "PCA_display": "Two separate PNG images; no combined raw/corrected plot and no arrows",
+  "figures": [
+    "01_PG_39samples_Raw_vs_corrected_highlight_CFB_PROS1.png",
+    "02_STGSWSTLK_Heavy_batch_references_and_factors.png",
+    "03_batch_protein_CV_raw_vs_corrected.png",
+    "04a_PCA_Raw.png",
+    "04b_PCA_Corrected.png",
+    "05_CFB_PROS1_by_batch_Raw_vs_corrected.png",
+    "06_sample_PG_medians_Raw_vs_corrected.png",
+    "07_Raw_global_batch_internal_CV.png"
+  ],
+  "valid_PG_cells": 137870
+}
