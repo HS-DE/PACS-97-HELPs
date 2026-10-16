@@ -1,0 +1,69 @@
+{
+  "source_sha256": {
+    "NYD_pg_matrix2.tsv": "39f912d004f8cd3a51a8d879a97d43b308b32f3ee195646b51e32dcbc60d7167",
+    "Heavy.xlsx": "7670f3d5d939d18bcf4163523d2197c74eba96eb46a52eebb227e2abbac03af0",
+    "NYD_sampleinfo2.xlsx": "82f2637934e097d9e0b28742e93ce66b7388b877b80810e0a97108b95d5e321c"
+  },
+  "n_original_samples": 40,
+  "n_retained_samples": 39,
+  "excluded_sample_id": "MAP26092326E01",
+  "excluded_before_CV_MAD_detection_and_reference": true,
+  "number_HELP_in_Heavy": 97,
+  "n_fully_detected_HELP": 91,
+  "selection_rule": "among 39/39 detected, relative MAD% <= median relative MAD% of full-detection peptides; select 5 lowest original-linear-scale CV%",
+  "relative_MAD_guardrail_pct": 9.588546946757477,
+  "relative_MAD_definition": "100 * median(abs(original_linear_H - median(original_linear_H))) / median(original_linear_H)",
+  "MAD_original_linear_definition": "median(abs(H - median(H)))",
+  "MAD_log2_definition": "median(abs(log2 H - median(log2 H)))",
+  "CV_pct_definition": "100 * sample_standard_deviation(H,ddof=1) / mean(H)",
+  "selected_HELP_in_CV_rank_order": [
+    "LLIYWASTR",
+    "ALDFAVGEYNK",
+    "VTVLGQPK",
+    "YWGVASFLQK",
+    "SLDFTELDVAAEK"
+  ],
+  "n_selected_HELP": 5,
+  "reference": "Per HELP median(log2 Heavy) across 39 retained clinical samples; not pooled QC",
+  "h": "mean of the five [log2 Heavy of sample - its own 39-sample reference] values",
+  "fi": "-h",
+  "corrected_PG": "raw PG log2 + (-h)",
+  "no_extra_weights": true,
+  "equal_weight_per_HELP": 0.2,
+  "no_imputation_or_factor_capping": true,
+  "no_source_or_previous_results_modified": true,
+  "n_protein_groups": 4264,
+  "valid_original_PG_cells": 137870,
+  "valid_corrected_PG_cells": 137870,
+  "PCA": {
+    "fitted_on": "Raw PG log2 only",
+    "corrected_data": "Projected onto original Raw components; not a second PCA fit",
+    "feature_selection": "Raw detection >=70% of 39 retained samples and Raw SD>1e-8",
+    "n_selected_proteins": 3307,
+    "missing_imputation": "Each selected protein's Raw median, identical for Raw and Corrected",
+    "centering": "Each selected protein's Raw mean after Raw-only missing imputation",
+    "PC1_raw_explained_variance_pct": 18.73592939293115,
+    "PC2_raw_explained_variance_pct": 13.960616595312784,
+    "PC_axis_orientation": "Raw loading with largest absolute magnitude is positive"
+  },
+  "PCA_same_axis_limits": {
+    "x_min": -22.1033467148303,
+    "x_max": 61.01708370876914,
+    "y_min": -14.646751020247587,
+    "y_max": 30.744222279901287
+  },
+  "PCA_display": "Raw and Corrected separate PNGs using one Raw fit",
+  "CV_on_linear_PG": true,
+  "figures": [
+    "01_all_HELP_CV_vs_relative_MAD_selected5.png",
+    "02_97_HELP_Heavy_39sample_boxes_selected5.png",
+    "01_PG_39samples_Raw_vs_corrected_highlight_CFB_PROS1.png",
+    "04_sample_HELP_h_and_negative_correction.png",
+    "03_batch_protein_CV_raw_vs_corrected.png",
+    "05_Raw_one_HELP_vs_five_HELP_batch_CV.png",
+    "04a_PCA_Raw.png",
+    "04b_PCA_Corrected.png",
+    "05_CFB_PROS1_by_batch_Raw_vs_corrected.png",
+    "06_sample_PG_medians_Raw_vs_corrected.png"
+  ]
+}
