@@ -253,8 +253,8 @@ def plot_cv(summary,cvvalues):
     post=[next(r["median_protein_cv_pct"] for r in summary if r["stage"]=="Corrected" and r["batch"]==b)
           for b in BATCHES]
     xx=np.arange(4)
-    ax.bar(xx-.19,raw,width=.36,c="#8293A2",label="Raw")
-    ax.bar(xx+.19,post,width=.36,c=BLUE,label="Corrected")
+    ax.bar(xx-.19,raw,width=.36,color="#8293A2",label="Raw")
+    ax.bar(xx+.19,post,width=.36,color=BLUE,label="Corrected")
     for pos,val in zip(list(xx-.19)+list(xx+.19),raw+post):
         ax.text(pos,val+.6,f"{val:.2f}%",ha="center",fontsize=9)
     ax.set_xticks(xx,[f"{b}\nn={BATCH_COUNTS[b]}" for b in BATCHES])
