@@ -72,6 +72,22 @@ across panels, and the third panel shows each sample movement.
 - PCA_Raw_fitted_sample_coordinates.csv: shared PCA scores and movement.
 - run_manifest.json: exact original SHA256 and all methods.
 
+## Large-factor warning (all samples retained)
+
+**MAP26092326E01 (T003)** has original STGSWSTLK Heavy
+intensity **2,658.13**, versus the across-40 reference median of about
+**2.23 million**. Following the specified algorithm *without any factor cap*,
+its offset is **+9.7096 log2 units**, corresponding to a **837.31×**
+multiplier for every measured PG protein in that sample. This one
+extreme correction is a plausible primary driver of the T003 batch median
+protein CV changing from **19.09% to 278.59%**. The same sample had
+previously shown unusually low PG detection (2,077/4,264) and an elevated
+Raw PG median, which makes source signal quality worth checking.
+
+**No sample was dropped or winsorized, and no factor was capped.**
+This is a faithful *as-requested* calibration, not a recommendation
+that the extreme factor is biologically or technically valid.
+
 ## Caution
 
 By using one Heavy peptide's deviation from an overall 40-sample
