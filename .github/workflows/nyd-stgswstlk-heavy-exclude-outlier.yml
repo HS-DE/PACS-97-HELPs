@@ -54,6 +54,7 @@ jobs:
           assert len(factors)==39
           ids=[r["sample_id"] for r in factors]
           assert len(set(ids))==39
+          assert sum(r["batch"]=="T003" for r in factors)==7
           assert all(x["batch"] in manifest["batch_sizes"] for x in factors)
           assert "MAP26092326E01" not in ids
           assert manifest["excluded_sample_id"]=="MAP26092326E01"
@@ -72,6 +73,7 @@ jobs:
           assert np.allclose(offsets,[float(x["fi_log2"]) for x in factors],atol=1e-12)
           assert np.allclose(np.exp2(offsets),[float(x["multiplier_linear"]) for x in factors],atol=1e-12)
           assert np.allclose(h+offsets,median,rtol=0,atol=1e-12)
+          assert float(np.max(np.abs(offsets)))<1.0, "Suspiciously large correction remains after exclusion"
           assert np.allclose(h,[float(x["median_hi_log2_single_value"]) for x in factors],atol=1e-12)
           assert all(np.isclose(float(r["median_h_log2_all_39"]),median) for r in factors)
           with (root/"NYD_pg_matrix2.tsv").open(encoding="utf-8-sig",newline="") as f:
