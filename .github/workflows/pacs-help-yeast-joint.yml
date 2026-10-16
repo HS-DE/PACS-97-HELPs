@@ -86,7 +86,7 @@ jobs:
                                  rtol=1e-12,atol=1e-10,equal_nan=True)
           for path,n in (
               ("all_group_protein_CV.csv",20),
-              ("pooled_QC_LOO_group_cv.csv",5),
+              ("pooled_QC_LOO_group_cv.csv",4),
               ("pooled_QC_plate_CV.csv",27),
               ("PCA_summary.csv",10),
           ):
