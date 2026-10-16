@@ -1,0 +1,134 @@
+name: NYD STGSWSTLK Heavy per-batch reference normalization
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/nyd_STGSWSTLK_heavy_batch_internal_trial.py
+      - .github/workflows/nyd-stgswstlk-batch-internal.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: nyd-stgswstlk-heavy-batch-internal
+  cancel-in-progress: false
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install scientific and plotting dependencies
+        run: python -m pip install numpy pandas matplotlib
+      - name: Run batch-local STGSWSTLK Heavy calibration and plots
+        run: |
+          OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 \
+            python scripts/nyd_STGSWSTLK_heavy_batch_internal_trial.py
+      - name: Independently verify each batch reference, 39 PG columns, per-protein CV, PCA
+        run: |
+          OPENBLAS_NUM_THREADS=2 python - <<'PY'
+          import csv,hashlib,json,math
+          from pathlib import Path
+          import numpy as np
+          import pandas as pd
+          root=Path("NYD_data/40samples")
+          directory=root/"STGSWSTLK_Heavy_batch_internal_normalization_without_T003_outlier"
+          former=root/"STGSWSTLK_Heavy_single_reference_normalization_without_T003_outlier"
+          manifest=json.loads((directory/"run_manifest.json").read_text())
+          assert manifest["n_original_samples"]==40 and manifest["n_retained_samples"]==39
+          assert manifest["excluded_sample_id"]=="MAP26092326E01"
+          assert manifest["batch_counts"]=={"T001":16,"T002":8,"T003":7,"T004":8}
+          assert manifest["reference_not_global"]
+          assert manifest["median_of_each_batch_factors_is_zero"]
+          assert manifest["PCA_Raw_fit"]["fitted_on"]=="Raw PG log2 only"
+          assert manifest["PCA_display"].startswith("Two separate")
+          for filename,hashvalue in manifest["source_sha256"].items():
+              assert hashlib.sha256((root/filename).read_bytes()).hexdigest()==hashvalue
+          reference=pd.read_csv(directory/"batch_STGSWSTLK_Heavy_median_references.csv")
+          assert len(reference)==4 and set(reference.batch)=={"T001","T002","T003","T004"}
+          f=pd.read_csv(directory/"sample_batch_internal_factors.csv")
+          assert len(f)==39 and f.sample_id.nunique()==39 and "MAP26092326E01" not in f.sample_id.values
+          assert f.groupby("batch").size().to_dict()==manifest["batch_counts"]
+          h=np.log2(f.Heavy_STGSWSTLK_linear.to_numpy(float))
+          assert np.allclose(h,f.median_hi_log2.to_numpy(),rtol=0,atol=1e-12)
+          assert np.allclose(f.Heavy_after_factor_diagnostic_log2,
+                             f.median_ref_batch_log2,rtol=0,atol=1e-12)
+          assert np.allclose(f.fi_log2,
+                             f.median_ref_batch_log2-f.median_hi_log2,rtol=0,atol=1e-12)
+          assert np.allclose(f.multiplier_linear,np.exp2(f.fi_log2),rtol=0,atol=1e-12)
+          for row in reference.itertuples():
+              sub=f[f.batch==row.batch]
+              assert len(sub)==int(row.n_samples)
+              median=float(np.median(np.log2(sub.Heavy_STGSWSTLK_linear)))
+              assert math.isclose(median,row.median_ref_log2_STGSWSTLK_Heavy,abs_tol=1e-12)
+              assert np.allclose(sub.median_ref_batch_log2,median,rtol=0,atol=1e-12)
+              assert math.isclose(np.median(sub.fi_log2),0,abs_tol=1e-12)
+          old=pd.read_csv(former/"sample_STGSWSTLK_Heavy_factors.csv").set_index("sample_id")
+          fidx=f.set_index("sample_id")
+          for batch,sub in f.groupby("batch"):
+              delta=fidx.loc[sub.sample_id,"fi_log2"]-old.loc[sub.sample_id,"fi_log2"]
+              assert float(np.ptp(delta))<1e-11
+          # Check ALL observed PG intensities, ALL 4264 proteins x 39 samples.
+          with (root/"NYD_pg_matrix2.tsv").open(encoding="utf-8-sig",newline="") as fh:
+              original=list(csv.DictReader(fh,delimiter="\t"))
+          with (directory/"corrected_NYD_pg_matrix2_log2.tsv").open(newline="") as fh:
+              reader=csv.DictReader(fh,delimiter="\t")
+              columns=reader.fieldnames
+              corrected=list(reader)
+          assert len(original)==len(corrected)==4264
+          assert len(columns)==44 and set(columns[5:])==set(f.sample_id)
+          assert "MAP26092326E01" not in columns
+          offset=dict(zip(f.sample_id,f.fi_log2))
+          annotation=("Protein.Group","Protein.Ids","Protein.Names","Genes","First.Protein.Description")
+          for i,(r,c) in enumerate(zip(original,corrected)):
+              assert all(r[k]==c[k] for k in annotation)
+              for sid,shift in offset.items():
+                  try: v=float(r[sid])
+                  except (ValueError,TypeError):v=float("nan")
+                  if not math.isfinite(v) or v<=0:assert c[sid]=="",(i,sid)
+                  else:
+                      assert math.isclose(float(c[sid]),math.log2(v)+shift,
+                                          rel_tol=1e-12,abs_tol=1e-10),(i,sid)
+          cv=pd.read_csv(directory/"batch_protein_CV_summary.csv")
+          prior_cv=pd.read_csv(former/"batch_protein_CV_summary.csv")
+          assert len(cv)==8 and len(prior_cv)==8
+          for r in cv.itertuples():
+              previous=prior_cv[(prior_cv.stage==r.stage)&(prior_cv.batch==r.batch)]
+              assert len(previous)==1
+              assert math.isclose(r.median_protein_cv_pct,
+                                  float(previous.iloc[0].median_protein_cv_pct),
+                                  rel_tol=1e-11,abs_tol=1e-10)
+          comp=pd.read_csv(directory/"Raw_global_batch_internal_CV_comparison.csv")
+          assert len(comp)==4
+          assert np.allclose(comp.Batch_minus_previous_global_pp,0,rtol=0,atol=1e-10)
+          scores=pd.read_csv(directory/"PCA_Raw_fitted_sample_coordinates.csv")
+          assert len(scores)==39 and set(scores.sample_id)==set(f.sample_id)
+          assert manifest["PCA_Raw_fit"]["n_selected_proteins"]>=100
+          axis=manifest["common_PCA_axis_limits"]
+          for v in ("x_min","x_max","y_min","y_max"):assert math.isfinite(axis[v])
+          assert axis["x_min"]<axis["x_max"] and axis["y_min"]<axis["y_max"]
+          for stage in ("Raw_PC1","Raw_PC2","Corrected_projected_PC1","Corrected_projected_PC2"):
+              assert np.all(np.isfinite(scores[stage]))
+          figs=manifest["figures"]
+          assert len(figs)==8 and len(list(directory.glob("*.png")))==8
+          assert "04a_PCA_Raw.png" in figs and "04b_PCA_Corrected.png" in figs
+          assert all((directory/name).stat().st_size>15000 for name in figs)
+          print("PASS: batch-wise log2 median references for 16/8/7/8, "
+                "39 exact sample factors, 4264 x 39 PG matrix, "
+                "within-batch CV identities, 8 figures and separate common-frame PCA")
+          PY
+      - name: Publish new batch-internal results without changing history
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- NYD_data/40samples/STGSWSTLK_Heavy_batch_internal_normalization_without_T003_outlier
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish 39-sample STGSWSTLK Heavy batch-internal correction and two PCA charts [skip ci]"
+            git push
+          fi
