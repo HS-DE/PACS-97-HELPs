@@ -319,8 +319,8 @@ def main():
       "- Sample Pearson correlations: before-and-after paired PNG.",
       "- Supporting sample-to-sample correlation CSVs and sample-label key.",
       "",
-      "All figures are free of reference-target highlights and numeric",
-      "correction-factor annotations.",
+      "Figures emphasize protein distributions and sample correlations",
+      "without individual target-protein annotations.",
       ""]
     (ROOT/"README.md").write_text("\n".join(report),encoding="utf-8")
     manifest={
