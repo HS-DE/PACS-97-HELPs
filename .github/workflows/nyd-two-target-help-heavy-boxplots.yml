@@ -1,0 +1,92 @@
+name: NYD PG and 97 HELP Heavy sample boxplots
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/nyd_pg_heavy_two_highlight.py
+      - .github/workflows/nyd-two-target-help-heavy-boxplots.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: nyd-two-target-40sample-boxplots
+  cancel-in-progress: false
+jobs:
+  plot-and-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install numeric and Excel plotting dependencies
+        run: python -m pip install numpy pandas matplotlib openpyxl
+      - name: Generate original PG and original HELP Heavy boxplots
+        run: OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 python scripts/nyd_pg_heavy_two_highlight.py
+      - name: Independently audit exact protein and peptide highlights
+        run: |
+          python - <<'PY'
+          import hashlib,json,math
+          from pathlib import Path
+          import numpy as np
+          import pandas as pd
+          root=Path("NYD_data/40samples")
+          out=root/"PG_and_HELP_Heavy_two_reference_highlight"
+          m=json.loads((out/"run_manifest.json").read_text())
+          assert m["sample_count"]==40 and m["protein_group_count"]==4264
+          assert m["HELP_unique_peptide_count"]==97
+          assert m["no_imputation"] and m["no_normalization"]
+          assert m["batch_counts"]=={"T001":16,"T002":8,"T003":8,"T004":8}
+          for file,hashval in m["source_sha256"].items():
+              assert hashlib.sha256((root/file).read_bytes()).hexdigest()==hashval
+          for f in m["figures"]:
+              path=out/f
+              assert path.is_file() and path.stat().st_size>18000
+          assert len(list(out.glob("*.png")))==3
+          stats=pd.read_csv(out/"sample_distribution_summary.csv")
+          pts=pd.read_csv(out/"highlighted_two_targets_positions.csv")
+          assert stats.shape[0]==80 and pts.shape[0]==160
+          assert stats.groupby("source").size().to_dict()=={"PG_protein":40,"HELP_Heavy":40}
+          assert pts.groupby(["source","peptide"]).size().to_dict()=={
+            ("PG_protein","STGSWSTLK"):40,
+            ("PG_protein","VYFAGFPR"):40,
+            ("HELP_Heavy","STGSWSTLK"):40,
+            ("HELP_Heavy","VYFAGFPR"):40,
+          }
+          assert set(pts["highlight_color"])=={"blue","yellow"}
+          assert pts.raw_linear_intensity.gt(0).all()
+          assert np.allclose(pts.log2_intensity.to_numpy(),
+                             np.log2(pts.raw_linear_intensity.to_numpy()),atol=1e-12)
+          assert pts.percentile_among_valid_features.between(0,100).all()
+          pg=pd.read_csv(root/"NYD_pg_matrix2.tsv",sep="\t",dtype=str,keep_default_na=False)
+          help_=pd.read_excel(root/"Heavy.xlsx",engine="openpyxl")
+          sources={
+              "PG_protein":pg,
+              "HELP_Heavy":help_,
+          }
+          for row in pts.itertuples(index=False):
+              source=sources[row.source]
+              i=int(row.source_feature_index_zero_based)
+              value=float(source.loc[i,row.sample_id])
+              assert math.isclose(value,row.raw_linear_intensity,rel_tol=1e-12,abs_tol=1e-9)
+              s=stats[(stats.source==row.source)&(stats.sample_id==row.sample_id)]
+              assert len(s)==1 and s.iloc[0].finite_positive_features==row.background_n_valid
+              assert math.isclose(row.log2_difference_from_sample_median,
+                                  row.log2_intensity-float(s.iloc[0].median_log2),abs_tol=1e-11)
+          assert (out/"README.md").is_file()
+          print("PASS: exact original sources, 40 samples, 4264 PG, 97 Heavy HELP, all 160 colored target points")
+          PY
+      - name: Publish only the new NYD highlighting result directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- NYD_data/40samples/PG_and_HELP_Heavy_two_reference_highlight
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish NYD raw PG and HELP Heavy per-sample target highlights [skip ci]"
+            git push
+          fi
