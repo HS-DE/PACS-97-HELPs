@@ -1,0 +1,149 @@
+name: NYD STGSWSTLK subtract-factor global and batch
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/nyd_STGSWSTLK_heavy_reverse_factor_trial.py
+      - .github/workflows/nyd-stgswstlk-subtract-factor.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: nyd-STGSWSTLK-39sample-subtract-factor
+  cancel-in-progress: false
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install plotting and table dependencies
+        run: python -m pip install numpy pandas matplotlib
+      - name: Compute reverse-direction single Heavy factors and plot two branches
+        run: |
+          OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 \
+            python scripts/nyd_STGSWSTLK_heavy_reverse_factor_trial.py
+      - name: Independently check original factor identity, all protein shifts, CV, PCA and figures
+        run: |
+          OPENBLAS_NUM_THREADS=2 python - <<'PY'
+          import csv,hashlib,json,math
+          from pathlib import Path
+          import numpy as np
+          import pandas as pd
+          root=Path("NYD_data/40samples")
+          out=root/"STGSWSTLK_Heavy_subtract_factor_39samples"
+          gplus=root/"STGSWSTLK_Heavy_single_reference_normalization_without_T003_outlier"
+          bplus=root/"STGSWSTLK_Heavy_batch_internal_normalization_without_T003_outlier"
+          meta=json.loads((out/"run_manifest.json").read_text())
+          assert meta["n_original"]==40 and meta["n_retained"]==39
+          assert meta["excluded_sample_id"]=="MAP26092326E01"
+          assert meta["removed_before_all_references_and_analysis"]
+          assert meta["factors_exactly_match_original_plus_f_trials"]
+          assert meta["per_batch_reverse_CV_global_equals_batch_internal"]
+          for name,expect in meta["inputs_sha256"].items():
+              assert hashlib.sha256((root/name).read_bytes()).hexdigest()==expect
+          with (root/"NYD_pg_matrix2.tsv").open(encoding="utf-8-sig",newline="") as fh:
+              original=list(csv.DictReader(fh,delimiter="\t"))
+          annotations=("Protein.Group","Protein.Ids","Protein.Names","Genes","First.Protein.Description")
+          assert len(original)==4264
+          branches=[
+              ("global_subtract_fi",gplus/"sample_STGSWSTLK_Heavy_factors.csv",
+               "median_h_log2_all_39"),
+              ("batch_subtract_fi",bplus/"sample_batch_internal_factors.csv",
+               "median_ref_batch_log2")
+          ]
+          both={}
+          for branch,prior_path,prior_median_field in branches:
+              sub=out/branch
+              df=pd.read_csv(sub/"sample_factors_subtract_fi.csv")
+              earlier=pd.read_csv(prior_path)
+              assert df.shape[0]==39 and df.sample_id.nunique()==39
+              assert "MAP26092326E01" not in set(df.sample_id)
+              assert df.groupby("batch").size().to_dict()=={"T001":16,"T002":8,"T003":7,"T004":8}
+              earlier=earlier.set_index("sample_id").loc[df.sample_id]
+              assert np.allclose(df.fi_original_log2.to_numpy(),
+                                 earlier.fi_log2.to_numpy(),atol=1e-12,rtol=0)
+              assert np.allclose(df.median_ref_log2.to_numpy(),
+                                 earlier[prior_median_field].to_numpy(),atol=1e-12,rtol=0)
+              assert np.allclose(df.fi_original_log2,
+                                 df.median_ref_log2-df.median_hi_log2_single_peptide,
+                                 rtol=0,atol=1e-12)
+              assert np.allclose(df.actual_subtracted_shift_log2,-df.fi_original_log2,atol=1e-12)
+              assert np.allclose(df.applied_multiplier_linear,
+                                 np.exp2(-df.fi_original_log2),atol=1e-12)
+              with (sub/"corrected_NYD_pg_matrix2_log2.tsv").open(encoding="utf-8",newline="") as fh:
+                  reader=csv.DictReader(fh,delimiter="\t")
+                  cols=reader.fieldnames
+                  rows=list(reader)
+              assert len(rows)==4264 and len(cols)==44
+              assert set(cols[5:])==set(df.sample_id)
+              assert "MAP26092326E01" not in cols
+              mapping=dict(zip(df.sample_id,df.fi_original_log2))
+              for i,(before,after) in enumerate(zip(original,rows)):
+                  assert all(before[k]==after[k] for k in annotations)
+                  for sid,fi in mapping.items():
+                      try:x=float(before[sid])
+                      except (ValueError,TypeError):x=float("nan")
+                      if not math.isfinite(x) or x<=0:
+                          assert after[sid]=="",(branch,i,sid)
+                      else:
+                          assert math.isclose(float(after[sid]),math.log2(x)-fi,
+                                              rel_tol=1e-12,abs_tol=1e-10),(branch,i,sid)
+              cv=pd.read_csv(sub/"batch_protein_CV_summary.csv")
+              assert len(cv)==8 and set(cv.stage)=={"Raw","Corrected"}
+              assert len(pd.read_csv(sub/"per_protein_batch_CV_long.csv"))==2*4*4264
+              pca=pd.read_csv(sub/"PCA_Raw_fitted_sample_coordinates.csv")
+              assert len(pca)==39
+              assert set(pca.sample_id)==set(df.sample_id)
+              details=json.loads((sub/"factor_reference.json").read_text())
+              assert details["application"]=="corrected_PG_log2 = raw_PG_log2 - fi"
+              assert details["separate_PCA_figures"]
+              assert details["PCA_Raw_fit_only"]["fitted_on"]=="Raw PG log2 only"
+              assert len(details["figures"])==7
+              assert len(list(sub.glob("*.png")))==7
+              assert all((sub/image).stat().st_size>15000 for image in details["figures"])
+              both[branch]={"factor":df,"CV":cv,"PCA":pca,"metadata":details}
+              print("VERIFIED",branch,"39 samples x 4264 PG, exact subtraction, 7 graphics")
+          x=both["global_subtract_fi"]
+          y=both["batch_subtract_fi"]
+          for b in ("T001","T002","T003","T004"):
+              f1=x["factor"].set_index("sample_id")
+              f2=y["factor"].set_index("sample_id")
+              keys=x["factor"].loc[x["factor"].batch==b,"sample_id"]
+              d=f1.loc[keys,"fi_original_log2"]-f2.loc[keys,"fi_original_log2"]
+              assert np.ptp(d)<1e-11
+              one=x["CV"].query("batch==@b and stage=='Corrected'").iloc[0]
+              two=y["CV"].query("batch==@b and stage=='Corrected'").iloc[0]
+              assert math.isclose(one.median_protein_cv_pct,
+                                  two.median_protein_cv_pct,abs_tol=1e-10)
+              assert one.n_proteins_with_valid_cv==two.n_proteins_with_valid_cv
+          for key in ("Raw_PC1","Raw_PC2"):
+              assert np.allclose(x["PCA"][key],y["PCA"][key],atol=1e-11,rtol=0)
+          assert x["metadata"]["PCA_axis_bounds_identical_across_BOTH_variants"]==y["metadata"]["PCA_axis_bounds_identical_across_BOTH_variants"]
+          comparison=pd.read_csv(out/"00_global_batch_plus_minus_CV_comparison.csv")
+          assert len(comparison)==4
+          assert np.allclose(comparison["Global - fi"],comparison["Batch - fi"],atol=1e-10)
+          assert np.allclose(comparison["Global + fi"],comparison["Batch + fi"],atol=1e-10)
+          assert (out/"00_Raw_plus_factor_minus_factor_CV_comparison.png").stat().st_size>15000
+          assert (out/"README.md").stat().st_size>500
+          assert len(list(out.glob("*.png")))==1
+          print("PASS: two reverse-direction trials, identical original fi and sample set, "
+                "full matrix-level independent check, within-batch CV equality, "
+                "two separate common-frame PCA each, 15 PNG")
+          PY
+      - name: Commit independent reverse-factor outputs only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- NYD_data/40samples/STGSWSTLK_Heavy_subtract_factor_39samples
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish global and batch single-Heavy subtract-factor experiments [skip ci]"
+            git push
+          fi
