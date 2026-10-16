@@ -1,0 +1,68 @@
+{
+  "input_sha256": {
+    "pg_matrix.tsv": "112d59739481b2fbf1d5252d0fc754c4a4494af60c77ff050af153fe423012be",
+    "LH_ratio_tables_2026.10.13—ALL-HELP.xlsx": "5523ffca836fd7244610322f781084619541482835f108a92cdb350a6e3a4e53",
+    "all_QC_metadata.xlsx": "5dc7ee9296a1ed6422e3d3e4390c36dac8da884727f4b276d3db54764c25177e",
+    "all_sample_metadata.xlsx": "86e90f10a3ae3a099f52baa77a422dc234322a134fe2235c09bccf071e6863fe",
+    "EN01.xlsx": "08122d5a044689a7863cb85768d96797566d976a76925ecd3a71bdedcef09c45",
+    "sample-QC-InternalQC-HELP_yeast.xlsx": "4813ebd8387ee704e55a2c9b2ae5ed8cebd86d3e3db8c4792d320d0e3aaccee8"
+  },
+  "peptides_5_help": [
+    "FSVVYAK",
+    "STGSWSTLK",
+    "VTGWGNLK",
+    "VVEESELAR",
+    "VYFAGFPR"
+  ],
+  "yeast_input_audit": {
+    "yeast_protein_source_rows": [
+      "P00924_ENO1_YEAST",
+      "P00925_ENO1_YEAST"
+    ],
+    "protein_row_sums_all75_linear": [
+      590526810.0,
+      125724162.0
+    ],
+    "selected_single_protein_index_zero_based": 0,
+    "selected_single_protein_source_id": "P00924_ENO1_YEAST",
+    "yeast_peptide_source_rows": [
+      "AADALLLK",
+      "VNQIGTLSESIK"
+    ],
+    "missing_yeast_protein_by_original_row_all75": [
+      1,
+      1
+    ],
+    "missing_yeast_peptide_by_source_row_all75": [
+      1,
+      1
+    ],
+    "protein_sum": "sum both source rows in original linear intensity then log2",
+    "note": "Source labels contain P00925_ENO1_YEAST; accession annotation identity is not independently verified"
+  },
+  "n_pooled_QC_for_reference": 15,
+  "leave_one_out_n_peer_QC": 14,
+  "sample_counts": {
+    "HC": 27,
+    "S": 27,
+    "pooled QC": 15,
+    "Internal-QC": 6
+  },
+  "log2_h": "mean of five individual log2(H_sample/H_median_pooledQC)",
+  "log2_y_yeast_peptides": "mean of two peptide-specific log2(Y_sample/Y_median_pooledQC)",
+  "log2_y_protein_sum": "log2(sum two original linear protein signals) minus median in 15 pooled QC",
+  "log2_r": "log2_y-log2_h",
+  "two_step": "-log2_h - (log2_y-log2_h) == -log2_y, exactly same as yeast-only",
+  "corrected_groups": [
+    "HC",
+    "S",
+    "pooled QC"
+  ],
+  "unchanged_group": [
+    "Internal-QC"
+  ],
+  "CV_evaluated_linear": true,
+  "PCA_missing_value_median_imputation_only": true,
+  "yeast_residual_is_not_proof_of_digestion_efficiency": true,
+  "no_original_file_overwrites": true
+}
