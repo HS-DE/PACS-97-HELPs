@@ -1,0 +1,59 @@
+{
+  "sources": {
+    "pg_matrix.tsv": "112d59739481b2fbf1d5252d0fc754c4a4494af60c77ff050af153fe423012be",
+    "LH_ratio_tables_2026.10.13—ALL-HELP.xlsx": "5523ffca836fd7244610322f781084619541482835f108a92cdb350a6e3a4e53",
+    "all_QC_metadata.xlsx": "5dc7ee9296a1ed6422e3d3e4390c36dac8da884727f4b276d3db54764c25177e",
+    "all_sample_metadata.xlsx": "86e90f10a3ae3a099f52baa77a422dc234322a134fe2235c09bccf071e6863fe"
+  },
+  "proteins": 6675,
+  "samples": 75,
+  "five_peptides": [
+    "FSVVYAK",
+    "STGSWSTLK",
+    "VTGWGNLK",
+    "VVEESELAR",
+    "VYFAGFPR"
+  ],
+  "source_proteins": {
+    "FSVVYAK": {
+      "row": 975,
+      "accession": "P02765",
+      "gene": "AHSG"
+    },
+    "STGSWSTLK": {
+      "row": 874,
+      "accession": "P00751",
+      "gene": "CFB"
+    },
+    "VTGWGNLK": {
+      "row": 863,
+      "accession": "P00734",
+      "gene": "F2"
+    },
+    "VVEESELAR": {
+      "row": 968,
+      "accession": "P02748",
+      "gene": "C9"
+    },
+    "VYFAGFPR": {
+      "row": 1120,
+      "accession": "P07225",
+      "gene": "PROS1"
+    }
+  },
+  "QC_reference_sample_count": 15,
+  "QC_LOO_others_count": 14,
+  "f_i": "arithmetic mean of median pooled-QC log2 Heavy minus sample log2 Heavy, over five peptides",
+  "ratio_control": "same formula with L/H ratio values",
+  "corrected_protein": "raw log2 PG + f_i for HC/S and pooled QC, Internal-QC unchanged",
+  "CV": "sample sd (ddof=1)/mean on corrected linear-scale intensity",
+  "log2_before_median": true,
+  "no_imputation": true,
+  "L_minus_H_minus_log2_ratio_max_abs": {
+    "FSVVYAK": 7.105427357601002e-15,
+    "STGSWSTLK": 6.217248937900877e-15,
+    "VTGWGNLK": 7.105427357601002e-15,
+    "VVEESELAR": 7.105427357601002e-15,
+    "VYFAGFPR": 7.105427357601002e-15
+  }
+}
