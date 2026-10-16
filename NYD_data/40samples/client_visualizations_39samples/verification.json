@@ -1,0 +1,37 @@
+{
+  "sample_count": 39,
+  "n_protein_groups": 4264,
+  "n_valid_protein_intensities": 137870,
+  "batches": {
+    "T001": 16,
+    "T002": 8,
+    "T003": 7,
+    "T004": 8
+  },
+  "boxplot_ylim": [
+    7.574455066345731,
+    22.26207061949865
+  ],
+  "pearson_color_limits": [
+    0.85,
+    1.0
+  ],
+  "min_common_protein_count": 2636,
+  "max_common_protein_count": 3907,
+  "max_abs_pearson_change": {
+    "overall_reference": 3.1086244689504383e-15,
+    "within_batch_reference": 2.4424906541753444e-15
+  },
+  "raw_pearson_offdiagonal_min": 0.8930669312743562,
+  "note": "Pearson sample correlation is mathematically invariant to per-sample constant log2 shifts.",
+  "figures_by_variant": [
+    "01_protein_boxplots_before.png",
+    "02_protein_boxplots_after.png",
+    "03_protein_boxplots_before_after.png",
+    "04_sample_correlation_before.png",
+    "05_sample_correlation_after.png",
+    "06_sample_correlation_before_after.png"
+  ],
+  "source_PG_sha256": "39f912d004f8cd3a51a8d879a97d43b308b32f3ee195646b51e32dcbc60d7167",
+  "original_processing_results_retained": true
+}
