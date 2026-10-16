@@ -1,0 +1,70 @@
+{
+  "PG_source": "NYD_data/40samples/NYD_pg_matrix2.tsv",
+  "Heavy_source": "NYD_data/40samples/Heavy.xlsx",
+  "metadata_source": "NYD_data/40samples/NYD_sampleinfo2.xlsx",
+  "source_sha256": {
+    "NYD_pg_matrix2.tsv": "39f912d004f8cd3a51a8d879a97d43b308b32f3ee195646b51e32dcbc60d7167",
+    "Heavy.xlsx": "7670f3d5d939d18bcf4163523d2197c74eba96eb46a52eebb227e2abbac03af0",
+    "NYD_sampleinfo2.xlsx": "82f2637934e097d9e0b28742e93ce66b7388b877b80810e0a97108b95d5e321c"
+  },
+  "sample_count": 40,
+  "batch_counts": {
+    "T001": 16,
+    "T002": 8,
+    "T003": 8,
+    "T004": 8
+  },
+  "protein_group_count": 4264,
+  "HELP_unique_peptide_count": 97,
+  "PG_exact_accession_matches": [
+    {
+      "peptide": "STGSWSTLK",
+      "accession": "P00751",
+      "gene": "CFB",
+      "row_1based_excluding_header": 564,
+      "protein_group": "P00751",
+      "Protein.Ids": "P00751;P00751-2",
+      "Genes": "CFB"
+    },
+    {
+      "peptide": "VYFAGFPR",
+      "accession": "P07225",
+      "gene": "PROS1",
+      "row_1based_excluding_header": 798,
+      "protein_group": "P07225",
+      "Protein.Ids": "P07225",
+      "Genes": "PROS1"
+    }
+  ],
+  "reference_peptides": [
+    "STGSWSTLK",
+    "VYFAGFPR"
+  ],
+  "colors": {
+    "STGSWSTLK/P00751": "blue #2364E8",
+    "VYFAGFPR/P07225": "yellow #F2C94C"
+  },
+  "original_raw_linear_positive_then_log2": true,
+  "no_normalization": true,
+  "no_imputation": true,
+  "per_layer_validity": {
+    "PG_protein": {
+      "total": 170560,
+      "valid_positive": 139947,
+      "missing_invalid_nonpositive": 30613
+    },
+    "HELP_Heavy": {
+      "total": 3880,
+      "valid_positive": 3853,
+      "missing_invalid_nonpositive": 27
+    }
+  },
+  "matching": "exact sample identifiers and exact protein accession tokens",
+  "sample_order": "NYD_sampleinfo2.xlsx by batch T001/T002/T003/T004, original metadata order within batch",
+  "PCA_policy_for_future_work": "Raw-fit PCA, fixed Raw axes/feature selection/centering; transform corrected values into same space",
+  "figures": [
+    "01_NYD_40_sample_PG_boxplots_highlight_CFB_PROS1.png",
+    "02_NYD_40_sample_HELP_Heavy_boxplots_highlight_two.png",
+    "00_NYD_PG_and_HELP_Heavy_combined.png"
+  ]
+}
