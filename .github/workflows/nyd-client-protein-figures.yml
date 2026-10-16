@@ -1,0 +1,91 @@
+name: NYD client protein boxplots and correlation heatmaps
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/nyd_client_boxplots_correlation_heatmaps.py
+      - .github/workflows/nyd-client-protein-figures.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: nyd-client-39-sample-visualizations
+  cancel-in-progress: false
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install rendering dependencies
+        run: python -m pip install numpy pandas matplotlib
+      - name: Generate customer-facing figures
+        run: |
+          OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 \
+          python scripts/nyd_client_boxplots_correlation_heatmaps.py
+      - name: Verify image content constraints and correlation numerics
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          import math
+          import numpy as np
+          import pandas as pd
+          root=Path("NYD_data/40samples/client_visualizations_39samples")
+          m=json.loads((root/"verification.json").read_text(encoding="utf-8"))
+          assert m["sample_count"]==39 and m["n_protein_groups"]==4264
+          assert m["n_valid_protein_intensities"]==137870
+          assert m["batches"]=={"T001":16,"T002":8,"T003":7,"T004":8}
+          assert m["min_common_protein_count"]>=500
+          names=pd.read_csv(root/"sample_label_key.csv")
+          assert len(names)==39 and names.sample_id.nunique()==39
+          assert "MAP26092326E01" not in set(names.sample_id)
+          methods=("overall_reference","within_batch_reference")
+          files=m["figures_by_variant"]
+          assert len(files)==6
+          matrices=[]
+          for method in methods:
+              folder=root/method
+              assert len(list(folder.glob("*.png")))==6
+              for name in files:
+                  img=folder/name
+                  assert img.is_file() and img.stat().st_size>25000,name
+                  assert all(x not in name.lower() for x in ("factor","help","cfb","pros1"))
+                  with img.open("rb") as fh:hdr=fh.read(24)
+                  assert hdr[:8]==bytes((137,80,78,71,13,10,26,10))
+                  width=int.from_bytes(hdr[16:20],"big")
+                  height=int.from_bytes(hdr[20:24],"big")
+                  assert width>=1300 and height>=900,(method,name,width,height)
+              bef=pd.read_csv(folder/"Pearson_correlation_before.csv",index_col=0)
+              aft=pd.read_csv(folder/"Pearson_correlation_after.csv",index_col=0)
+              assert bef.shape==aft.shape==(39,39)
+              assert list(bef.columns)==list(names.sample_id)
+              assert list(aft.columns)==list(names.sample_id)
+              assert np.allclose(bef.to_numpy(),aft.to_numpy(),atol=1e-10,rtol=0)
+              assert np.allclose(bef.to_numpy(),bef.to_numpy().T,atol=1e-12)
+              assert np.allclose(np.diag(bef),1.,atol=1e-12)
+              assert m["max_abs_pearson_change"][method]<1e-10
+              matrices.append((bef.to_numpy(),aft.to_numpy()))
+          assert np.allclose(matrices[0][0],matrices[1][0],atol=1e-12)
+          assert np.allclose(matrices[0][1],matrices[1][1],atol=1e-10)
+          readme=(root/"README.md").read_text()
+          assert "Pearson correlations are unchanged" in readme
+          assert "fi" not in readme and "STGSWSTLK" not in readme
+          print("PASS 12 PNG, 39x39 correlations, 2 methods, no target/factor display")
+          PY
+      - name: Publish only new client visualization package
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- NYD_data/40samples/client_visualizations_39samples
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish customer-ready protein boxes and sample Pearson heatmaps for both NYD processing variants [skip ci]"
+            git push
+          fi
