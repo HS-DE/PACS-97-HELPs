@@ -1,0 +1,110 @@
+name: PACS HELP Heavy and yeast joint normalization
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/pacs_help_yeast_joint_trial.py
+      - .github/workflows/pacs-help-yeast-joint.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: pacs-help-yeast-joint
+  cancel-in-progress: false
+jobs:
+  trial:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install numerical and plotting packages
+        run: python -m pip install numpy pandas matplotlib
+      - name: Execute five-HELP / yeast reference and residual comparison
+        run: |
+          OPENBLAS_NUM_THREADS=2 MKL_NUM_THREADS=2 OMP_NUM_THREADS=2 \
+            python scripts/pacs_help_yeast_joint_trial.py
+      - name: Audit factors, QC exclusion and mathematical stage equality
+        run: |
+          OPENBLAS_NUM_THREADS=2 python - <<'PY'
+          import json,hashlib,math
+          from pathlib import Path
+          import numpy as np
+          import pandas as pd
+          d=Path("results/help5_heavy_yeast_decomposition")
+          assert (d/"README.md").is_file()
+          m=json.loads((d/"run_manifest.json").read_text())
+          assert m["sample_counts"]=={"HC":27,"S":27,"pooled QC":15,"Internal-QC":6}
+          for fname,expected in m["input_sha256"].items():
+              assert hashlib.sha256(Path(fname).read_bytes()).hexdigest()==expected, fname
+          t=pd.read_csv(d/"sample_help_yeast_factors.csv")
+          assert len(t)==75 and t.sample_id.nunique()==75
+          assert t.groupby("group").size().to_dict()==m["sample_counts"]
+          ids=t.sample_id.tolist()
+          mask=t.group=="Internal-QC"
+          assert np.allclose(t.loc[mask,"HELP_only_factor_log2"],0)
+          assert np.allclose(t.loc[mask,"Yeast_sum_only_factor_log2"],0)
+          assert np.allclose(t.loc[mask,"Yeast_single_only_factor_log2"],0)
+          assert np.allclose(t.loc[mask,"Yeast_peptide_only_factor_log2"],0)
+          assert np.allclose(
+              t.loc[~mask,"HELP_only_factor_log2"]+
+              t.loc[~mask,"sum_protein_residual_factor_log2"],
+              t.loc[~mask,"Yeast_sum_only_factor_log2"],atol=1e-12)
+          assert np.allclose(t["sum_protein_residual_log2_r_y_div_h"],
+                             t["Yeast_protein_sum_log2_y_relative_QC"]-
+                             t["log2_h_HEAVY_relative_QC"],atol=1e-12,equal_nan=True)
+          old=pd.read_csv("results/help5_heavy_only_normalization/sample_factors.csv")
+          old=old[old.source=="H"].set_index("sample_id").loc[ids]
+          assert np.allclose(t["HELP_only_factor_log2"],
+                             old["factor_log2"],atol=1e-12)
+          inp=pd.read_csv("pg_matrix.tsv",sep="\t",dtype=str,keep_default_na=False)
+          samples=inp.columns[5:].tolist()
+          assert inp.shape==(6675,80) and set(samples)==set(ids)
+          x=inp[samples].apply(pd.to_numeric,errors="coerce").to_numpy(float)
+          raw=np.full(x.shape,np.nan)
+          valid=np.isfinite(x)&(x>0)
+          raw[valid]=np.log2(x[valid])
+          for name,field in (
+              ("corrected_pg_log2_help_only.tsv","HELP_only_factor_log2"),
+              ("corrected_pg_log2_yeast_sum.tsv","Yeast_sum_only_factor_log2"),
+              ("corrected_pg_log2_yeast_single.tsv","Yeast_single_only_factor_log2"),
+              ("corrected_pg_log2_yeast_peptide.tsv","Yeast_peptide_only_factor_log2"),
+          ):
+              f=d/name
+              assert f.is_file() and f.stat().st_size>100000
+              a=pd.read_csv(f,sep="\t",dtype=str,keep_default_na=False)
+              assert a.shape==inp.shape and a.columns.tolist()==inp.columns.tolist()
+              arr=a[samples].apply(pd.to_numeric,errors="coerce").to_numpy(float)
+              delta=t.set_index("sample_id").loc[samples,field].to_numpy(float)
+              assert np.allclose(arr,raw+delta[None,:],rtol=1e-12,atol=1e-10,equal_nan=True)
+              imask=np.array([s in set(t.loc[mask,"sample_id"]) for s in samples])
+              assert np.allclose(arr[:,imask],raw[:,imask],
+                                 rtol=1e-12,atol=1e-10,equal_nan=True)
+          for path,n in (
+              ("all_group_protein_CV.csv",20),
+              ("pooled_QC_LOO_group_cv.csv",5),
+              ("pooled_QC_plate_CV.csv",27),
+              ("PCA_summary.csv",10),
+          ):
+              t2=pd.read_csv(d/path)
+              assert len(t2)==n,(path,len(t2))
+          assert len(list(d.glob("*.png")))==6
+          assert all(f.stat().st_size>15000 for f in d.glob("*.png"))
+          print("PASS: 75 matched samples, HELP factors equal prior Heavy-only, "
+                "yeast residual identity, 4 PG matrices, 3-plate QC CV, 6 figures")
+          PY
+      - name: Publish independent joint-normalization result directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- results/help5_heavy_yeast_decomposition
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish five-HELP Heavy and yeast two-stage factor decomposition [skip ci]"
+            git push
+          fi
