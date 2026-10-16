@@ -378,7 +378,7 @@ def main():
               "Yeast peptides (2)":"corrected_pg_log2_yeast_peptide.tsv",
             }[method]
             out.to_csv(OUT/filename,sep="\t",index=False,na_rep="")
-    loo_stages={"Raw":raw}
+    loo_stages={}
     for name in METHODS[1:]:
         loo_stages[name+" QC LOO"]=raw+loo_offsets[name][None,:]
     loo_summary=[]
