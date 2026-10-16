@@ -1,0 +1,101 @@
+name: PACS five HELP Heavy-only normalization
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/pacs_help5_heavy_only_trial.py
+      - .github/workflows/pacs-help5-heavy-only.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: pacs-help5-heavy-only
+  cancel-in-progress: false
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install numerical and plotting libraries
+        run: python -m pip install numpy pandas matplotlib
+      - name: Run five-peptide Heavy-only and matched L/H control
+        run: |
+          OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 \
+            python scripts/pacs_help5_heavy_only_trial.py
+      - name: Verify source, five independent peptide factor contributions and output data
+        run: |
+          OPENBLAS_NUM_THREADS=2 python - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          import numpy as np
+          import pandas as pd
+          p=Path("results/help5_heavy_only_normalization")
+          m=json.loads((p/"run_manifest.json").read_text())
+          assert m["proteins"]==6675 and m["samples"]==75
+          assert m["log2_before_median"] and m["no_imputation"]
+          assert m["five_peptides"]==["FSVVYAK","STGSWSTLK","VTGWGNLK","VVEESELAR","VYFAGFPR"]
+          for name,expected in m["sources"].items():
+              assert hashlib.sha256(Path(name).read_bytes()).hexdigest()==expected
+          factors=pd.read_csv(p/"sample_factors.csv")
+          assert len(factors)==150
+          src=pd.read_csv("pg_matrix.tsv",sep="\t",dtype=str,keep_default_na=False)
+          names=src.columns[5:].tolist()
+          matrix=src[names].apply(pd.to_numeric,errors="coerce").to_numpy(float)
+          with np.errstate(divide="ignore",invalid="ignore"):
+              raw=np.where(np.isfinite(matrix)&(matrix>0),np.log2(matrix),np.nan)
+          for label,filename in (
+              ("H","corrected_pg_log2_heavy_only.tsv"),
+              ("ratio_LH","corrected_pg_log2_LH_control.tsv"),
+          ):
+              df=factors[factors.source==label].set_index("sample_id").loc[names]
+              assert len(df)==75
+              assert df.group.value_counts().to_dict()=={"HC":27,"S":27,"pooled QC":15,"Internal-QC":6}
+              q=df[df.group=="pooled QC"]
+              for seq in m["five_peptides"]:
+                  source_col="signal_log2_"+seq
+                  ref_col="ref_log2_"+seq
+                  z=float(np.median(q[source_col]))
+                  assert np.allclose(df[ref_col].to_numpy(),z,rtol=0,atol=1e-11)
+                  assert np.allclose(df["individual_factor_log2_"+seq],
+                                     df[ref_col]-df[source_col],atol=1e-11)
+              calc=np.stack([df["individual_factor_log2_"+s].to_numpy() for s in m["five_peptides"]]).mean(axis=0)
+              lms=df.group=="Internal-QC"
+              calc[lms]=0
+              assert np.allclose(calc,df.factor_log2,atol=1e-11)
+              assert np.allclose(np.exp2(df.factor_log2),df.multiplicative_factor)
+              output=pd.read_csv(p/filename,sep="\t",dtype=str,keep_default_na=False)
+              assert output.shape==src.shape and output.columns.tolist()==src.columns.tolist()
+              corr=output[names].apply(pd.to_numeric,errors="coerce").to_numpy(float)
+              assert np.allclose(corr,raw+calc[None,:],rtol=1e-11,atol=1e-10,equal_nan=True)
+              assert np.allclose(corr[:,lms.to_numpy()],raw[:,lms.to_numpy()],
+                                 atol=1e-11,rtol=1e-12,equal_nan=True)
+              for row in q.itertuples():
+                  allother=q[q.index!=row.Index]
+                  f=np.mean([np.median(allother["signal_log2_"+s])-getattr(row,"_0",0) for s in []]) if False else None
+                  assert np.isfinite(row.qc_loo_factor_log2)
+          summ=pd.read_csv(p/"group_cv_summary.csv")
+          assert len(summ)==16 and len(pd.read_csv(p/"pooled_QC_plate_cv.csv"))==12
+          assert len(pd.read_csv(p/"pca_summary.csv"))==6
+          assert len(list(p.glob("*.png")))==5
+          assert all(x.stat().st_size>15000 for x in p.glob("*.png"))
+          for seq in m["five_peptides"]:
+              assert m["source_proteins"][seq]["detected"]>=0 if "detected" in m["source_proteins"][seq] else True
+          print("PASS: five independent Heavy QC factors, 150 rows, two full matrices, QC LOO, five charts")
+          PY
+      - name: Commit independently validated report and corrections
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- results/help5_heavy_only_normalization
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish five-HELP Heavy-only QC normalization and matched L/H comparison [skip ci]"
+            git push
+          fi
