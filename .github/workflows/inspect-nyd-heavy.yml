@@ -1,0 +1,48 @@
+name: Inspect NYD 40sample Heavy source
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/inspect-nyd-heavy.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Inspect Heavy, PG and metadata layouts
+        run: |
+          python -m pip install openpyxl
+          python - <<'PY'
+          import openpyxl,csv,re
+          from pathlib import Path
+          base=Path("NYD_data/40samples")
+          for name in ("Heavy.xlsx","NYD_sampleinfo2.xlsx"):
+              wb=openpyxl.load_workbook(base/name,read_only=True,data_only=True)
+              print("WORKBOOK",name,"SHEETS",wb.sheetnames,flush=True)
+              for ws in wb.worksheets:
+                  print("SHEET",ws.title,"ROWS",ws.max_row,"COLS",ws.max_column,flush=True)
+                  for row in ws.iter_rows(max_row=min(5,ws.max_row),values_only=True):
+                      print("HEADROW",[(i,str(v)[:80]) for i,v in enumerate(row) if v is not None][:15],flush=True)
+                  matches=[]
+                  for i,row in enumerate(ws.iter_rows(values_only=True),start=1):
+                      if i<=5: continue
+                      if any("STGSWSTLK" in str(v) or "VYFAGFPR" in str(v) for v in row[:6]):
+                          matches.append((i,[(k,str(v)[:70]) for k,v in enumerate(row) if v is not None][:12]))
+                  print("HELP_FOCUS",matches[:12],"COUNT",len(matches),flush=True)
+          with (base/"NYD_pg_matrix2.tsv").open(encoding="utf-8-sig",newline="") as f:
+              r=csv.DictReader(f,delimiter="\t")
+              print("PG_HEADER",r.fieldnames[:12],"N_COLUMNS",len(r.fieldnames),flush=True)
+              target=[]
+              for i,row in enumerate(r,start=1):
+                  toks=set(re.split(r"[;,|\\s]+",row.get("Protein.Ids","")))|set(re.split(r"[;,|\\s]+",row.get("Protein.Group","")))
+                  hits=toks&{"P00751","P07225"}
+                  if hits:
+                      target.append((i,sorted(hits),row["Protein.Group"],row["Protein.Ids"],row.get("Genes"),sum(bool(v) for k,v in row.items() if k not in r.fieldnames[:5])))
+              print("PG_TARGETS",target,"COUNT",len(target),flush=True)
+          PY
