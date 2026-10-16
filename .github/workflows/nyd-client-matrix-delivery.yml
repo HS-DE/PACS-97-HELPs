@@ -1,0 +1,8 @@
+name: NYD Client Matrix Export
+on: workflow_dispatch
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python scripts/nyd_client_39samples_protein_matrix_delivery.py
