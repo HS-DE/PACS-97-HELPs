@@ -1,0 +1,15 @@
+name: NYD Matrices Bundle
+on:
+  push:
+    paths:
+      - .github/workflows/nyd-matrices-bundle.yml
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python scripts/nyd_client_39samples_protein_matrix_delivery.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NYD-protein-matrices
+          path: NYD_data/40samples/client_delivery_39samples_protein_matrices/
