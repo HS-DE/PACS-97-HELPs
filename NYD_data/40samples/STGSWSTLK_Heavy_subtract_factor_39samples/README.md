@@ -67,3 +67,24 @@ Blue CFB/P00751 and yellow PROS1/P07225 are marked on PG boxes.
 Because samples within each batch are different clinical specimens,
 within-batch protein CV includes biological variation. A lower CV
 is not by itself evidence of more accurate instrument calibration.
+
+## Added violin plots with median CV labels
+
+Following the original 39-sample single-Heavy CV figure RIGHT-hand violin panel:
+paired Raw (left) and Corrected (right) violins with embedded boxplots,
+each with its median per-protein CV (%) labeled at the very top.
+Axes display up to the pooled 99th percentile x 1.10, matching
+the prior style. All finite protein CV values are retained for
+distributions, medians, and quartiles.
+
+### Global -fi violin plot
+
+![Global minus factor violin](global_subtract_fi/08_per_protein_CV_violin_Raw_vs_Corrected_median_labels.png)
+
+### Batch-internal -fi violin plot
+
+![Batch-local minus factor violin](batch_subtract_fi/08_per_protein_CV_violin_Raw_vs_Corrected_median_labels.png)
+
+Both methods yield the same within-batch CV distribution, because
+their factors differ only by a constant within each batch.
+Corresponding 08_violin_median_CV_values.csv files record the plotted medians.
