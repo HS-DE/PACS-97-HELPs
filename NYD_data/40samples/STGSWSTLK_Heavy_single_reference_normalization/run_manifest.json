@@ -1,0 +1,57 @@
+{
+  "sources": {
+    "NYD_pg_matrix2.tsv": "39f912d004f8cd3a51a8d879a97d43b308b32f3ee195646b51e32dcbc60d7167",
+    "Heavy.xlsx": "7670f3d5d939d18bcf4163523d2197c74eba96eb46a52eebb227e2abbac03af0",
+    "NYD_sampleinfo2.xlsx": "82f2637934e097d9e0b28742e93ce66b7388b877b80810e0a97108b95d5e321c"
+  },
+  "n_samples": 40,
+  "n_protein_groups": 4264,
+  "n_HELP_peptides_in_source": 97,
+  "one_selected_peptide": "STGSWSTLK",
+  "single_peptide_one_Heavy_measurement_per_sample": true,
+  "40_sample_global_median_of_log2_STGSWSTLK_Heavy": 21.085823841150244,
+  "f_i": "median_h - median_hi, median_hi=log2 Heavy_STGSWSTLK_i (singleton)",
+  "original_scale_factor": "2**(median_h - log2(H_i))",
+  "applied_to": "All 4264 PG proteins in all 40 samples, not the HELP data file",
+  "normalization_on_log2": true,
+  "no_imputation": true,
+  "raw_original_not_overwritten": true,
+  "valid_PG_cells_Raw": 139947,
+  "valid_PG_cells_Corrected": 139947,
+  "calibrated_Heavy_median_log2_range": 0.0,
+  "batch_sizes": {
+    "T001": 16,
+    "T002": 8,
+    "T003": 8,
+    "T004": 8
+  },
+  "PCA": {
+    "fitted_on": "Raw PG log2 only",
+    "corrected_data": "Projected onto original Raw components; not a second PCA fit",
+    "feature_selection": "Raw detection >=70% of 40 and Raw SD>1e-8",
+    "n_selected_proteins": 3312,
+    "missing_imputation": "Each selected protein's Raw median, identical for Raw and Corrected",
+    "centering": "Each selected protein's Raw mean after Raw-only missing imputation",
+    "PC1_raw_explained_variance_pct": 17.738176683304154,
+    "PC2_raw_explained_variance_pct": 13.346352833616882,
+    "PC_axis_orientation": "Raw loading with largest absolute magnitude is positive"
+  },
+  "PG_targets": {
+    "P00751": {
+      "gene": "CFB",
+      "data_row_1based": 564
+    },
+    "P07225": {
+      "gene": "PROS1",
+      "data_row_1based": 798
+    }
+  },
+  "plots": [
+    "01_PG_40samples_Raw_vs_corrected_highlight_CFB_PROS1.png",
+    "02_STGSWSTLK_Heavy_per_sample_offsets.png",
+    "03_batch_protein_CV_raw_vs_corrected.png",
+    "04_PCA_Raw_fitted_common_coordinates.png",
+    "05_CFB_PROS1_by_batch_Raw_vs_corrected.png",
+    "06_sample_PG_medians_Raw_vs_corrected.png"
+  ]
+}
