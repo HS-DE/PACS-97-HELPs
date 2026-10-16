@@ -1,0 +1,64 @@
+{
+  "sources": {
+    "NYD_pg_matrix2.tsv": "39f912d004f8cd3a51a8d879a97d43b308b32f3ee195646b51e32dcbc60d7167",
+    "Heavy.xlsx": "7670f3d5d939d18bcf4163523d2197c74eba96eb46a52eebb227e2abbac03af0",
+    "NYD_sampleinfo2.xlsx": "82f2637934e097d9e0b28742e93ce66b7388b877b80810e0a97108b95d5e321c"
+  },
+  "n_samples": 39,
+  "n_protein_groups": 4264,
+  "n_HELP_peptides_in_source": 97,
+  "one_selected_peptide": "STGSWSTLK",
+  "single_peptide_one_Heavy_measurement_per_sample": true,
+  "40_sample_original_median_log2_for_comparison_only": 21.085823841150244,
+  "39_sample_global_median_of_log2_STGSWSTLK_Heavy": 21.085857242488732,
+  "delta_median_39_minus_40_log2": 3.340133848794835e-05,
+  "f_i": "median_h - median_hi, median_hi=log2 Heavy_STGSWSTLK_i (singleton)",
+  "original_scale_factor": "2**(median_h - log2(H_i))",
+  "applied_to": "All 4264 PG proteins in 39 retained samples, not the HELP data file",
+  "excluded_sample_id": "MAP26092326E01",
+  "excluded_sample_batch": "T003",
+  "original_input_sample_count": 40,
+  "exclusion_before_reference_median": true,
+  "excluded_from_factors_CV_plots_PCA_and_corrected_matrix": true,
+  "normalization_on_log2": true,
+  "no_imputation": true,
+  "raw_original_not_overwritten": true,
+  "valid_PG_cells_Raw": 137870,
+  "valid_PG_cells_Corrected": 137870,
+  "calibrated_Heavy_median_log2_range": 0.0,
+  "batch_sizes": {
+    "T001": 16,
+    "T002": 8,
+    "T003": 7,
+    "T004": 8
+  },
+  "PCA": {
+    "fitted_on": "Raw PG log2 only",
+    "corrected_data": "Projected onto original Raw components; not a second PCA fit",
+    "feature_selection": "Raw detection >=70% of 39 retained samples and Raw SD>1e-8",
+    "n_selected_proteins": 3307,
+    "missing_imputation": "Each selected protein's Raw median, identical for Raw and Corrected",
+    "centering": "Each selected protein's Raw mean after Raw-only missing imputation",
+    "PC1_raw_explained_variance_pct": 18.735929392931155,
+    "PC2_raw_explained_variance_pct": 13.96061659531278,
+    "PC_axis_orientation": "Raw loading with largest absolute magnitude is positive"
+  },
+  "PG_targets": {
+    "P00751": {
+      "gene": "CFB",
+      "data_row_1based": 564
+    },
+    "P07225": {
+      "gene": "PROS1",
+      "data_row_1based": 798
+    }
+  },
+  "plots": [
+    "01_PG_39samples_Raw_vs_corrected_highlight_CFB_PROS1.png",
+    "02_STGSWSTLK_Heavy_per_sample_offsets.png",
+    "03_batch_protein_CV_raw_vs_corrected.png",
+    "04_PCA_Raw_fitted_common_coordinates.png",
+    "05_CFB_PROS1_by_batch_Raw_vs_corrected.png",
+    "06_sample_PG_medians_Raw_vs_corrected.png"
+  ]
+}
