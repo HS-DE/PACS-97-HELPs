@@ -125,7 +125,14 @@ def inputs():
     heavy=np.array([val(byseq[SEQ].get(column_ids[s],"")) for s in names],float)
     if not np.isfinite(heavy).all():
         raise ValueError("STGSWSTLK Heavy must have finite positive values in all 39 retained samples")
-    return records,names,annotations,raw,pg_targets,heavy
+    # Independent audit: derive the original 40-sample reference from the
+    # unchanged Heavy.xlsx, strictly for comparison (NOT used to calibrate).
+    full_heavy=np.array([val(byseq[SEQ].get(column_ids[r["sample_id"]],""))
+                        for r in md],float)
+    if not np.isfinite(full_heavy).all():
+        raise ValueError("Original 40-sample Heavy values unexpected")
+    original_40_reference=float(np.median(np.log2(full_heavy)))
+    return records,names,annotations,raw,pg_targets,heavy,original_40_reference
 
 def apply_calibration(raw,heavy):
     # log2 FIRST. Only one STGSWSTLK observation per sample.
@@ -441,7 +448,7 @@ def plot_sample_medians(raw,after,names,records):
 def main():
     if OUT.exists() and any(OUT.iterdir()):
         raise FileExistsError("Existing trial directory protected: "+str(OUT))
-    records,names,annotations,raw,targets,heavy=inputs()
+    records,names,annotations,raw,targets,heavy,original_40_reference=inputs()
     median_hi,median_h,factors,corrected=apply_calibration(raw,heavy)
     OUT.mkdir(parents=True,exist_ok=False)
     # Retain all annotation columns and sample IDs. Positive log2 intensities,
@@ -487,7 +494,9 @@ def main():
         "n_samples":N_RETAINED,"n_protein_groups":4264,"n_HELP_peptides_in_source":97,
         "one_selected_peptide":SEQ,
         "single_peptide_one_Heavy_measurement_per_sample":True,
-        "40_sample_global_median_of_log2_STGSWSTLK_Heavy":median_h,
+        "40_sample_original_median_log2_for_comparison_only":original_40_reference,
+        "39_sample_global_median_of_log2_STGSWSTLK_Heavy":median_h,
+        "delta_median_39_minus_40_log2":median_h-original_40_reference,
         "f_i":"median_h - median_hi, median_hi=log2 Heavy_STGSWSTLK_i (singleton)",
         "original_scale_factor":"2**(median_h - log2(H_i))",
         "applied_to":"All 4264 PG proteins in 39 retained samples, not the HELP data file",
@@ -527,6 +536,11 @@ def main():
         "2. median_hi = median of the singleton STGSWSTLK Heavy observation in sample i",
         "   = log2(Heavy_i).",
         "3. median_h = median(median_hi) across ALL 39 retained samples.",
+        f"   Original 40-sample median was {original_40_reference:.8f} log2;",
+        f"   retained 39-sample median is {median_h:.8f} log2;",
+        f"   difference is {median_h-original_40_reference:+.8f} log2.",
+        "   The original 40-sample median is a diagnostic only and never used", 
+        "   to compute any retained-sample factor.",
         "4. fi = median_h - median_hi.",
         "5. Corrected PG_i = raw PG log2_i + fi for every detected protein.",
         "6. Do NOT alter other HELP peptides, Heavy.xlsx, or original PG input.",
