@@ -1,0 +1,40 @@
+{
+  "variant": "global_subtract_fi",
+  "reference": "Global 39-sample median",
+  "sample_n": 39,
+  "excluded_sample": "MAP26092326E01",
+  "fi": "median reference (global or batch-local) - raw log2 Heavy",
+  "application": "corrected_PG_log2 = raw_PG_log2 - fi",
+  "unmodified_reference_factor_source": "/home/runner/work/PACS-97-HELPs/PACS-97-HELPs/NYD_data/40samples/STGSWSTLK_Heavy_single_reference_normalization_without_T003_outlier",
+  "reference_log2": 21.085857242488732,
+  "n_protein_groups": 4264,
+  "n_valid_pg_values": 137870,
+  "PCA_Raw_fit_only": {
+    "fitted_on": "Raw PG log2 only",
+    "corrected_data": "Projected onto original Raw components; not a second PCA fit",
+    "feature_selection": "Raw detection >=70% of 39 retained samples and Raw SD>1e-8",
+    "n_selected_proteins": 3307,
+    "missing_imputation": "Each selected protein's Raw median, identical for Raw and Corrected",
+    "centering": "Each selected protein's Raw mean after Raw-only missing imputation",
+    "PC1_raw_explained_variance_pct": 18.735929392931155,
+    "PC2_raw_explained_variance_pct": 13.96061659531278,
+    "PC_axis_orientation": "Raw loading with largest absolute magnitude is positive"
+  },
+  "PCA_axis_bounds_identical_across_BOTH_variants": [
+    -26.902740154815334,
+    65.55597796254611,
+    -16.986271254950573,
+    28.398549264891273
+  ],
+  "separate_PCA_figures": true,
+  "no_imputation_in_CV_or_protein_matrix": true,
+  "figures": [
+    "01_PG_Raw_vs_subtract_factor_blue_CFB_yellow_PROS1.png",
+    "02_Heavy_reference_and_reverse_sample_factors.png",
+    "03_batch_protein_CV_Raw_vs_subtract_factor.png",
+    "04a_PCA_Raw.png",
+    "04b_PCA_Corrected.png",
+    "05_CFB_PROS1_by_batch_Raw_vs_corrected.png",
+    "06_sample_PG_medians_Raw_vs_corrected.png"
+  ]
+}

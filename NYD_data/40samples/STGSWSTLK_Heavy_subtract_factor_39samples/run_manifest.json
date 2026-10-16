@@ -1,0 +1,53 @@
+{
+  "inputs_sha256": {
+    "NYD_pg_matrix2.tsv": "39f912d004f8cd3a51a8d879a97d43b308b32f3ee195646b51e32dcbc60d7167",
+    "Heavy.xlsx": "7670f3d5d939d18bcf4163523d2197c74eba96eb46a52eebb227e2abbac03af0",
+    "NYD_sampleinfo2.xlsx": "82f2637934e097d9e0b28742e93ce66b7388b877b80810e0a97108b95d5e321c"
+  },
+  "excluded_sample_id": "MAP26092326E01",
+  "removed_before_all_references_and_analysis": true,
+  "n_original": 40,
+  "n_retained": 39,
+  "batch_sizes": {
+    "T001": 16,
+    "T002": 8,
+    "T003": 7,
+    "T004": 8
+  },
+  "references_log2": {
+    "global": 21.085857242488732,
+    "batch": {
+      "T001": 21.122744278499212,
+      "T002": 21.163280893507395,
+      "T003": 20.91881450490014,
+      "T004": 21.23099536075814
+    }
+  },
+  "factors_exactly_match_original_plus_f_trials": true,
+  "reverse_factor_application": "log2 PG corrected = raw log2 PG - (reference - log2 H)",
+  "corrected_does_not_align_STGSWSTLK_Heavy_to_median": true,
+  "previous_results_and_origins_untouched": true,
+  "PCA_method": "Raw PCA fitted once and reused for both corrected branches",
+  "same_PCA_limits_all_four_images": [
+    -26.902740154815334,
+    65.55597796254611,
+    -16.986271254950573,
+    28.398549264891273
+  ],
+  "Raw_PCA_details": {
+    "fitted_on": "Raw PG log2 only",
+    "corrected_data": "Projected onto original Raw components; not a second PCA fit",
+    "feature_selection": "Raw detection >=70% of 39 retained samples and Raw SD>1e-8",
+    "n_selected_proteins": 3307,
+    "missing_imputation": "Each selected protein's Raw median, identical for Raw and Corrected",
+    "centering": "Each selected protein's Raw mean after Raw-only missing imputation",
+    "PC1_raw_explained_variance_pct": 18.735929392931155,
+    "PC2_raw_explained_variance_pct": 13.96061659531278,
+    "PC_axis_orientation": "Raw loading with largest absolute magnitude is positive"
+  },
+  "CV_evaluated_in_original_linear_intensity": true,
+  "per_batch_reverse_CV_global_equals_batch_internal": true,
+  "summary_figures": [
+    "00_Raw_plus_factor_minus_factor_CV_comparison.png"
+  ]
+}
