@@ -60,7 +60,7 @@ jobs:
               factors=pd.read_csv(folder/"sample_factors_internal.csv").set_index("sample_id").loc[ids]
               assert len(factors)==39
               offsets=factors.actual_PG_applied_shift_log2.to_numpy(float)
-              assert np.allclose(corrected-numeric,offsets[None,:],atol=1e-9,rtol=0,equal_nan=True)
+              assert np.nanmax(np.abs(corrected-numeric-offsets[None,:]))<1e-9
               directions=factors.correction_direction.tolist()
               for i,(_id, row) in enumerate(factors.iterrows()):
                   assert directions[i]==meta["directions"][row["batch"]]
@@ -71,8 +71,7 @@ jobs:
               assert len(cv)==8
               for item in comparison.itertuples():
                   observed=cv[(cv.batch==item.batch)&(cv.stage=="Corrected")].iloc[0].median_protein_cv_pct
-                  expected=getattr(item,variant.replace("reference","mixed_median_cv_pct")) if False else (
-                      item.overall_mixed_median_cv_pct if variant=="overall_reference"
+                  expected=(item.overall_mixed_median_cv_pct if variant=="overall_reference"
                       else item.within_batch_mixed_median_cv_pct)
                   assert np.isclose(observed,expected,atol=1e-9,rtol=0)
               long=pd.read_csv(folder/"per_protein_batch_CV_long.csv")
