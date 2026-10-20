@@ -1,0 +1,116 @@
+name: PACS STGSWSTLK QC Heavy samplewise +/- normalization
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/pacs_STGSWSTLK_qc_heavy_two_signs.py
+      - .github/workflows/pacs-stgswstlk-qc-heavy-two-signs.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: pacs-stgswstlk-qc-two-signs
+  cancel-in-progress: false
+jobs:
+  calculate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install data analysis dependencies
+        run: python -m pip install numpy pandas matplotlib
+      - name: Calculate QC-reference STGSWSTLK Heavy +/- corrections
+        run: |
+          OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 \
+            python scripts/pacs_STGSWSTLK_qc_heavy_two_signs.py
+      - name: Verify QC references, four matrices and sample factor shifts
+        run: |
+          python - <<'PY'
+          import json
+          import numpy as np
+          import pandas as pd
+          from pathlib import Path
+
+          root=Path("results/stgswstlk_heavy_qc_samplewise_sign_comparison")
+          manifest=json.loads((root/"run_manifest.json").read_text())
+          assert manifest["n_samples"]==75 and manifest["n_PG"]==6675
+          assert manifest["STGSWSTLK_only"] and manifest["used_sheet"]=="H"
+          assert manifest["reference_count_global"]==15
+          assert manifest["reference_count_per_plate"]==5
+          assert manifest["NYD_sign_pattern_not_transferred"]
+          assert manifest["corrected_groups"].startswith("all 75")
+          details=pd.read_csv(root/"sample_75_factors_and_medians.csv")
+          assert len(details)==75 and details.sample_id.nunique()==75
+          assert details.groupby("group").size().to_dict()=={
+              "Internal-QC":6,"pooled QC":15,"HC":27,"S":27}
+          qc=details[details.group=="pooled QC"]
+          assert len(qc)==15 and qc.groupby("plate").size().to_dict()=={1:5,2:5,3:5}
+          h=qc.original_STGSWSTLK_Heavy_log2.to_numpy(float)
+          ref=manifest["median_reference_overall_log2"]
+          assert np.isclose(ref,np.median(h),atol=1e-12,rtol=0)
+          for plate in (1,2,3):
+              subset=qc[qc.plate==plate].original_STGSWSTLK_Heavy_log2.to_numpy(float)
+              assert np.isclose(manifest["median_reference_by_plate_log2"][str(plate)],
+                                np.median(subset),atol=1e-12,rtol=0)
+          raw=pd.read_csv("pg_matrix.tsv",sep="\t",encoding="utf-8-sig",low_memory=False)
+          assert raw.shape==(6675,80)
+          ids=list(raw.columns[5:])
+          source=raw[ids].to_numpy(dtype=float)
+          good=np.isfinite(source)&(source>0)
+          log=np.full(source.shape,np.nan)
+          log[good]=np.log2(source[good])
+          data=details.set_index("sample_id").loc[ids]
+          assert len(data)==75
+          group_cv=pd.read_csv(root/"group_protein_CV_summary.csv")
+          qc_cv=pd.read_csv(root/"pooled_QC_within_plate_CV.csv")
+          assert len(group_cv)==5*4 and len(qc_cv)==5*3
+          assert set(group_cv.method)=={
+              "Raw","overall_reference/plus_fi","overall_reference/minus_fi",
+              "within_plate_reference/plus_fi","within_plate_reference/minus_fi"}
+          for refname in ("overall_reference","within_plate_reference"):
+              for direction in ("plus_fi","minus_fi"):
+                  file=root/refname/f"corrected_pg_log2_{direction}.tsv"
+                  matrix=pd.read_csv(file,sep="\t",encoding="utf-8-sig",low_memory=False)
+                  assert matrix.shape==(6675,80)
+                  assert list(matrix.columns)==list(raw.columns)
+                  assert np.array_equal(matrix.iloc[:,:5].fillna("").to_numpy(),
+                                        raw.iloc[:,:5].fillna("").to_numpy())
+                  corr=matrix[ids].to_numpy(dtype=float)
+                  assert np.array_equal(np.isfinite(corr),good)
+                  f=data[refname+"_fi"].to_numpy(float)
+                  sign=1 if direction=="plus_fi" else -1
+                  assert np.nanmax(np.abs(corr-log-sign*f[None,:]))<1e-9
+                  assert len(list((root/refname).glob(f"03_pg_boxes_raw_vs_{direction}.png")))==1
+                  assert (root/refname/f"03_pg_boxes_raw_vs_{direction}.png").stat().st_size>20000
+              qc_plus=qc_cv[(qc_cv.method==refname+"/plus_fi")].sort_values("plate")
+              qc_minus=qc_cv[(qc_cv.method==refname+"/minus_fi")].sort_values("plate")
+              assert len(qc_plus)==len(qc_minus)==3
+          for sign in ("plus_fi","minus_fi"):
+              a=qc_cv[qc_cv.method=="overall_reference/"+sign].sort_values("plate")
+              b=qc_cv[qc_cv.method=="within_plate_reference/"+sign].sort_values("plate")
+              assert np.allclose(a.median_protein_CV_pct.to_numpy(),b.median_protein_CV_pct.to_numpy(),
+                                 rtol=0,atol=1e-8)
+          loo=pd.read_csv(root/"QC_leave_one_out_sensitivity.csv")
+          assert len(loo)==4*3
+          assert len(pd.read_csv(root/"per_protein_CV_long.csv"))==5*4*6675
+          for fig in ("01_QC_Heavy_references.png","02_CV_group_and_QC_plate_comparison.png",
+                      "04_raw_fitted_PCA_54_study.png","05_raw_fitted_PCA_all_75.png"):
+              assert (root/fig).stat().st_size>20000
+          print("PASS 75 samples, 15 QC, 3 plates, 4 corrected PG matrices, factor signs, QC CV and figures")
+          PY
+      - name: Commit independent PACS normalization result directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- results/stgswstlk_heavy_qc_samplewise_sign_comparison
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish pooled QC referenced STGSWSTLK Heavy PACS corrections [skip ci]"
+            git push
+          fi
