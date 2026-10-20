@@ -1,0 +1,107 @@
+name: NYD STGSWSTLK Heavy mixed-sign 39-sample normalization
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/nyd_STGSWSTLK_heavy_mixed_sign_trial.py
+      - .github/workflows/nyd-stgswstlk-mixed-sign-39.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: nyd-stgswstlk-heavy-mixed-sign-39
+  cancel-in-progress: false
+jobs:
+  calculate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install processing and plotting dependencies
+        run: python -m pip install numpy pandas matplotlib
+      - name: Run two STGSWSTLK Heavy mixed-sign normalization variants
+        run: |
+          OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 \
+            python scripts/nyd_STGSWSTLK_heavy_mixed_sign_trial.py
+      - name: Verify matrix offsets and exact batch CV baselines
+        run: |
+          python - <<'PY'
+          import csv, json, math
+          from pathlib import Path
+          import numpy as np
+          import pandas as pd
+          root=Path("NYD_data/40samples/STGSWSTLK_Heavy_mixed_sign_39samples")
+          meta=json.loads((root/"run_manifest.json").read_text())
+          assert meta["n_retained"]==39 and meta["n_protein_groups"]==4264
+          assert meta["excluded_sample_id"]=="MAP26092326E01"
+          assert meta["directions"]=={"T001":"-fi","T002":"-fi","T003":"-fi","T004":"+fi"}
+          raw=pd.read_csv(root/"00_Raw_NYD_pg_matrix2_log2_39samples.tsv",sep="\t")
+          assert raw.shape==(4264,44)
+          ids=raw.columns[5:].tolist()
+          assert len(ids)==39 and "MAP26092326E01" not in ids
+          numeric=raw.iloc[:,5:].to_numpy(float)
+          prev_good=np.isfinite(numeric)
+          comparison=pd.read_csv(root/"00_mixed_sign_CV_comparison.csv")
+          assert len(comparison)==4
+          assert comparison.batch.tolist()==["T001","T002","T003","T004"]
+          matrices=[]
+          for variant in ["overall_reference","within_batch_reference"]:
+              folder=root/variant
+              df=pd.read_csv(folder/"corrected_NYD_pg_matrix2_log2.tsv",sep="\t")
+              assert df.shape==raw.shape and list(df.columns)==list(raw.columns)
+              assert np.array_equal(df.iloc[:,:5].fillna("").to_numpy(),raw.iloc[:,:5].fillna("").to_numpy())
+              corrected=df.iloc[:,5:].to_numpy(float)
+              assert np.array_equal(np.isfinite(corrected),prev_good)
+              factors=pd.read_csv(folder/"sample_factors_internal.csv").set_index("sample_id").loc[ids]
+              assert len(factors)==39
+              offsets=factors.actual_PG_applied_shift_log2.to_numpy(float)
+              assert np.allclose(corrected-numeric,offsets[None,:],atol=1e-9,rtol=0,equal_nan=True)
+              directions=factors.correction_direction.tolist()
+              for i,(_id, row) in enumerate(factors.iterrows()):
+                  assert directions[i]==meta["directions"][row["batch"]]
+                  sign=-1 if directions[i]=="-fi" else 1
+                  assert np.isclose(offsets[i],sign*row.fi_reference_minus_Heavy_log2,atol=1e-12,rtol=0)
+                  assert np.isclose(row.actual_PG_multiplier_linear,2**offsets[i],atol=1e-12)
+              cv=pd.read_csv(folder/"batch_protein_CV_summary.csv")
+              assert len(cv)==8
+              for item in comparison.itertuples():
+                  observed=cv[(cv.batch==item.batch)&(cv.stage=="Corrected")].iloc[0].median_protein_cv_pct
+                  expected=getattr(item,variant.replace("reference","mixed_median_cv_pct")) if False else (
+                      item.overall_mixed_median_cv_pct if variant=="overall_reference"
+                      else item.within_batch_mixed_median_cv_pct)
+                  assert np.isclose(observed,expected,atol=1e-9,rtol=0)
+              long=pd.read_csv(folder/"per_protein_batch_CV_long.csv")
+              assert len(long)==4264*4*2
+              assert len(pd.read_csv(folder/"PCA_Raw_fitted_sample_coordinates.csv"))==39
+              assert len(pd.read_csv(folder/"08_violin_median_CV_values.csv"))==8
+              images=list(folder.glob("*.png"))
+              assert len(images)==8,sorted(x.name for x in images)
+              assert all(img.stat().st_size>20000 for img in images)
+              matrices.append(corrected)
+          factors_a=pd.read_csv(root/"overall_reference"/"sample_factors_internal.csv").set_index("sample_id").loc[ids]
+          factors_b=pd.read_csv(root/"within_batch_reference"/"sample_factors_internal.csv").set_index("sample_id").loc[ids]
+          dif=factors_a.actual_PG_applied_shift_log2.to_numpy()-factors_b.actual_PG_applied_shift_log2.to_numpy()
+          for group in comparison.batch:
+              arr=dif[factors_a.batch.to_numpy()==group]
+              assert np.allclose(arr,arr[0],atol=1e-11,rtol=0)
+          assert np.allclose(comparison.overall_mixed_median_cv_pct,comparison.within_batch_mixed_median_cv_pct,atol=1e-10,rtol=0)
+          assert (comparison.delta_mixed_minus_raw_percentage_points>0).all()
+          assert (root/"00_mixed_sign_CV_vs_Raw.png").stat().st_size>20000
+          print("PASS 39 samples, 4264 PG, two references, mixed signs, precise shifts, CV invariants, PCA and charts")
+          PY
+      - name: Publish new experiment without touching old results
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- NYD_data/40samples/STGSWSTLK_Heavy_mixed_sign_39samples
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish STGSWSTLK mixed-sign calibration matrices and charts [skip ci]"
+            git push
+          fi
