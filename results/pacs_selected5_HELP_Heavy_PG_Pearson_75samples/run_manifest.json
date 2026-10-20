@@ -1,0 +1,41 @@
+{
+  "dataset": "PACS main, not NYD",
+  "n_samples": 75,
+  "n_raw_protein_groups": 6675,
+  "n_common_75_PG": 267,
+  "n_valid_PG_by_sample_range": [
+    593,
+    6189
+  ],
+  "manual_5_HELP": [
+    "FSVVYAK",
+    "STGSWSTLK",
+    "VTGWGNLK",
+    "VVEESELAR",
+    "VYFAGFPR"
+  ],
+  "source_Heavy": "Original H sheet only, not L/H ratio",
+  "raw_log2_PG": "Log2 of each positive finite original PG intensity",
+  "PG_summary": "Samplewise median of log2 PG intensity",
+  "all_detected_PG": "Own sample positive finite PGs, different sets possible",
+  "common_75_PG": "Fixed 75-sample intersection, positive finite in all 75 samples",
+  "scope_counts": {
+    "ALL_75": 75,
+    "Plate_1": 27,
+    "Plate_2": 27,
+    "Plate_3": 21,
+    "HC": 27,
+    "S": 27,
+    "pooled_QC": 15,
+    "Internal_QC": 6
+  },
+  "extra_group_scopes": "HC/S/pooled QC/Internal-QC separate diagnostic, no cross-group correlation interpreted as technical precision",
+  "statistics": "Pearson across samples, no imputation; two-sided unadjusted p-values",
+  "composite_HELP": "Mean of five peptide-wise QC-independent centered log2 Heavy signals",
+  "source_sha256": {
+    "pg_matrix.tsv": "112d59739481b2fbf1d5252d0fc754c4a4494af60c77ff050af153fe423012be",
+    "LH_ratio_tables_2026.10.13—ALL-HELP.xlsx": "5523ffca836fd7244610322f781084619541482835f108a92cdb350a6e3a4e53",
+    "all_QC_metadata.xlsx": "5dc7ee9296a1ed6422e3d3e4390c36dac8da884727f4b276d3db54764c25177e",
+    "all_sample_metadata.xlsx": "86e90f10a3ae3a099f52baa77a422dc234322a134fe2235c09bccf071e6863fe"
+  }
+}
