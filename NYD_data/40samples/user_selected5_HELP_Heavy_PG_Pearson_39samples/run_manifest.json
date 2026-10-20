@@ -1,0 +1,38 @@
+{
+  "n_samples": 39,
+  "excluded_sample": "MAP26092326E01",
+  "batch_sizes": {
+    "T001": 16,
+    "T002": 8,
+    "T003": 7,
+    "T004": 8
+  },
+  "n_PG_total": 4264,
+  "n_PG_common_39": 2259,
+  "HELP_selected_manually_from_PACS": [
+    "FSVVYAK",
+    "STGSWSTLK",
+    "VTGWGNLK",
+    "VVEESELAR",
+    "VYFAGFPR"
+  ],
+  "HELP_missing_by_peptide": {
+    "FSVVYAK": 0,
+    "STGSWSTLK": 0,
+    "VTGWGNLK": 0,
+    "VVEESELAR": 0,
+    "VYFAGFPR": 0
+  },
+  "data": "NYD original Heavy.xlsx H intensity and raw PG linear intensities",
+  "PG_aggregation": "median(log2(valid positive PG intensity))",
+  "PG_definitions": {
+    "all_detected_PG": "Each sample's OWN valid positive PG set",
+    "common_39_PG": "The SAME PG rows finite positive in all 39"
+  },
+  "correlation": "Pearson across sample observations, pairwise complete",
+  "source_sha256": {
+    "NYD_pg_matrix2.tsv": "39f912d004f8cd3a51a8d879a97d43b308b32f3ee195646b51e32dcbc60d7167",
+    "Heavy.xlsx": "7670f3d5d939d18bcf4163523d2197c74eba96eb46a52eebb227e2abbac03af0",
+    "NYD_sampleinfo2.xlsx": "82f2637934e097d9e0b28742e93ce66b7388b877b80810e0a97108b95d5e321c"
+  }
+}
