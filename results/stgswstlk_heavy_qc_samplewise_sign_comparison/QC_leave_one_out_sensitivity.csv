@@ -1,0 +1,13 @@
+method,plate,n_pooled_QC,n_proteins_with_CV,median_protein_CV_pct
+overall_reference/plus_fi/QC_LOO,1,5,5884,10.01487869245657
+overall_reference/plus_fi/QC_LOO,2,5,5901,10.06701712605952
+overall_reference/plus_fi/QC_LOO,3,5,5929,9.672668633416261
+overall_reference/minus_fi/QC_LOO,1,5,5884,9.619636959870656
+overall_reference/minus_fi/QC_LOO,2,5,5901,10.175829393478084
+overall_reference/minus_fi/QC_LOO,3,5,5929,9.72493854522201
+within_plate_reference/plus_fi/QC_LOO,1,5,5884,10.4699559675187
+within_plate_reference/plus_fi/QC_LOO,2,5,5901,10.255288035180751
+within_plate_reference/plus_fi/QC_LOO,3,5,5929,10.187281328777456
+within_plate_reference/minus_fi/QC_LOO,1,5,5884,10.046801487578236
+within_plate_reference/minus_fi/QC_LOO,2,5,5901,10.404477923411287
+within_plate_reference/minus_fi/QC_LOO,3,5,5929,10.233871989791634

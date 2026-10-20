@@ -1,0 +1,16 @@
+[
+  {
+    "view": "HC/S",
+    "n_samples": 54,
+    "n_selected_PG": 5594,
+    "raw_PC1_explained_pct": 27.371958179580247,
+    "raw_PC2_explained_pct": 16.46912731927788
+  },
+  {
+    "view": "Internal-QC/pooled QC/HC/S",
+    "n_samples": 75,
+    "n_selected_PG": 5508,
+    "raw_PC1_explained_pct": 25.813406590521144,
+    "raw_PC2_explained_pct": 15.433145856663256
+  }
+]

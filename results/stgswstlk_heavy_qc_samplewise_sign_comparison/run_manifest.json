@@ -1,0 +1,48 @@
+{
+  "original_data": {
+    "PG": "pg_matrix.tsv",
+    "HELP": "LH_ratio_tables_2026.10.13—ALL-HELP.xlsx",
+    "metadata": [
+      "all_QC_metadata.xlsx",
+      "all_sample_metadata.xlsx"
+    ]
+  },
+  "sources_sha256": {
+    "pg_matrix.tsv": "112d59739481b2fbf1d5252d0fc754c4a4494af60c77ff050af153fe423012be",
+    "LH_ratio_tables_2026.10.13—ALL-HELP.xlsx": "5523ffca836fd7244610322f781084619541482835f108a92cdb350a6e3a4e53",
+    "all_QC_metadata.xlsx": "5dc7ee9296a1ed6422e3d3e4390c36dac8da884727f4b276d3db54764c25177e",
+    "all_sample_metadata.xlsx": "86e90f10a3ae3a099f52baa77a422dc234322a134fe2235c09bccf071e6863fe"
+  },
+  "n_samples": 75,
+  "n_PG": 6675,
+  "groups": {
+    "HC": 27,
+    "S": 27,
+    "pooled QC": 15,
+    "Internal-QC": 6
+  },
+  "plates": {
+    "1": 27,
+    "2": 27,
+    "3": 21
+  },
+  "reference_source": "pooled QC only; never Internal-QC or Study",
+  "reference_count_global": 15,
+  "reference_count_per_plate": 5,
+  "STGSWSTLK_only": true,
+  "used_sheet": "H",
+  "median_reference_overall_log2": 24.762065471942048,
+  "median_reference_by_plate_log2": {
+    "1": 24.763577511214514,
+    "2": 24.707099261818154,
+    "3": 24.78944061198816
+  },
+  "factor": "reference_median - sample_log2_STGSWSTLK_Heavy",
+  "application": "raw_pg_log2 + fi for plus_fi; raw_pg_log2 - fi for minus_fi",
+  "corrected_groups": "all 75 including Internal-QC; latter never reference",
+  "n_nan_original": 87723,
+  "no_imputation_for_CV_or_export": true,
+  "QC_LOO_diagnostics": "QC reference excludes evaluated QC from its own reference, separately for 15 or 5 QC group; sensitivity only",
+  "PCA": "Raw-fitted projections (study-only and all-groups) with identical feature set, center and axes per view",
+  "NYD_sign_pattern_not_transferred": true
+}

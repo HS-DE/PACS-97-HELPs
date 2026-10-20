@@ -1,0 +1,16 @@
+method,plate,n_pooled_QC,n_proteins_with_CV,median_protein_CV_pct
+Raw,1,5,5884,8.914564063557489
+Raw,2,5,5901,8.761378737825781
+Raw,3,5,5929,8.37627341537531
+overall_reference/plus_fi,1,5,5884,9.912509430731593
+overall_reference/plus_fi,2,5,5901,9.97107992248619
+overall_reference/plus_fi,3,5,5929,9.608103936538983
+overall_reference/minus_fi,1,5,5884,9.562200534495313
+overall_reference/minus_fi,2,5,5901,10.059021425852736
+overall_reference/minus_fi,3,5,5929,9.66918682069147
+within_plate_reference/plus_fi,1,5,5884,9.912509430731596
+within_plate_reference/plus_fi,2,5,5901,9.971079922486183
+within_plate_reference/plus_fi,3,5,5929,9.608103936538988
+within_plate_reference/minus_fi,1,5,5884,9.562200534495313
+within_plate_reference/minus_fi,2,5,5901,10.059021425852734
+within_plate_reference/minus_fi,3,5,5929,9.669186820691468
