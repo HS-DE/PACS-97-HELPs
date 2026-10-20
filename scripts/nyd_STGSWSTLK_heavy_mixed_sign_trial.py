@@ -177,6 +177,8 @@ def main():
         client.box_combined(raw, corrected, records, names, sample_short, box_bounds,
                             folder/"03_protein_boxplots_before_after.png")
         draw_shift(names, records, applied, folder, variant)
+        prev.OUT = folder
+        prev.plot_sample_medians(raw, corrected, names, records)
         reverse.pca_two_separate(*pca_results[variant], pca_bounds, folder, variant)
         arrays, labels = violins.data(folder)
         violins.plot(folder, f"{variant} | T001-T003 -fi; T004 +fi", arrays, labels)
@@ -288,6 +290,7 @@ def main():
         "  - PCA_Raw_fitted_sample_coordinates.csv and reference_and_processing.json",
         "  - 01/02/03: separate before/after and paired protein intensity boxplots (no targeted highlights)",
         "  - 04: applied factor chart, for internal audit only",
+        "  - 06: before/after sample PG medians (log2)",
         "  - 04a_PCA_Raw.png and 04b_PCA_Corrected.png (both on one Raw-fitted basis)",
         "  - 08_per_protein_CV_violin_Raw_vs_Corrected_median_labels.png and CSV",
         "",
