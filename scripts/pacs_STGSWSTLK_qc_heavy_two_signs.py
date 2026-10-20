@@ -171,7 +171,9 @@ def reference_plot(h, names, info, q, ref_g, ref_p):
     ax.set_xticks([1,2,3],["Plate 1","Plate 2","Plate 3"])
     ax.set_ylabel("Original STGSWSTLK Heavy log2 intensity")
     ax.set_title("Only pooled QC samples define Heavy reference",fontweight="bold")
-    ax.legend(frameon=False, fontsize=9)
+    handles,labels=ax.get_legend_handles_labels()
+    fig.legend(handles,labels,loc="upper center",bbox_to_anchor=(.5,-.045),
+               ncol=4,frameon=False,fontsize=9)
     ax.grid(alpha=.15)
     fig.savefig(OUT/"01_QC_Heavy_references.png",dpi=170,bbox_inches="tight")
     plt.close(fig)
@@ -196,8 +198,9 @@ def cv_figure(table, qc_table):
     axes[1].set_xticks([1,2,3],["Plate 1","Plate 2","Plate 3"])
     axes[1].set_ylabel("Within-plate pooled QC median protein CV (%)")
     axes[1].set_title("5 pooled QC per plate; includes reference reuse")
-    fig.legend(loc="lower center",ncol=3,frameon=False,fontsize=8)
-    fig.subplots_adjust(bottom=.27)
+    handles,labels=axes[0].get_legend_handles_labels()
+    fig.legend(handles,labels,loc="upper center",bbox_to_anchor=(.5,-.035),
+               ncol=3,frameon=False,fontsize=8)
     fig.suptitle("PACS 75-sample STGSWSTLK Heavy normalization | 4 methods + Raw",
                  fontweight="bold")
     fig.savefig(OUT/"02_CV_group_and_QC_plate_comparison.png",dpi=170,bbox_inches="tight")
@@ -244,7 +247,9 @@ def pca_chart(stages, names, info, groups, filename):
         ax.set_xlabel(f"Raw PC1 {explained[0]:.1f}%")
         ax.grid(alpha=.12)
     axs[0].set_ylabel(f"Raw PC2 {explained[1]:.1f}%")
-    axs[0].legend(frameon=False,fontsize=7)
+    handles,labels=axs[0].get_legend_handles_labels()
+    fig.legend(handles,labels,loc="upper center",bbox_to_anchor=(.5,-.04),
+               ncol=4,frameon=False,fontsize=8)
     fig.suptitle(f"Raw-fitted PCA; corrected projected onto same components | {'/'.join(groups)}",
                  fontsize=13,fontweight="bold")
     fig.savefig(OUT/filename,dpi=160,bbox_inches="tight")
