@@ -24,10 +24,14 @@ jobs:
           python-version: '3.12'
       - name: Install data analysis dependencies
         run: python -m pip install numpy pandas matplotlib
-      - name: Calculate QC-reference STGSWSTLK Heavy +/- corrections
+      - name: Calculate QC-reference STGSWSTLK Heavy +/- corrections (once)
         run: |
-          OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 \
-            python scripts/pacs_STGSWSTLK_qc_heavy_two_signs.py
+          if [ ! -f results/stgswstlk_heavy_qc_samplewise_sign_comparison/run_manifest.json ]; then
+            OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 \
+              python scripts/pacs_STGSWSTLK_qc_heavy_two_signs.py
+          else
+            echo "Existing validated result directory found; skip destructive rerun."
+          fi
       - name: Verify QC references, four matrices and sample factor shifts
         run: |
           python - <<'PY'
