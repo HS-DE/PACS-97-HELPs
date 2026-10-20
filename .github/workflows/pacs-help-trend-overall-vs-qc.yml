@@ -1,0 +1,62 @@
+name: PACS HELP overall-75 trend ranking versus QC validation overlay
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/pacs_heavy_trend_75_vs_QC_supplement.py
+      - .github/workflows/pacs-help-trend-overall-vs-qc.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: pacs-help-overall-vs-qc-supplement
+  cancel-in-progress: false
+jobs:
+  add:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install statistics and plotting tools
+        run: python -m pip install numpy pandas scipy matplotlib
+      - name: Generate strongest all-75 versus QC trend comparisons
+        run: |
+          OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 \
+            python scripts/pacs_heavy_trend_75_vs_QC_supplement.py
+      - name: Validate supplemental ranked tables and plot
+        run: |
+          python - <<'PY'
+          import json
+          import pandas as pd
+          from pathlib import Path
+          root=Path("results/pacs_help97_heavy_trend_vs_raw_PG_75samples")
+          base=pd.read_csv(root/"01_full_detect_HELP_QC_trend_ranking.csv")
+          a=pd.read_csv(root/"06_all75_ownPG_Pearson_rank.csv")
+          b=pd.read_csv(root/"07_all75_fixedPG_Pearson_rank.csv")
+          qc=pd.read_csv(root/"08_QC_within_plate_Pearson_rank.csv")
+          assert len(base)==len(a)==len(b)==len(qc)==96
+          assert a.overall75_allPG_r.is_monotonic_decreasing
+          assert b.overall75_fixedPG_r.is_monotonic_decreasing
+          assert qc.QC_within_plate_fixedPG_r.is_monotonic_decreasing
+          assert a.overall75_Pearson_rank.eq(range(1,97)).all()
+          assert (root/"07_top5_overall75_rawPG_trend_vs_QC_check.png").stat().st_size>40000
+          summary=json.loads((root/"07_overall75_ranking_supplement.json").read_text())
+          assert summary["all75_top5"]==a.HELP_sequence.head(5).tolist()
+          print("PASS direct overall75 ranking and independent QC contrast chart")
+          PY
+      - name: Publish supplemental files only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- results/pacs_help97_heavy_trend_vs_raw_PG_75samples
+          if ! git diff --cached --quiet; then
+            git commit -m "Add overall75 candidate ranks contrasted with pooled-QC Heavy trends [skip ci]"
+            git push
+          fi
