@@ -1,0 +1,115 @@
+name: PACS five manual HELP Pearson (plate) and figure legend repairs
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/pacs_selected5_HELP_Heavy_PG_Pearson_75samples.py
+      - scripts/pacs_STGSWSTLK_qc_legends_refresh.py
+      - scripts/nyd_mixed_sign_figures_legend_refresh.py
+      - .github/workflows/pacs-five-help-pearson-and-legends.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: pacs-five-help-pearson-legends
+  cancel-in-progress: false
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install statistics and graphics packages
+        run: python -m pip install numpy scipy pandas matplotlib
+      - name: Record existing numeric data file hashes for figure-only repairs
+        run: |
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          dirs=[Path("results/stgswstlk_heavy_qc_samplewise_sign_comparison"),
+                Path("NYD_data/40samples/STGSWSTLK_Heavy_mixed_sign_39samples")]
+          lookup={}
+          for path in dirs:
+              for f in path.rglob("*"):
+                  if f.is_file() and f.suffix not in (".png",):
+                      lookup[str(f)]=hashlib.sha256(f.read_bytes()).hexdigest()
+          assert len(lookup)>=15
+          Path("/tmp/pacs_existing_nonimage_hashes.json").write_text(json.dumps(lookup))
+          print("Numeric/metadata files protected:",len(lookup))
+          PY
+      - name: Pearson for 75 PACS samples and three plates
+        run: |
+          OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 \
+            python scripts/pacs_selected5_HELP_Heavy_PG_Pearson_75samples.py
+      - name: Refresh last PACS Heavy normalization figures without rerunning statistics
+        run: |
+          OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 \
+            python scripts/pacs_STGSWSTLK_qc_legends_refresh.py
+      - name: Refresh NYD mixed-sign figure legends without touching matrices
+        run: |
+          OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 \
+            python scripts/nyd_mixed_sign_figures_legend_refresh.py
+      - name: Validate correlations, samples, figures and preserved historical numbers
+        run: |
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          import numpy as np
+          import pandas as pd
+
+          root=Path("results/pacs_selected5_HELP_Heavy_PG_Pearson_75samples")
+          m=json.loads((root/"run_manifest.json").read_text())
+          assert m["n_samples"]==75 and m["n_raw_protein_groups"]==6675
+          assert 100<=m["n_common_75_PG"]<=6675
+          assert m["scope_counts"]=={"ALL_75":75,"Plate_1":27,"Plate_2":27,"Plate_3":21,
+                                     "HC":27,"S":27,"pooled_QC":15,"Internal_QC":6}
+          assert m["manual_5_HELP"]==["FSVVYAK","STGSWSTLK","VTGWGNLK","VVEESELAR","VYFAGFPR"]
+          assert m["source_Heavy"]=="Original H sheet only, not L/H ratio"
+          samples=pd.read_csv(root/"sample_75_Heavy_and_PG_log2_medians.csv")
+          assert len(samples)==75 and samples.sample_id.nunique()==75
+          assert len(pd.read_csv(root/"common_75_PG_protein_list.csv"))==m["n_common_75_PG"]
+          assert samples.n_common_75_PG.eq(m["n_common_75_PG"]).all()
+          assert samples.groupby("plate").size().to_dict()=={1:27,2:27,3:21}
+          assert np.isfinite(samples[["all_detected_PG_log2_median",
+               "common_75_PG_log2_median"]].to_numpy(float)).all()
+          for seq in m["manual_5_HELP"]:
+              assert np.isfinite(samples[seq+"_Heavy_log2"]).all()
+          corr=pd.read_csv(root/"pearson_summary_overall_plate_group.csv")
+          assert len(corr)==8*6*2
+          assert corr.groupby(["scope","HELP","PG_basis"]).size().eq(1).all()
+          assert corr.n_pairs.min()>=6
+          assert corr.pearson_r.between(-1,1).all()
+          assert len(pd.read_csv(root/"PG_detected_count_vs_medians.csv"))==8*2
+          for fig in ("01_scatter_selected5_Heavy_vs_PG_medians.png",
+                      "02_Pearson_r_overall_plate_group_heatmaps.png"):
+              assert (root/fig).stat().st_size>45000,fig
+          print("Pearson raw 75 samples, common PG",m["n_common_75_PG"])
+          print(corr[corr.scope=="ALL_75"].to_string(index=False))
+          baseline=json.loads(Path("/tmp/pacs_existing_nonimage_hashes.json").read_text())
+          for p,hash_ in baseline.items():
+              assert hashlib.sha256(Path(p).read_bytes()).hexdigest()==hash_,p
+          print("PASS",len(baseline),"preexisting non-PNG files left unchanged")
+          for folder in (
+             Path("results/stgswstlk_heavy_qc_samplewise_sign_comparison"),
+             Path("NYD_data/40samples/STGSWSTLK_Heavy_mixed_sign_39samples/overall_reference"),
+             Path("NYD_data/40samples/STGSWSTLK_Heavy_mixed_sign_39samples/within_batch_reference")):
+              assert all(p.stat().st_size>20000 for p in folder.glob("*.png"))
+          PY
+      - name: Publish correlations and corrected-layout PNGs
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- results/pacs_selected5_HELP_Heavy_PG_Pearson_75samples \
+            results/stgswstlk_heavy_qc_samplewise_sign_comparison \
+            NYD_data/40samples/STGSWSTLK_Heavy_mixed_sign_39samples
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish PACS five HELP plate Pearson and improve recent figure legend layouts [skip ci]"
+            git push
+          fi
