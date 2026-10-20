@@ -1,0 +1,95 @@
+name: PACS HELP Heavy trend screening vs raw PG sample medians
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/pacs_heavy_97_trend_screening.py
+      - .github/workflows/pacs-help-heavy-trend-screening.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: pacs-heavy-trend-screening-75
+  cancel-in-progress: false
+jobs:
+  calculate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install screening and figure dependencies
+        run: python -m pip install numpy pandas matplotlib scipy
+      - name: Screen original 97 Heavy HELP vs raw per-sample PG medians
+        run: |
+          OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 \
+            python scripts/pacs_heavy_97_trend_screening.py
+      - name: Independently verify rank tables, full detection, sample ordering and chart exports
+        run: |
+          python - <<'PY'
+          import hashlib,json
+          import numpy as np
+          import pandas as pd
+          from pathlib import Path
+          root=Path("results/pacs_help97_heavy_trend_vs_raw_PG_75samples")
+          manifest=json.loads((root/"run_manifest.json").read_text())
+          assert manifest["PACS_samples"]==75 and manifest["raw_PG_count"]==6675
+          assert manifest["HELP_total"]==97
+          assert manifest["full_detected_HELP_count"]>=5
+          assert manifest["PG_fixed_sets"]["common75"]==267
+          assert manifest["PG_fixed_sets"]["QC_common15"]>=500
+          assert manifest["PG_fixed_sets"]["Study_common54"]>=50
+          sources={"PG":"pg_matrix.tsv","HELP":"LH_ratio_tables_2026.10.13—ALL-HELP.xlsx",
+                   "QCMETA":"all_QC_metadata.xlsx","STUDYMETA":"all_sample_metadata.xlsx"}
+          for name in sources.values():
+              digest=hashlib.sha256(Path(name).read_bytes()).hexdigest()
+              assert manifest["input_sha256"][name]==digest, name
+          detected=pd.read_csv(root/"00_all97_HELP_detection_and_CV.csv")
+          ranks=pd.read_csv(root/"01_full_detect_HELP_QC_trend_ranking.csv")
+          long=pd.read_csv(root/"02_all_spearman_pearson_slope_RMSE_by_scope.csv")
+          records=pd.read_csv(root/"03_sample_order_and_medians.csv")
+          assert len(detected)==97 and detected.HELP_sequence.nunique()==97
+          assert ((detected.n_positive_of_75>=0)&(detected.n_positive_of_75<=75)).all()
+          assert (detected.n_positive_of_75==75).sum()==manifest["full_detected_HELP_count"]
+          assert len(ranks)==manifest["full_detected_HELP_count"]
+          assert (ranks.n_positive_of_75==75).all() and ranks.HELP_sequence.is_unique
+          assert ranks.exploratory_QC_trend_rank.tolist()==list(range(1,len(ranks)+1))
+          assert len(records)==75 and records.sample_id.nunique()==75
+          assert list(records.sample_order_index)==list(range(1,76))
+          assert records.n_75_complete_HELP.eq(len(ranks)).all()
+          assert records.groupby("plate").size().to_dict()=={1:27,2:27,3:21}
+          assert records.groupby("group").size().to_dict()=={
+             "Internal-QC":6,"pooled QC":15,"HC":27,"S":27}
+          assert manifest["top5_exploratory"]==ranks.HELP_sequence.head(5).tolist()
+          assert manifest["top10_exploratory"]==ranks.HELP_sequence.head(10).tolist()
+          assert np.isfinite(ranks["QC_within_plate_fixedPG_r"]).all()
+          assert ranks.QC_within_plate_fixedPG_r.between(-1,1).all()
+          assert ranks.overall75_allPG_r.between(-1,1).all()
+          assert len(long)>len(ranks)*12
+          for key,label in (("common75","common_75"),
+                            ("QC_common15","QC_common_15"),
+                            ("Study_common54","Study_common_54")):
+              file=root/f"04_{label}_PG_list.csv"
+              assert len(pd.read_csv(file))==manifest["PG_fixed_sets"][key]
+          assert len(pd.read_csv(root/"05_QC_PG_median_technical_SD_by_plate.csv"))==3
+          figs=sorted(root.glob("*.png"))
+          assert len(figs)==6,[i.name for i in figs]
+          assert all(i.stat().st_size>28000 for i in figs),[(i.name,i.stat().st_size) for i in figs]
+          print("PASS",len(ranks),"full 75/75 HELP, fixed PG",manifest["PG_fixed_sets"],
+                "top five",manifest["top5_exploratory"],"six PNG and raw source hashes")
+          PY
+      - name: Publish independent HELP trend discovery directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- results/pacs_help97_heavy_trend_vs_raw_PG_75samples
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish PACS original Heavy HELP median-trend screening and plots [skip ci]"
+            git push
+          fi
