@@ -1,8 +1,8 @@
 # PACS 75 samples | user-selected five HELP Heavy vs sample raw PG medians
 
 Uses 75 original samples and these five MANUALLY chosen HELP peptide sequences:
-FSVVYAK, STGSWSTLK, VTGWGNLK, VVEESELAR, VYFAGFPR
-. Heavy intensity is from H sheet, NOT ratio_LH.
+FSVVYAK, STGSWSTLK, VTGWGNLK, VVEESELAR, VYFAGFPR.
+Heavy intensity is from the H sheet, NOT ratio_LH.
 No normalization/factor is applied here. Study, pooled-QC and Internal-QC
 samples are all included. This is not NYD; biological sample heterogeneity matters.
 
