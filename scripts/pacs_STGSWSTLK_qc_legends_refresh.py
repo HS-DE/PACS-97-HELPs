@@ -37,6 +37,7 @@ def main():
             variants[label]=adjusted
     cv=pd.read_csv(root/"group_protein_CV_summary.csv")
     qc=pd.read_csv(root/"pooled_QC_within_plate_CV.csv")
+    qc["plate"]=qc["plate"].astype(str)
     if len(cv)!=20 or len(qc)!=15:
         raise ValueError("Existing summary incomplete")
     experiment.reference_plot(h,names,info,pooled,g,p)
