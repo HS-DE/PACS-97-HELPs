@@ -1,0 +1,37 @@
+{
+  "variant": "within_batch_reference",
+  "reference_log2": {
+    "T001": 21.122744278499212,
+    "T002": 21.163280893507395,
+    "T003": 20.91881450490014,
+    "T004": 21.23099536075814
+  },
+  "correction_direction": {
+    "T001": -1.0,
+    "T002": -1.0,
+    "T003": -1.0,
+    "T004": 1.0
+  },
+  "PG_log2_correction": "Raw + sign[batch] * (reference - log2(STGSWSTLK Heavy))",
+  "factors_equal_earlier_positive_direction_trials": true,
+  "n_protein_groups": 4264,
+  "n_samples": 39,
+  "no_missing_imputation_except_PCA": true,
+  "PCA_raw_fit": {
+    "fitted_on": "Raw PG log2 only",
+    "corrected_data": "Projected onto original Raw components; not a second PCA fit",
+    "feature_selection": "Raw detection >=70% of 39 retained samples and Raw SD>1e-8",
+    "n_selected_proteins": 3307,
+    "missing_imputation": "Each selected protein's Raw median, identical for Raw and Corrected",
+    "centering": "Each selected protein's Raw mean after Raw-only missing imputation",
+    "PC1_raw_explained_variance_pct": 18.735929392931155,
+    "PC2_raw_explained_variance_pct": 13.96061659531278,
+    "PC_axis_orientation": "Raw loading with largest absolute magnitude is positive"
+  },
+  "PCA_common_axis_bounds": [
+    -26.902740154815334,
+    65.55597796254611,
+    -16.986271254950573,
+    28.398549264891273
+  ]
+}

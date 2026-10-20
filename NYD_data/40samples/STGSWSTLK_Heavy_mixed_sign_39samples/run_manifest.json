@@ -1,0 +1,40 @@
+{
+  "n_original": 40,
+  "n_retained": 39,
+  "n_protein_groups": 4264,
+  "excluded_sample_id": "MAP26092326E01",
+  "batch_sizes": {
+    "T001": 16,
+    "T002": 8,
+    "T003": 7,
+    "T004": 8
+  },
+  "stgswstlk_only": true,
+  "directions": {
+    "T001": "-fi",
+    "T002": "-fi",
+    "T003": "-fi",
+    "T004": "+fi"
+  },
+  "fi_definition": "reference_median_log2 - log2(original STGSWSTLK Heavy)",
+  "reference_log2": {
+    "overall_reference": 21.085857242488732,
+    "within_batch_reference": {
+      "T001": 21.122744278499212,
+      "T002": 21.163280893507395,
+      "T003": 20.91881450490014,
+      "T004": 21.23099536075814
+    }
+  },
+  "correction_rule": "PG_corrected_log2 = raw_PG_log2 + sign_by_batch * fi",
+  "original_inputs_sha256": {
+    "NYD_pg_matrix2.tsv": "39f912d004f8cd3a51a8d879a97d43b308b32f3ee195646b51e32dcbc60d7167",
+    "Heavy.xlsx": "7670f3d5d939d18bcf4163523d2197c74eba96eb46a52eebb227e2abbac03af0",
+    "NYD_sampleinfo2.xlsx": "82f2637934e097d9e0b28742e93ce66b7388b877b80810e0a97108b95d5e321c"
+  },
+  "raw_pg_valid_values": 137870,
+  "no_changes_to_previous_experiments": true,
+  "within_batch_cv_identical_between_two_reference_methods": true,
+  "same_Raw_PCA_basis_and_axes": true,
+  "no_imputation_for_CV_or_matrices": true
+}
