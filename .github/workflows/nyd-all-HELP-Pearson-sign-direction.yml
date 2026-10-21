@@ -1,0 +1,99 @@
+name: NYD all 40 Heavy HELP Pearson-sign directional calibration
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/nyd_all_HELP_Pearson_sign_directional_normalization_v1.py
+      - .github/workflows/nyd-all-HELP-Pearson-sign-direction.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: nyd-all-HELP-pearson-sign-direction
+  cancel-in-progress: false
+jobs:
+  calibration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Dependencies
+        run: python -m pip install numpy pandas scipy matplotlib
+      - name: Calculate per-HELP direction-selective PG calibration and plots
+        run: |
+          OPENBLAS_NUM_THREADS=2 MKL_NUM_THREADS=2 OMP_NUM_THREADS=2 \
+            python scripts/nyd_all_HELP_Pearson_sign_directional_normalization_v1.py
+      - name: Audit complete peptide outputs, factors, Pearson signs, batches and matrices
+        run: |
+          python - <<'PY'
+          import json,math
+          from pathlib import Path
+          import numpy as np,pandas as pd
+          root=Path("NYD_data/40samples/HELP97_Pearson_sign_directional_correction_all_detected_v1")
+          man=json.loads((root/"run_manifest.json").read_text())
+          assert man["total_initial_HELP"]==97 and man["PG_count"]==4264
+          for cohort,n,counts in (("full40",40,[16,8,8,8]),
+                                  ("exclude_T003_bad_sample_39",39,[16,8,7,8])):
+              src=root/cohort
+              block=man["primary" if n==40 else "sensitivity"]
+              nc=block["full_detected_n"]
+              assert nc>10 and nc<=97
+              assert list(block["batch_counts"].values())==counts
+              results=pd.read_csv(src/"01_HELP_all_candidates_metrics_sorted_by_deltaCV.csv")
+              assert len(results)==nc and results.HELP_sequence.is_unique
+              factors=pd.read_csv(src/"02_every_HELP_per_sample_factors.csv.gz")
+              assert len(factors)==nc*n
+              protein=pd.read_csv(src/"03_every_HELP_per_protein_Pearson_signs.csv.gz")
+              assert len(protein)==nc*4264
+              assert protein.correction_sign.isin([-1,0,1]).all()
+              assert results.eval("pearson_positive_PG_n+pearson_negative_PG_n+pearson_undefined_or_zero_PG_n").eq(4264).all()
+              assert factors.groupby("HELP_sequence").size().eq(n).all()
+              assert protein.groupby("HELP_sequence").size().eq(4264).all()
+              assert factors.groupby("HELP_sequence").fi_log2.median().abs().max()<1e-11
+              assert np.isfinite(results.ALL_after_medianCV).all()
+              if n==40:
+                  for seq in block["full_detected_HELP"]:
+                      p=src/"per_HELP"/seq
+                      assert p.joinpath("corrected_PG_log2.tsv.gz").stat().st_size>10000
+                      assert len(list(p.glob("*.png")))==3
+                      assert all(x.stat().st_size>16000 for x in p.glob("*.png"))
+                  assert len(list(src.glob("per_HELP/*/*.png")))==3*nc
+                  assert len(list(src.glob("per_HELP/*/*.tsv.gz")))==nc
+                  # Full intensity reconstruction independent of code path,
+                  # on three representative peptides, first/last sample.
+                  first=[block["full_detected_HELP"][0],
+                         block["full_detected_HELP"][-1]]
+                  if "STGSWSTLK" in block["full_detected_HELP"]:
+                      first+=["STGSWSTLK"]
+                  pg=pd.read_csv("NYD_data/40samples/NYD_pg_matrix2.tsv",sep="\t")
+                  for seq in first:
+                      f=factors[factors.HELP_sequence==seq].set_index("sample_id")
+                      signs=protein[protein.HELP_sequence==seq].sort_values("protein_row_index")
+                      mat=pd.read_csv(src/"per_HELP"/seq/"corrected_PG_log2.tsv.gz",sep="\t")
+                      for sid in (f.index[0],f.index[-1]):
+                          pre=pd.to_numeric(pg[sid],errors="coerce").to_numpy(float)
+                          observed=pre>0
+                          orig=np.full(len(pre),np.nan)
+                          orig[observed]=np.log2(pre[observed])
+                          expect=orig+signs.correction_sign.to_numpy()*float(f.loc[sid,"fi_log2"])
+                          got=mat[sid].to_numpy(float)
+                          assert np.array_equal(np.isfinite(expect),np.isfinite(got))
+                          assert np.allclose(expect,got,equal_nan=True,atol=1e-8)
+              print("VERIFIED",cohort,n,nc)
+          PY
+      - name: Publish independent NYD results
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- NYD_data/40samples/HELP97_Pearson_sign_directional_correction_all_detected_v1
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish full NYD Pearson-sign Heavy calibrations and graphics [skip ci]"
+            git push
+          fi
