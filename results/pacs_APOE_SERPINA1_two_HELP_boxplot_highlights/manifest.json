@@ -1,0 +1,68 @@
+{
+  "target_map": {
+    "LAVYQAGAR": {
+      "accession": "P02649",
+      "gene": "APOE",
+      "color": "#C54D47",
+      "marker": "D"
+    },
+    "AVLTIDEK": {
+      "accession": "P01009",
+      "gene": "SERPINA1",
+      "color": "#087D94",
+      "marker": "o"
+    }
+  },
+  "actual_PG_matching_rows": [
+    {
+      "HELP_sequence": "LAVYQAGAR",
+      "UniProt_accession": "P02649",
+      "Gene": "APOE",
+      "source_pg_row_number_including_header": 953,
+      "Protein.Group": "P02649",
+      "Protein.Ids": "P02649",
+      "Protein.Names": "APOE_HUMAN",
+      "Genes": "APOE",
+      "First.Protein.Description": "Apolipoprotein E",
+      "n_positive_pg": 75
+    },
+    {
+      "HELP_sequence": "AVLTIDEK",
+      "UniProt_accession": "P01009",
+      "Gene": "SERPINA1",
+      "source_pg_row_number_including_header": 884,
+      "Protein.Group": "P01009",
+      "Protein.Ids": "P01009;P01009-2;P01009-3",
+      "Protein.Names": "A1AT_HUMAN",
+      "Genes": "SERPINA1",
+      "First.Protein.Description": "Alpha-1-antitrypsin",
+      "n_positive_pg": 75
+    }
+  ],
+  "n_samples": 75,
+  "n_raw_PG": 6675,
+  "n_raw_HELP": 97,
+  "n_75_complete_Heavy_HELP": 96,
+  "original_sources_sha256": {
+    "pg_matrix.tsv": "112d59739481b2fbf1d5252d0fc754c4a4494af60c77ff050af153fe423012be",
+    "LH_ratio_tables_2026.10.13—ALL-HELP.xlsx": "5523ffca836fd7244610322f781084619541482835f108a92cdb350a6e3a4e53",
+    "all_QC_metadata.xlsx": "5dc7ee9296a1ed6422e3d3e4390c36dac8da884727f4b276d3db54764c25177e",
+    "all_sample_metadata.xlsx": "86e90f10a3ae3a099f52baa77a422dc234322a134fe2235c09bccf071e6863fe"
+  },
+  "sample_order": "group -> plate -> sample ID",
+  "H_sheet": "original H sheet, not L or ratio",
+  "PG": "original pg_matrix.tsv, not corrected",
+  "log2": true,
+  "no_normalization": true,
+  "no_imputation": true,
+  "legends": "outside axes in reserved figure margin",
+  "images": [
+    "01_97HELP_Heavy_both_highlights.png",
+    "02_6675PG_APOE_SERPINA1_both_highlights.png",
+    "03_Heavy_LAVYQAGAR_highlight.png",
+    "04_PG_APOE_P02649_highlight.png",
+    "03_Heavy_AVLTIDEK_highlight.png",
+    "04_PG_SERPINA1_P01009_highlight.png",
+    "05_two_HELP_and_PG_centered_trends.png"
+  ]
+}

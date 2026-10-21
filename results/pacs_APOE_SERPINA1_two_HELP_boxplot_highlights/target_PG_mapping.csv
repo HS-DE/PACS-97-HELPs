@@ -1,0 +1,3 @@
+﻿HELP_sequence,UniProt_accession,Gene,source_pg_row_number_including_header,Protein.Group,Protein.Ids,Protein.Names,Genes,First.Protein.Description,n_positive_pg
+LAVYQAGAR,P02649,APOE,953,P02649,P02649,APOE_HUMAN,APOE,Apolipoprotein E,75
+AVLTIDEK,P01009,SERPINA1,884,P01009,P01009;P01009-2;P01009-3,A1AT_HUMAN,SERPINA1,Alpha-1-antitrypsin,75
