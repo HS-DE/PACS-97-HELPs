@@ -1,0 +1,73 @@
+name: PACS LAVYQAGAR AVLTIDEK Heavy and PG highlight boxplots
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/pacs_LAVYQAGAR_AVLTIDEK_boxplot_highlights.py
+      - .github/workflows/pacs-two-HELP-APOE-SERPINA1-highlights.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: pacs-two-help-apoe-serpina1-highlights
+  cancel-in-progress: false
+jobs:
+  plot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install plotting dependencies
+        run: python -m pip install numpy pandas matplotlib
+      - name: Generate highlighted Heavy and PG boxplots from original data
+        run: |
+          OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 \
+            python scripts/pacs_LAVYQAGAR_AVLTIDEK_boxplot_highlights.py
+      - name: Validate highlight mapping, source file hashes, and figures
+        run: |
+          python - <<'PY'
+          import json,hashlib
+          import pandas as pd
+          from pathlib import Path
+          root=Path("results/pacs_APOE_SERPINA1_two_HELP_boxplot_highlights")
+          cfg=json.loads((root/"manifest.json").read_text())
+          assert cfg["n_samples"]==75 and cfg["n_raw_PG"]==6675
+          assert cfg["n_raw_HELP"]==97 and cfg["n_75_complete_Heavy_HELP"]==96
+          assert cfg["no_normalization"] and cfg["no_imputation"]
+          assert {seq:(v["accession"],v["gene"]) for seq,v in cfg["target_map"].items()}=={
+              "LAVYQAGAR":("P02649","APOE"),
+              "AVLTIDEK":("P01009","SERPINA1")}
+          matching=pd.read_csv(root/"target_PG_mapping.csv")
+          assert len(matching)==2
+          assert dict(zip(matching.UniProt_accession,matching.Gene))=={"P02649":"APOE","P01009":"SERPINA1"}
+          a=pd.read_csv(root/"75_samples_target_intensities.csv")
+          assert len(a)==75 and a.sample_id.nunique()==75
+          assert a.order.tolist()==list(range(1,76))
+          assert a.groupby("group").size().to_dict()=={
+              "Internal-QC":6,"pooled QC":15,"HC":27,"S":27}
+          assert a.groupby("plate").size().to_dict()=={1:27,2:27,3:21}
+          assert a[["LAVYQAGAR_Heavy_log2","AVLTIDEK_Heavy_log2"]].notna().all().all()
+          figs=sorted(root.glob("*.png"))
+          assert len(figs)==7, [f.name for f in figs]
+          assert {f.name for f in figs}==set(cfg["images"])
+          assert all(f.stat().st_size>23000 for f in figs)
+          for filename, digest in cfg["original_sources_sha256"].items():
+              assert hashlib.sha256(Path(filename).read_bytes()).hexdigest()==digest,filename
+          print("PASS 2 exact targets, 75 samples, 97 original Heavy, 6675 original PG, 7 figures")
+          PY
+      - name: Publish independent highlighted results
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- results/pacs_APOE_SERPINA1_two_HELP_boxplot_highlights
+          if ! git diff --cached --quiet; then
+            git commit -m "Add LAVYQAGAR/AVLTIDEK Heavy and APOE/SERPINA1 PG highlights [skip ci]"
+            git push
+          fi
