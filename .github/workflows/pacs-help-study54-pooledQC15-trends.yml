@@ -1,0 +1,108 @@
+name: PACS HELP trends Study54 vs pooledQC15 no InternalQC
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/pacs_HELP_trend_study54_pooledQC15.py
+      - .github/workflows/pacs-help-study54-pooledQC15-trends.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: pacs-help-study54-qc15-trends
+  cancel-in-progress: false
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install plotting and statistics dependencies
+        run: python -m pip install numpy pandas scipy matplotlib
+      - name: Recompute original HELP and PG median trend matches for exactly two groups
+        run: |
+          OPENBLAS_NUM_THREADS=2 MKL_NUM_THREADS=2 OMP_NUM_THREADS=2 \
+            python scripts/pacs_HELP_trend_study54_pooledQC15.py
+      - name: Audit independent groups, PG universes and trend ranking
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,json
+          import pandas as pd
+          import numpy as np
+          root=Path("results/pacs_HELP_trend_Study54_pooledQC15_excludeInternalQC")
+          m=json.loads((root/"run_manifest.json").read_text())
+          assert m["n_samples_researched"]==69 and m["n_excluded_InternalQC"]==6
+          assert set(m["group_summaries"])=={"Study54","pooledQC15"}
+          pgs={"Study54":3965,"pooledQC15":5227}
+          sample_ids=[]
+          for group,n in (("Study54",54),("pooledQC15",15)):
+              d=m["group_summaries"][group]
+              assert d["sample_count"]==n
+              assert d["PG_full_detection_proteins"]==pgs[group]
+              assert d["full_detection_HELP_count"]>=96
+              assert len(d["sample_IDs"])==n and len(set(d["sample_IDs"]))==n
+              samples=pd.read_csv(root/f"00_{group}_sample_order_and_medians.csv")
+              assert len(samples)==n and samples.sample_id.is_unique
+              assert list(samples.sample_id)==d["sample_IDs"]
+              assert samples.sample_order.tolist()==list(range(1,n+1))
+              assert not (samples.original_group=="Internal-QC").any()
+              assert samples.plate.astype(int).is_monotonic_increasing
+              if group=="Study54":
+                  assert set(samples.original_group)=={"HC","S"}
+                  assert samples.groupby("original_group").size().to_dict()=={"HC":27,"S":27}
+              else:
+                  assert set(samples.original_group)=={"pooled QC"}
+                  assert samples.groupby("plate").size().to_dict()=={1:5,2:5,3:5}
+              sample_ids+=list(samples.sample_id)
+              common=pd.read_csv(root/f"00_{group}_common_PG_list.csv")
+              assert len(common)==pgs[group]
+              metrics=pd.read_csv(root/f"01_{group}_completeHELP_all_metrics.csv")
+              assert len(metrics)==d["full_detection_HELP_count"]
+              assert metrics.HELP_sequence.is_unique
+              assert metrics.Heavy_detected_n.eq(n).all()
+              assert metrics.ownPG_pearson_r.between(-1,1).all()
+              assert metrics.fixedPG_pearson_r.between(-1,1).all()
+              assert metrics.ownPG_centered_RMSE_log2.notna().all()
+              assert metrics.fixedPG_centered_RMSE_log2.notna().all()
+              for name,col,dir in [
+                 (f"02_{group}_ranking_ownPG_Pearson.csv","ownPG_pearson_r",False),
+                 (f"03_{group}_ranking_ownPG_RMSE.csv","ownPG_centered_RMSE_log2",True),
+                 (f"04_{group}_ranking_fixedPG_Pearson.csv","fixedPG_pearson_r",False),
+                 (f"05_{group}_ranking_fixedPG_RMSE.csv","fixedPG_centered_RMSE_log2",True),
+              ]:
+                  df=pd.read_csv(root/name)
+                  assert len(df)==len(metrics)
+                  assert df[col].is_monotonic_increasing if dir else df[col].is_monotonic_decreasing
+          assert len(set(sample_ids))==69
+          for name,col in [
+              ("07_pooledQC15_withinPlate_fixedPG_Pearson_rank.csv","withinPlate_fixedPG_pearson_r"),
+              ("08_pooledQC15_withinPlate_fixedPG_RMSE_rank.csv","withinPlate_fixedPG_centered_RMSE_log2")
+          ]:
+              a=pd.read_csv(root/name)
+              assert len(a)==m["group_summaries"]["pooledQC15"]["full_detection_HELP_count"]
+              assert a[col].notna().all()
+          expected=m["generated_figures"]
+          assert len(expected)==9
+          assert len(list(root.glob("*.png")))==9
+          assert all((root/i).stat().st_size>25000 for i in expected)
+          for fn,digest in m["source_hashes_sha256"].items():
+              assert hashlib.sha256(Path(fn).read_bytes()).hexdigest()==digest
+          print("VALIDATED: no InternalQC; HC+S jointly n=54; pooled QC separately n=15; own/fixed PG sets, 9 charts")
+          PY
+      - name: Publish separate two-group HELP trend screening results
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- results/pacs_HELP_trend_Study54_pooledQC15_excludeInternalQC
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish corrected Study54 and pooledQC15 HELP median trend rankings [skip ci]"
+            git push
+          fi
