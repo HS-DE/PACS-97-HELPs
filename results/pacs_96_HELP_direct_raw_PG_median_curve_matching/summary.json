@@ -1,0 +1,34 @@
+{
+  "full_75_HELP": 96,
+  "reference": "median(log2 positive PG intensity) per sample",
+  "reference_median_across_75": 13.995599344805536,
+  "reference_PG_sd": 1.5703828182413844,
+  "no_candidate_with_r_ge_09": true,
+  "count_r_ge_09": 0,
+  "count_r_ge_08": 0,
+  "best_by_r": [
+    "LAVYQAGAR",
+    "AVLTIDEK",
+    "YVLSPYK",
+    "GQVVPALNEK",
+    "LGPLVEQGR"
+  ],
+  "best_by_rmse": [
+    "YVLSPYK",
+    "LAVYQAGAR",
+    "AVLTIDEK",
+    "ALDFAVGEYNK",
+    "AGALNSNDAFVLK"
+  ],
+  "best_by_neighbor_steps": [
+    "LLEVPEGR",
+    "ELLESYIDGR",
+    "SLDFTELDVAAEK",
+    "LLGEVDHYQLALGK",
+    "GQVVPALNEK"
+  ],
+  "n_fixed_75PG": 267,
+  "analysis_nature": "No calibration. Raw original values; comparing 75-sample curves",
+  "caveat": "Adjacent differences depend on chosen group/plate/sample ID ordering; not chronological or causal",
+  "note": "Pearson is invariant to offsets and positive scaling, while centered RMSE retains amplitude mismatch"
+}
