@@ -1,0 +1,103 @@
+name: NYD one Pearson per HELP against sample PG medians
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/nyd_all_HELP_PGsampleMedian_globalPearson_v2.py
+      - .github/workflows/nyd-all-HELP-globalPGmedian-Pearson-v2.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: nyd-all-HELP-globalPGmedian-Pearson-v2
+  cancel-in-progress: false
+jobs:
+  analysis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Python packages
+        run: python -m pip install numpy pandas scipy matplotlib
+      - name: Compute global Pearson per HELP, then apply a single sign to all PG
+        run: |
+          OPENBLAS_NUM_THREADS=2 MKL_NUM_THREADS=2 OMP_NUM_THREADS=2 \
+            python scripts/nyd_all_HELP_PGsampleMedian_globalPearson_v2.py
+      - name: Verify global-Pearson sign, factors, corrected matrices and images
+        run: |
+          python - <<'PY'
+          import json
+          import numpy as np,pandas as pd
+          from pathlib import Path
+          root=Path("NYD_data/40samples/HELP97_PGsampleMedian_globalPearson_v2")
+          manifest=json.loads((root/"run_manifest.json").read_text())
+          assert manifest["n_protein_groups"]==4264 and manifest["input_HELP"]==97
+          pg=pd.read_csv("NYD_data/40samples/NYD_pg_matrix2.tsv",sep="\t")
+          for title,key,n,batches in (("full40","full40",40,[16,8,8,8]),
+               ("exclude_T003_bad_sample_39","sensitivity39",39,[16,8,7,8])):
+              r=root/title
+              obj=manifest[key]
+              seqs=obj["all_sequences"]
+              rows=pd.read_csv(r/"01_global_Pearson_HELP_ranking_and_CV.csv")
+              fact=pd.read_csv(r/"02_every_HELP_sample_factors.csv.gz")
+              assert len(rows)==obj["n_full_HELP"]==len(seqs)
+              assert rows.HELP_sequence.is_unique
+              assert len(fact)==len(rows)*n
+              assert fact.groupby("HELP_sequence").size().eq(n).all()
+              assert sorted(obj["batches"].values())==sorted(batches)
+              assert rows.pearson_direction.isin([-1,0,1]).all()
+              assert ((rows.pearson_direction==1)==
+                      (rows.Pearson_Heavy_vs_samplePGmedian>0)).all()
+              assert ((rows.pearson_direction==-1)==
+                      (rows.Pearson_Heavy_vs_samplePGmedian<0)).all()
+              for seq in seqs:
+                  f=fact[fact.HELP_sequence==seq].copy()
+                  assert np.allclose(f.fi_log2,
+                                     f.median_h_log2-f.median_hi_log2,atol=1e-12)
+                  assert np.allclose(f.applied_offset_log2,
+                                     f.Pearson_direction*f.fi_log2,atol=1e-12)
+                  assert np.allclose(f.Corrected_sample_PGmedian_log2,
+                                     f.Raw_sample_PGmedian_log2+f.applied_offset_log2,
+                                     atol=1e-10)
+                  x=f.median_hi_log2.to_numpy(float)
+                  y=f.Raw_sample_PGmedian_log2.to_numpy(float)
+                  observed=float(np.corrcoef(x,y)[0,1])
+                  assert np.isclose(observed,f.Pearson_global_across_samples.iloc[0],atol=1e-10)
+              if n==40:
+                  assert obj["n_full_HELP"]==74
+                  for seq in seqs:
+                      output=r/"per_HELP"/seq
+                      assert output.joinpath("corrected_PG_log2.tsv.gz").stat().st_size>10000
+                      charts=list(output.glob("*.png"))
+                      assert len(charts)==3
+                      assert all(p.stat().st_size>15000 for p in charts)
+                  assert len(list(r.glob("per_HELP/*/*.png")))==3*len(seqs)
+                  for seq in [seqs[0],seqs[-1], "STGSWSTLK"]:
+                      assert seq in seqs
+                      ff=fact[fact.HELP_sequence==seq].set_index("sample_id")
+                      c=pd.read_csv(r/"per_HELP"/seq/"corrected_PG_log2.tsv.gz",sep="\t")
+                      for s in [ff.index[0],ff.index[-1]]:
+                          raw=pd.to_numeric(pg[s],errors="coerce").to_numpy(float)
+                          orig=np.where(raw>0,np.log2(np.where(raw>0,raw,1)),np.nan)
+                          exp=orig+float(ff.loc[s,"applied_offset_log2"])
+                          got=c[s].to_numpy(float)
+                          assert np.array_equal(np.isfinite(exp),np.isfinite(got))
+                          assert np.allclose(exp,got,equal_nan=True,atol=1e-8)
+              print("PASS",title,len(seqs),n)
+          PY
+      - name: Publish results to separate versioned NYD folder
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- NYD_data/40samples/HELP97_PGsampleMedian_globalPearson_v2
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish NYD corrected one-Pearson-per-HELP calibration and visualizations [skip ci]"
+            git push
+          fi
