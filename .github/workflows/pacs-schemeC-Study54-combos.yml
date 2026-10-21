@@ -1,0 +1,76 @@
+name: PACS Scheme C Study54 Heavy combinations
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/pacs_schemeC_Study54_Heavy_combinations_v1.py
+      - .github/workflows/pacs-schemeC-Study54-combos.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: pacs-schemeC-Study54-Heavy
+  cancel-in-progress: false
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: python -m pip install numpy pandas scipy matplotlib
+      - name: Search Study54 signed sample PG median deviations
+        run: |
+          OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 \
+            python scripts/pacs_schemeC_Study54_Heavy_combinations_v1.py
+      - name: Audit source scope, all combinations and calculations
+        run: |
+          python - <<'PY'
+          import json,math
+          from pathlib import Path
+          import numpy as np,pandas as pd
+          root=Path("results/pacs_schemeC_Study54_Heavy_combinations_v1")
+          meta=json.loads((root/"summary.json").read_text())
+          assert meta["n_Study54"]==54 and meta["n_HC"]==27 and meta["n_S"]==27
+          assert meta["n_pooledQC"]==15 and meta["n_excluded_InternalQC"]==6
+          assert meta["candidate_count"]==68
+          n=68+math.comb(68,2)+math.comb(68,3)
+          assert meta["n_tested_combinations"]==n
+          r=pd.read_csv(root/"01_all_equal_weight_combinations_1to3.csv",keep_default_na=False)
+          assert len(r)==n
+          assert r.groupby("n_HELP").size().to_dict()=={1:68,2:2278,3:50116}
+          assert r.ownPG_RMSE.notna().all() and r.fixedPG_RMSE.notna().all()
+          assert r.ownPG_Pearson.between(-1,1).all()
+          assert r.fixedPG_Pearson.between(-1,1).all()
+          win=pd.read_csv(root/"03_winning_combinations_with_QC_diagnostics.csv",keep_default_na=False)
+          assert len(win)==12
+          assert np.isfinite(win.QC_after_median_proteinCV).all()
+          for t in ("ownPG","fixedPG"):
+            for k in (1,2,3):
+              d=r[(r.n_HELP==k)]
+              for criterion,key in (("RMSE",t+"_RMSE"),("Pearson",t+"_Pearson")):
+                q=pd.read_csv(root/f"02_{t}_top50_{k}HELP_{criterion}.csv",keep_default_na=False)
+                assert len(q)==min(50,len(d))
+                a=q.iloc[0][key]
+                b=d[key].min() if criterion=="RMSE" else d[key].max()
+                assert np.isclose(a,b,atol=1e-10)
+          assert len(meta["plots"])==2
+          assert all((root/p).stat().st_size>25000 for p in meta["plots"])
+          print("Validated: 52462 equal-weight combos, 68 QC-qualified HELP, signed medians and QC diagnostics")
+          PY
+      - name: Commit output
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- results/pacs_schemeC_Study54_Heavy_combinations_v1
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish Scheme C Study54 signed-median HELP combination search [skip ci]"
+            git push
+          fi
