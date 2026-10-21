@@ -1,0 +1,73 @@
+name: PACS 96 HELP raw PG median-curve shape and amplitude matching
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/pacs_96_HELP_direct_PG_median_curve_matching.py
+      - .github/workflows/pacs-help-direct-median-curve-matching.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: pacs-help-direct-median-curve-75
+  cancel-in-progress: false
+jobs:
+  calculate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install analytics packages
+        run: python -m pip install numpy scipy pandas matplotlib
+      - name: Compute correlation, curve-amplitude RMSE and visual trend matches
+        run: |
+          OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 \
+            python scripts/pacs_96_HELP_direct_PG_median_curve_matching.py
+      - name: Validate rankings and center-shift formulas
+        run: |
+          python - <<'PY'
+          import json
+          import numpy as np
+          import pandas as pd
+          from pathlib import Path
+          root=Path("results/pacs_96_HELP_direct_raw_PG_median_curve_matching")
+          m=json.loads((root/"summary.json").read_text())
+          assert m["full_75_HELP"]==96
+          assert m["n_fixed_75PG"]==267
+          a=pd.read_csv(root/"00_all96_ranking_by_overall_Pearson.csv")
+          b=pd.read_csv(root/"01_all96_ranking_by_centered_RMSE.csv")
+          c=pd.read_csv(root/"02_all96_ranking_by_neighbor_curve_changes.csv")
+          details=pd.read_csv(root/"03_sample_curve_values.csv")
+          assert len(a)==len(b)==len(c)==96
+          assert len(details)==75 and details.sample_id.nunique()==75
+          assert a.HELP_sequence.is_unique and set(a.HELP_sequence)==set(b.HELP_sequence)
+          assert np.isclose(a.iloc[0].ownPG_Pearson_r,.7178607757641912,atol=1e-10)
+          assert a.ownPG_Pearson_r.is_monotonic_decreasing
+          assert b.ownPG_centered_RMSE_log2.is_monotonic_increasing
+          assert c.neighbor_step_pearson_r.is_monotonic_decreasing
+          assert a.ownPG_Pearson_r.between(-1,1).all()
+          assert a.fixed75PG_Pearson_r.between(-1,1).all()
+          assert a.ownPG_centered_RMSE_log2.gt(0).all()
+          assert a.neighbor_step_direction_agreement_pct.between(0,100).all()
+          assert m["count_r_ge_09"]==int((a.ownPG_Pearson_r>=.9).sum())
+          assert m["count_r_ge_08"]==int((a.ownPG_Pearson_r>=.8).sum())
+          assert len(list(root.glob("*.png")))==4
+          assert all(f.stat().st_size>30000 for f in root.glob("*.png"))
+          print("PASS 96 Pearson/RMSE/neighbor trends, 75 raw sample medians, 4 images")
+          PY
+      - name: Publish separate median-curve analysis folder
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- results/pacs_96_HELP_direct_raw_PG_median_curve_matching
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish 96 HELP versus raw PG median-curve trend comparison [skip ci]"
+            git push
+          fi
