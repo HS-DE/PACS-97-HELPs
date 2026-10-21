@@ -1,0 +1,93 @@
+{
+  "n_original_HELP": 97,
+  "n_study": 54,
+  "n_pooled_QC": 15,
+  "excluded_Internal_QC": 6,
+  "n_full69": 97,
+  "n_pass_CV10": 68,
+  "CV_definition": "100*sd(linear Heavy in pooledQC15,ddof=1)/mean(linear Heavy)",
+  "CV_threshold_percent_strict_lt": 10,
+  "MAD_excluded": true,
+  "normalized": false,
+  "imputed": false,
+  "ownPG": "Each sample box median of all its detected PG (variable protein set)",
+  "fixedPG": "Each sample median of identical 5227 QC-common PG",
+  "plate_direction": "sign of Heavy and PG plate-median differences; all 3 pairs reported, 2 independent",
+  "sign_interesting_PG_difference_log2": 0.005,
+  "PG_plate_medians": [
+    {
+      "plate": "1",
+      "n_QC": 5,
+      "PG_own_median_log2": 13.98145133365125,
+      "PG_fixed5227_median_log2": 14.360154369426697
+    },
+    {
+      "plate": "2",
+      "n_QC": 5,
+      "PG_own_median_log2": 13.971597438466414,
+      "PG_fixed5227_median_log2": 14.365276701307103
+    },
+    {
+      "plate": "3",
+      "n_QC": 5,
+      "PG_own_median_log2": 13.9699976113865,
+      "PG_fixed5227_median_log2": 14.393946779946281
+    }
+  ],
+  "data_sha256": {
+    "pg_matrix.tsv": "112d59739481b2fbf1d5252d0fc754c4a4494af60c77ff050af153fe423012be",
+    "LH_ratio_tables_2026.10.13—ALL-HELP.xlsx": "5523ffca836fd7244610322f781084619541482835f108a92cdb350a6e3a4e53",
+    "all_QC_metadata.xlsx": "5dc7ee9296a1ed6422e3d3e4390c36dac8da884727f4b276d3db54764c25177e",
+    "all_sample_metadata.xlsx": "86e90f10a3ae3a099f52baa77a422dc234322a134fe2235c09bccf071e6863fe"
+  },
+  "top5_ownPG_pearson": [
+    "TLYSSSPR",
+    "YVLSPYK",
+    "LAVYQAGAR",
+    "IQNILTEEPK",
+    "VVGGLVALR"
+  ],
+  "top5_ownPG_RMSE": [
+    "TLYSSSPR",
+    "GQVVPALNEK",
+    "EAQLPVIENK",
+    "SIPQVSPVR",
+    "FSVVYAK"
+  ],
+  "top5_ownPG_plate": [
+    "FSVVYAK",
+    "YQISVNK",
+    "VYFAGFPR",
+    "DGAGDVAFVK",
+    "GQVVPALNEK"
+  ],
+  "top5_fixedPG_pearson": [
+    "LVVLPFPK",
+    "HFQNLGK",
+    "SALVLQYLR",
+    "WYVDGVEVHNAK",
+    "TWYPEVPK"
+  ],
+  "top5_fixedPG_RMSE": [
+    "TLYSSSPR",
+    "GQVVPALNEK",
+    "AIGYLNTGYQR",
+    "EAQLPVIENK",
+    "TWYPEVPK"
+  ],
+  "top5_fixedPG_plate": [
+    "NYNLVESLK",
+    "TGYYFDGISR",
+    "EFTPPVQAAYQK",
+    "WYVDGVEVHNAK",
+    "HVVPNEVVVQR"
+  ],
+  "generated_figures": [
+    "01_ownPG_pearson_top5_QC_curve.png",
+    "01_ownPG_RMSE_top5_QC_curve.png",
+    "02_ownPG_plate_directions_top8.png",
+    "01_fixedPG_pearson_top5_QC_curve.png",
+    "01_fixedPG_RMSE_top5_QC_curve.png",
+    "02_fixedPG_plate_directions_top8.png"
+  ]
+}
