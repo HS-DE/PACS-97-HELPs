@@ -1,0 +1,32 @@
+{
+  "n_Study": 54,
+  "n_HC": 27,
+  "n_S": 27,
+  "InternalQC_used": false,
+  "pooledQC_used": false,
+  "PG_fixed_count": 3965,
+  "figures": [
+    "01_PG_box_median_raw_log2.png",
+    "02_PG_box_median_centered.png",
+    "01_PG_fixed3965_median_raw_log2.png",
+    "02_PG_fixed3965_median_centered.png"
+  ],
+  "metrics": {
+    "PG_box_median": {
+      "pearson_r": 0.08202572228211091,
+      "spearman_rho": 0.1111111111111111,
+      "centered_RMSE_log2": 0.15962208691751073,
+      "centered_MAE_log2": 0.11866391961101536,
+      "Heavy_over_PG_SD": 0.4239982983110577,
+      "slope_PG_per_Heavy": 0.19345766860114716
+    },
+    "PG_fixed3965_median": {
+      "pearson_r": 0.19199362477939935,
+      "spearman_rho": 0.1550981513245664,
+      "centered_RMSE_log2": 0.09027812060256914,
+      "centered_MAE_log2": 0.07600569517131149,
+      "Heavy_over_PG_SD": 0.855826686220859,
+      "slope_PG_per_Heavy": 0.22433703911150588
+    }
+  }
+}
