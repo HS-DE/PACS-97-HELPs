@@ -1,0 +1,277 @@
+{
+  "n_Study54": 54,
+  "n_HC": 27,
+  "n_S": 27,
+  "n_pooledQC": 15,
+  "n_excluded_InternalQC": 6,
+  "CV_QC15_threshold_pct": 10,
+  "candidate_count": 68,
+  "candidate_names": [
+    "AADDTWEPFASGK",
+    "AAISGENAGLVR",
+    "AGALNSNDAFVLK",
+    "AHVDALR",
+    "AIGYLNTGYQR",
+    "ALDFAVGEYNK",
+    "ALLAFQESK",
+    "ATVVYQGER",
+    "ATWSGAVLAGR",
+    "AVLTIDEK",
+    "DGAGDVAFVK",
+    "DSVTGTLPK",
+    "EAQLPVIENK",
+    "EFTPPVQAAYQK",
+    "EQLSLLDR",
+    "ETLLQDFR",
+    "FSVVYAK",
+    "GLPAPIEK",
+    "GPSVFPLAPSSK",
+    "GQVVPALNEK",
+    "GSESGIFTNTK",
+    "HFQNLGK",
+    "HLVALSPK",
+    "HVVPNEVVVQR",
+    "IADAHLDR",
+    "IAYGTQGSSGYSLR",
+    "ILDDLSPR",
+    "IQNILTEEPK",
+    "IVIEYVDR",
+    "IVLGQEQDSYGGK",
+    "IWLDNVR",
+    "IYLQPGR",
+    "LAPLAEDVR",
+    "LAVYQAGAR",
+    "LGNQEPGGQTALK",
+    "LGPLVEQGR",
+    "LLEVPEGR",
+    "LQPLDFK",
+    "LVVLPFPK",
+    "NILTSNNIDVK",
+    "NIQSLEVIGK",
+    "NYNLVESLK",
+    "SALVLQYLR",
+    "SIPQVSPVR",
+    "SPELQAEAK",
+    "STGSWSTLK",
+    "STVEIFK",
+    "SVFLHAR",
+    "TFTLLDPK",
+    "TGYYFDGISR",
+    "TINVPLR",
+    "TLYSSSPR",
+    "TPLTATLSK",
+    "TWYPEVPK",
+    "VAQELEEK",
+    "VGAHAGEYGAEALER",
+    "VGYVSGWGR",
+    "VLDALQAIK",
+    "VLLDGVQNPR",
+    "VTGWGNLK",
+    "VTVLGQPK",
+    "VVEESELAR",
+    "VVGGLVALR",
+    "VYFAGFPR",
+    "WYVDGVEVHNAK",
+    "YEASILTHDSSIR",
+    "YQISVNK",
+    "YVLSPYK"
+  ],
+  "n_tested_combinations": 52462,
+  "combos_by_size": {
+    "1": 68,
+    "2": 2278,
+    "3": 50116
+  },
+  "objective": "Minimize RMSE of signed per-sample log2 PG median deviations versus equal weight mean log2 Heavy deviation, after independently median-centering final combination on Study54; no amplitude rescaling.",
+  "two_targets": "ownPG median of each sample's detected PG; fixedPG median of 3965 common Study PG",
+  "primary_target": "ownPG",
+  "pooled_QC_role": "QC linear Heavy CV gate and QC PG CV before/after exploratory diagnostic only",
+  "QC_fixed_commonPG_median_CV_raw": 8.986507959441141,
+  "training_validation_caveat": "Candidate search fit to Study raw PG sample medians; flattening those same Study medians is circular and NOT a validation of batch-effect removal.",
+  "plots": [
+    "04_Study54_ownPG_best1_2_3HELP_plate_colored.png",
+    "04_Study54_fixedPG_best1_2_3HELP_plate_colored.png"
+  ],
+  "winners": [
+    {
+      "target": "ownPG",
+      "n_HELP": 1,
+      "criterion": "RMSE",
+      "HELP": [
+        "YVLSPYK"
+      ],
+      "study_Pearson": 0.6855837754598727,
+      "study_RMSE": 0.1105836596867817,
+      "QC_before_CV": 8.986507959441141,
+      "QC_after_CV": 10.211569786207281,
+      "QC_PGown_Pearson": 0.5809266634261582,
+      "QC_PGown_RMSE": 0.06209397778631935
+    },
+    {
+      "target": "ownPG",
+      "n_HELP": 1,
+      "criterion": "Pearson",
+      "HELP": [
+        "YVLSPYK"
+      ],
+      "study_Pearson": 0.6855837754598727,
+      "study_RMSE": 0.1105836596867817,
+      "QC_before_CV": 8.986507959441141,
+      "QC_after_CV": 10.211569786207281,
+      "QC_PGown_Pearson": 0.5809266634261582,
+      "QC_PGown_RMSE": 0.06209397778631935
+    },
+    {
+      "target": "ownPG",
+      "n_HELP": 2,
+      "criterion": "RMSE",
+      "HELP": [
+        "LLEVPEGR",
+        "YVLSPYK"
+      ],
+      "study_Pearson": 0.6850705653848148,
+      "study_RMSE": 0.1106111236227691,
+      "QC_before_CV": 8.986507959441141,
+      "QC_after_CV": 10.268955266439615,
+      "QC_PGown_Pearson": 0.5415402778183805,
+      "QC_PGown_RMSE": 0.06591477007812248
+    },
+    {
+      "target": "ownPG",
+      "n_HELP": 2,
+      "criterion": "Pearson",
+      "HELP": [
+        "LLEVPEGR",
+        "YVLSPYK"
+      ],
+      "study_Pearson": 0.6850705653848148,
+      "study_RMSE": 0.1106111236227691,
+      "QC_before_CV": 8.986507959441141,
+      "QC_after_CV": 10.268955266439615,
+      "QC_PGown_Pearson": 0.5415402778183805,
+      "QC_PGown_RMSE": 0.06591477007812248
+    },
+    {
+      "target": "ownPG",
+      "n_HELP": 3,
+      "criterion": "RMSE",
+      "HELP": [
+        "AGALNSNDAFVLK",
+        "LLEVPEGR",
+        "YVLSPYK"
+      ],
+      "study_Pearson": 0.6883231666273166,
+      "study_RMSE": 0.110785902765913,
+      "QC_before_CV": 8.986507959441141,
+      "QC_after_CV": 10.373847150972411,
+      "QC_PGown_Pearson": 0.4065310262620855,
+      "QC_PGown_RMSE": 0.07110507956668591
+    },
+    {
+      "target": "ownPG",
+      "n_HELP": 3,
+      "criterion": "Pearson",
+      "HELP": [
+        "AGALNSNDAFVLK",
+        "LLEVPEGR",
+        "YVLSPYK"
+      ],
+      "study_Pearson": 0.6883231666273166,
+      "study_RMSE": 0.110785902765913,
+      "QC_before_CV": 8.986507959441141,
+      "QC_after_CV": 10.373847150972411,
+      "QC_PGown_Pearson": 0.4065310262620855,
+      "QC_PGown_RMSE": 0.07110507956668591
+    },
+    {
+      "target": "fixedPG",
+      "n_HELP": 1,
+      "criterion": "RMSE",
+      "HELP": [
+        "AGALNSNDAFVLK"
+      ],
+      "study_Pearson": 0.6276137436840683,
+      "study_RMSE": 0.0759263241268891,
+      "QC_before_CV": 8.986507959441141,
+      "QC_after_CV": 11.282420448009438,
+      "QC_PGown_Pearson": 0.11664596403543032,
+      "QC_PGown_RMSE": 0.09988165464904088
+    },
+    {
+      "target": "fixedPG",
+      "n_HELP": 1,
+      "criterion": "Pearson",
+      "HELP": [
+        "AGALNSNDAFVLK"
+      ],
+      "study_Pearson": 0.6276137436840683,
+      "study_RMSE": 0.0759263241268891,
+      "QC_before_CV": 8.986507959441141,
+      "QC_after_CV": 11.282420448009438,
+      "QC_PGown_Pearson": 0.11664596403543032,
+      "QC_PGown_RMSE": 0.09988165464904088
+    },
+    {
+      "target": "fixedPG",
+      "n_HELP": 2,
+      "criterion": "RMSE",
+      "HELP": [
+        "AGALNSNDAFVLK",
+        "VGAHAGEYGAEALER"
+      ],
+      "study_Pearson": 0.618908198070887,
+      "study_RMSE": 0.0623910531419958,
+      "QC_before_CV": 8.986507959441141,
+      "QC_after_CV": 10.061085105916707,
+      "QC_PGown_Pearson": 0.17340935047113115,
+      "QC_PGown_RMSE": 0.06939925765312702
+    },
+    {
+      "target": "fixedPG",
+      "n_HELP": 2,
+      "criterion": "Pearson",
+      "HELP": [
+        "AGALNSNDAFVLK",
+        "VGAHAGEYGAEALER"
+      ],
+      "study_Pearson": 0.618908198070887,
+      "study_RMSE": 0.0623910531419958,
+      "QC_before_CV": 8.986507959441141,
+      "QC_after_CV": 10.061085105916707,
+      "QC_PGown_Pearson": 0.17340935047113115,
+      "QC_PGown_RMSE": 0.06939925765312702
+    },
+    {
+      "target": "fixedPG",
+      "n_HELP": 3,
+      "criterion": "RMSE",
+      "HELP": [
+        "AGALNSNDAFVLK",
+        "VGAHAGEYGAEALER",
+        "YVLSPYK"
+      ],
+      "study_Pearson": 0.6595123497760332,
+      "study_RMSE": 0.0588569148671114,
+      "QC_before_CV": 8.986507959441141,
+      "QC_after_CV": 9.926319908163645,
+      "QC_PGown_Pearson": 0.34563818231684196,
+      "QC_PGown_RMSE": 0.06080638153902187
+    },
+    {
+      "target": "fixedPG",
+      "n_HELP": 3,
+      "criterion": "Pearson",
+      "HELP": [
+        "AGALNSNDAFVLK",
+        "VGAHAGEYGAEALER",
+        "YVLSPYK"
+      ],
+      "study_Pearson": 0.6595123497760332,
+      "study_RMSE": 0.0588569148671114,
+      "QC_before_CV": 8.986507959441141,
+      "QC_after_CV": 9.926319908163645,
+      "QC_PGown_Pearson": 0.34563818231684196,
+      "QC_PGown_RMSE": 0.06080638153902187
+    }
+  ]
+}
