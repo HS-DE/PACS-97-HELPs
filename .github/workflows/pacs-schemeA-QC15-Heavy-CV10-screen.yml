@@ -1,0 +1,88 @@
+name: PACS Scheme A pooled QC Heavy CV10 trend screening
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/pacs_schemeA_QC15_Heavy_CV10_trend_screen.py
+      - .github/workflows/pacs-schemeA-QC15-Heavy-CV10-screen.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: pacs-schemeA-QC15-heavy-CV10
+  cancel-in-progress: false
+jobs:
+  screen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Dependencies
+        run: python -m pip install numpy pandas scipy matplotlib
+      - name: Screening original PACS HELP Heavy on pooled QC
+        run: |
+          OPENBLAS_NUM_THREADS=2 MKL_NUM_THREADS=2 OMP_NUM_THREADS=2 \
+            python scripts/pacs_schemeA_QC15_Heavy_CV10_trend_screen.py
+      - name: Verify CV gate, sample scope, output metrics and figures
+        run: |
+          python - <<'PY'
+          import hashlib,json
+          import numpy as np,pandas as pd
+          from pathlib import Path
+          d=Path("results/pacs_schemeA_QC15_Heavy_CV10_median_trend_screen")
+          m=json.loads((d/"run_manifest.json").read_text())
+          assert m["n_original_HELP"]==97
+          assert m["n_study"]==54 and m["n_pooled_QC"]==15 and m["excluded_Internal_QC"]==6
+          assert m["n_full69"]==97
+          assert m["CV_threshold_percent_strict_lt"]==10 and m["MAD_excluded"]
+          assert not m["normalized"] and not m["imputed"]
+          a=pd.read_csv(d/"00_all97_detection_CV_trend_metrics.csv")
+          assert len(a)==97 and a.HELP_sequence.is_unique
+          assert a.Heavy_detected_out_of_69.eq(69).all()
+          assert a.QC15_detected.eq(15).all()
+          assert a.CV_QC15_linear_pct.notna().all()
+          passed=a[a.pass_69_CV_lt10]
+          assert len(passed)==m["n_pass_CV10"]
+          assert passed.CV_QC15_linear_pct.lt(10).all()
+          assert a.loc[~a.pass_69_CV_lt10,"CV_QC15_linear_pct"].ge(10).all()
+          assert a.ownPG_pearson_r.between(-1,1).all()
+          assert a.fixedPG_pearson_r.between(-1,1).all()
+          assert a.ownPG_centered_RMSE_log2.ge(0).all()
+          q=pd.read_csv(d/"01_QC15_sample_medians.csv")
+          assert len(q)==15 and q.sample_id.nunique()==15
+          assert q.plate.value_counts().sort_index().tolist()==[5,5,5]
+          assert q.QC_display_position.tolist()==list(range(1,16))
+          for kind in ("ownPG","fixedPG"):
+              for criterion,key in (("pearson",kind+"_pearson_r"),("RMSE",kind+"_centered_RMSE_log2"),
+                                    ("plate",kind+"_plate_sign_same_informative")):
+                  path=d/f"03_{kind}_{criterion}_CV10_ranking.csv"
+                  if m["n_pass_CV10"]==0:
+                      assert not path.exists()
+                      continue
+                  b=pd.read_csv(path)
+                  assert len(b)==len(passed)
+                  assert set(b.HELP_sequence)==set(passed.HELP_sequence)
+                  assert (b[key].is_monotonic_decreasing if criterion!="RMSE"
+                          else b[key].is_monotonic_increasing)
+          assert len(list(d.glob("*.png")))==len(m["generated_figures"])
+          assert all((d/file).stat().st_size>17000 for file in m["generated_figures"])
+          for f,h in m["data_sha256"].items():
+              assert hashlib.sha256(Path(f).read_bytes()).hexdigest()==h
+          print("PASS: original PACS 97 HELP, 69-sample detection, pooled QC15 linear CV gate, separated PG median definitions")
+          PY
+      - name: Publish scheme A exploratory screening results
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- results/pacs_schemeA_QC15_Heavy_CV10_median_trend_screen
+          if ! git diff --cached --quiet; then
+            git commit -m "Add scheme A QC Heavy CV10 and PG median trend screening [skip ci]"
+            git push
+          fi
