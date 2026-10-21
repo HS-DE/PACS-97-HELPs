@@ -1,0 +1,68 @@
+name: PACS TLYSSSPR Study54 plate-color trend
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/pacs_TLYSSSPR_Study54_plate_trends.py
+      - .github/workflows/pacs-TLYSSSPR-Study54-plate-trends.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: pacs-TLYSSSPR-study54-plate-colors
+  cancel-in-progress: false
+jobs:
+  plot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Python dependencies
+        run: python -m pip install numpy pandas scipy matplotlib
+      - name: Plot plate-colored Study54 TLYSSSPR trends
+        run: |
+          OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2             python scripts/pacs_TLYSSSPR_Study54_plate_trends.py
+      - name: Validate figures and statistics
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import pandas as pd, numpy as np, json
+          d=Path("results/pacs_TLYSSSPR_Study54_plate_trends")
+          meta=json.loads((d/"summary.json").read_text())
+          assert meta["n_Study"]==54 and meta["n_HC"]==27 and meta["n_S"]==27
+          assert meta["InternalQC_used"] is False and meta["pooledQC_used"] is False
+          assert meta["PG_fixed_count"]==3965
+          z=pd.read_csv(d/"Study54_TLYSSSPR_and_PG_values.csv")
+          assert len(z)==54 and z.sample_id.nunique()==54
+          assert z.plate.value_counts().sort_index().tolist()==[20,20,14]
+          assert z.HC_or_S.value_counts().to_dict()=={"HC":27,"S":27}
+          assert z.plate.is_monotonic_increasing
+          h=z["TLYSSSPR_Heavy_log2"].to_numpy()
+          for key in ("PG_box_median","PG_fixed3965_median"):
+              pg=z[key+"_log2"].to_numpy()
+              r=float(np.corrcoef(h,pg)[0,1])
+              diff=(h-np.median(h))-(pg-np.median(pg))
+              rmse=float(np.sqrt(np.mean(diff**2)))
+              assert np.isclose(meta["metrics"][key]["pearson_r"],r,atol=1e-10)
+              assert np.isclose(meta["metrics"][key]["centered_RMSE_log2"],rmse,atol=1e-10)
+          assert len(meta["figures"])==4
+          assert len(list(d.glob("*.png")))==4
+          assert all((d/name).stat().st_size>25000 for name in meta["figures"])
+          print("PASS: 54 plate-colored Study samples, TLYSSSPR pearson & RMSE in two PG definitions")
+          PY
+      - name: Publish new figures and sample values
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- results/pacs_TLYSSSPR_Study54_plate_trends
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish TLYSSSPR Study54 plate-colored trend figures [skip ci]"
+            git push
+          fi
