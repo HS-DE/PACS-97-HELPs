@@ -1,0 +1,112 @@
+name: NYD Scheme C v2 direct-sum HELP offset combinations
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/nyd_schemeC_direct_SUM_offsets_1to3_v2.py
+      - .github/workflows/nyd-schemeC-directSUM-v2.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: NYD-schemeC-directSUM-v2
+  cancel-in-progress: false
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install packages
+        run: python -m pip install numpy pandas scipy matplotlib
+      - name: Exhaustive NYD direct SUM scheme C search
+        run: |
+          OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 \
+            python scripts/nyd_schemeC_direct_SUM_offsets_1to3_v2.py
+      - name: Audit every score against actual signed SUM
+        run: |
+          python - <<'PY'
+          import itertools,json,math
+          from pathlib import Path
+          import numpy as np,pandas as pd
+          root=Path("NYD_data/40samples/SchemeC_v2_directSUM_Heavy_offsets_1to3")
+          m=json.loads((root/"run_manifest.json").read_text())
+          assert m["no_weights"] and m["no_averaging"] and m["no_calibration_applied"]
+          assert m["no_combination_recenter"] and m["no_amplitude_fitting"]
+          import sys
+          sys.path.insert(0,"scripts")
+          import nyd_all_HELP_Pearson_sign_directional_normalization_v1 as loader
+          rec,names,pg,anno,seqs,H=loader.load()
+          for name,obj,keep in (
+            ("full40",m["main40"],np.arange(40)),
+            ("exclude_T003_outlier_39",m["sensitivity39"],
+               np.array([j for j,s in enumerate(names) if s!=loader.EXCLUDE]))):
+            p=root/name
+            eligible=obj["full_detected_HELP"]
+            a=pd.read_csv(p/"01_all_combinations_1to3_unweighted_SUM.csv.gz",
+                          keep_default_na=False)
+            n=len(eligible)
+            expected=n+math.comb(n,2)+math.comb(n,3)
+            assert len(a)==obj["n_combinations"]==expected
+            assert a.groupby("n_HELP").size().to_dict()=={
+                1:n,2:math.comb(n,2),3:math.comb(n,3)}
+            assert (a.RMSE_log2>=0).all()
+            assert a.Pearson_r.between(-1,1).all()
+            for k in (1,2,3):
+                x=a[a.n_HELP==k]
+                assert (x.RMSE_log2>=0).all()
+                assert len(x)==math.comb(n,k)
+                for col in ("positive_min_RMSE","positive_max_Pearson",
+                            "all_signs_min_RMSE","negative_whole_sum_inverted_diagnostic"):
+                    t=pd.read_csv(p/f"02_{k}HELP_{col}_top30.csv",
+                                  keep_default_na=False)
+                    assert len(t)<=30
+                    if len(t):
+                        assert t.n_HELP.eq(k).all()
+                        if col.startswith("positive"):assert t.Pearson_r.gt(0).all()
+                        if col.startswith("negative"):assert t.Pearson_r.lt(0).all()
+            q=pd.read_csv(p/"00_sample_PG_median_deviations.csv")
+            assert len(q)==len(keep)
+            pgmedian=q.target_PG_medianDeviation_log2.to_numpy(float)
+            assert abs(np.median(pgmedian))<1e-12
+            h=np.log2(H[:,keep])
+            for which in (0,1,5,23,len(a)//2,len(a)-1):
+                row=a.iloc[which]
+                keys=[row.HELP_1,row.HELP_2,row.HELP_3][:int(row.n_HELP)]
+                assert all(keys)
+                ids=[seqs.index(s) for s in keys]
+                z=(h[ids]-np.median(h[ids],axis=1)[:,None]).sum(axis=0)
+                rmse=float(np.sqrt(np.mean((z-pgmedian)**2)))
+                r=float(np.corrcoef(z,pgmedian)[0,1])
+                sd=float(np.std(z,ddof=1)/np.std(pgmedian,ddof=1))
+                assert np.isclose(rmse,row.RMSE_log2,atol=1e-10)
+                assert np.isclose(r,row.Pearson_r,atol=1e-10)
+                assert np.isclose(sd,row.sum_SD_divided_target_SD,atol=1e-10)
+            for which in (1,2,3):
+                cur=a[a.n_HELP==which]
+                positive=cur[cur.Pearson_r>0]
+                chosen=pd.read_csv(p/f"02_{which}HELP_positive_min_RMSE_top30.csv",
+                                   keep_default_na=False)
+                if len(positive):
+                    assert np.isclose(positive.RMSE_log2.min(),
+                                      chosen.RMSE_log2.min(),atol=1e-10)
+            assert len(list(p.glob("*.png")))==2
+            assert all(f.stat().st_size>25000 for f in p.glob("*.png"))
+            print("VERIFIED",name,expected,"direct-sum candidate combinations")
+          PY
+      - name: Commit NYD Scheme C direct SUM results
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- NYD_data/40samples/SchemeC_v2_directSUM_Heavy_offsets_1to3
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish NYD direct SUM Scheme C exhaustive combination results [skip ci]"
+            git push
+          fi
