@@ -1,0 +1,90 @@
+name: NYD Heavy vs sample PG median Pearson RMSE screening
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/nyd_Heavy_vs_samplePGmedian_Pearson_RMSE_screen.py
+      - .github/workflows/nyd-Heavy-vs-samplePGmedian-Pearson-RMSE.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: nyd-Heavy-vs-samplePGmedian-Pearson-RMSE
+  cancel-in-progress: false
+jobs:
+  screen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: python -m pip install numpy pandas scipy matplotlib
+      - name: Screen NYD full40 and outlier-excluded39 trends
+        run: |
+          OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 \
+            python scripts/nyd_Heavy_vs_samplePGmedian_Pearson_RMSE_screen.py
+      - name: Verify screening, ranking and visualizations
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import numpy as np,pandas as pd
+          root=Path("NYD_data/40samples/HELP97_Heavy_vs_samplePGmedian_Pearson_RMSE_screen")
+          z=json.loads((root/"run_manifest.json").read_text())
+          assert z["no_normalization"]
+          for name,key,n,count in (("full40","main40",40,74),
+                                   ("exclude_T003_bad_sample_39","sensitivity39",39,91)):
+              d=root/name
+              meta=z[key]
+              x=pd.read_csv(d/"01_all_full_detection_HELP_Pearson_centeredRMSE.csv")
+              assert len(x)==count==meta["full_detected"]
+              assert x.HELP_sequence.nunique()==count
+              assert x.n_samples.eq(n).all()
+              assert meta["n_positive"]+meta["n_negative"]+meta["n_zero_or_undefined"]==count
+              assert x.Pearson_r.between(-1,1).all()
+              assert x.median_centered_RMSE_log2.ge(0).all()
+              p=pd.read_csv(d/"03_positive_same_direction_combined_rank.csv")
+              assert len(p)==meta["n_positive"]
+              assert p.Pearson_r.gt(0).all()
+              assert p.rank_sum.is_monotonic_increasing
+              low=pd.read_csv(d/"05_positive_rank_by_centered_RMSE.csv")
+              high=pd.read_csv(d/"04_positive_rank_by_Pearson.csv")
+              assert low.median_centered_RMSE_log2.is_monotonic_increasing
+              assert high.Pearson_r.is_monotonic_decreasing
+              assert np.isclose(low.iloc[0].median_centered_RMSE_log2,
+                                x[x.Pearson_r>0].median_centered_RMSE_log2.min())
+              assert np.isclose(high.iloc[0].Pearson_r,
+                                x[x.Pearson_r>0].Pearson_r.max())
+              negatives=pd.read_csv(d/"06_negative_opposite_direction_inverted_diagnostic_rank.csv")
+              assert len(negatives)==meta["n_negative"]
+              assert negatives.Pearson_r.lt(0).all()
+              h=pd.read_csv(d/"02_all_HELP_curves_by_sample.csv.gz")
+              assert len(h)==count*n
+              for seq in [x.iloc[0].HELP_sequence,x.iloc[-1].HELP_sequence]:
+                  r=x[x.HELP_sequence==seq].iloc[0]
+                  subset=h[h.HELP_sequence==seq]
+                  a=subset.original_Heavy_log2.to_numpy()
+                  b=subset.original_samplePGmedian_log2.to_numpy()
+                  observed=float(np.corrcoef(a,b)[0,1])
+                  ermse=float(np.sqrt(np.mean(((a-np.median(a))-(b-np.median(b)))**2)))
+                  assert np.isclose(observed,r.Pearson_r,atol=1e-10)
+                  assert np.isclose(ermse,r.median_centered_RMSE_log2,atol=1e-10)
+              assert all((d/p).stat().st_size>25000 for p in meta["plots"])
+              print("Verified",name,count,"full-detected HELP",meta["n_positive"],"positive")
+          PY
+      - name: Commit new NYD screening results
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- NYD_data/40samples/HELP97_Heavy_vs_samplePGmedian_Pearson_RMSE_screen
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish NYD Heavy versus sample PG median Pearson RMSE rankings [skip ci]"
+            git push
+          fi
