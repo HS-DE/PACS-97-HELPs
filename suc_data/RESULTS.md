@@ -34,4 +34,4 @@ QC held-out 2-fold cross-validation, with models recalibrated in every fold:
 4. This is a practical SomaScan-inspired method, not the complete SomaScan pipeline: lacks its 12 specific hybridization controls and global healthy reference (ANML); LM-QC provides no within-plate calibrator replicates.
 5. The calibration should **not** replace the PACS correction process for these samples without independent technical replication and QC type/reference verification.
 
-The detailed calculations, per-protein effect estimates and stagewise matrices are in `results/`.
+The detailed calculations, per-protein effect estimates and stagewise matrices are in `results/`; large TSV outputs are stored as `.tsv.gz` to minimize repository size.
