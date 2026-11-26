@@ -63,15 +63,16 @@ python suc_data/sensitivity_checks.py \
 ## Outputs
 
 - `results/QC_CV_summary.tsv`: overall CV by calibrator, evaluation set, and stage
-- `results/QC_CV_per_protein.tsv`: per-protein raw and corrected CVs
+- `results/QC_CV_per_protein.tsv.gz`: per-protein raw and corrected CVs
 - `results/sensitivity_CV_summary.tsv`: no HELP, full HELP, gated/capped HELP, detection thresholds and QC cross-validation
 - `results/QC_intraplate_pair_CV.tsv`: within-plate QC replicate CV
 - `results/sample_HELP_factors.tsv`, `results/HELP_coverage.tsv`: HELP normalization factors and peptide coverage
-- `results/plate_factors_*.tsv`, `results/per_protein_plate_factors_*.tsv`, `results/calibrator_intraplate_factors_*.tsv`: transparent correction factors
-- `results/pg_matrix_*`: linear-intensity matrices after individual stages; QC OOF matrix contains **only the held-out QC columns** (all other intensity cells missing)
+- `results/plate_factors_*.tsv`, `results/per_protein_plate_factors_*.tsv.gz`, `results/calibrator_intraplate_factors_*.tsv`: transparent correction factors
+- `results/pg_matrix_*.tsv.gz`: linear-intensity matrices after individual stages; QC OOF matrix contains **only the held-out QC columns** (all other intensity cells missing)
 - `results/sample_manifest.tsv`, `results/run_manifest.json`: audit metadata
 
 ## References
 
 - SomaLogic official technical note: https://somalogic.com/wp-content/uploads/2022/07/SL00000442_Rev4_2021-07_-SomaScan-v4.0-and-v4.1-Data-Standardization.pdf
 - SomaScan normalization and quality control methods: https://pubmed.ncbi.nlm.nih.gov/40601147/
+Large result tables and protein matrices are stored on GitHub as `.tsv.gz` files; decompress with `gzip -dk file.tsv.gz` (or read directly with Python gzip/pandas). Raw input files are **not re-published** in this folder. The companion downloadable ZIP contains the uncompressed output tables.
