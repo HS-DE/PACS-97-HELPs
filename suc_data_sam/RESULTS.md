@@ -69,7 +69,7 @@ The study-sample median CV changed from 64.57% to 63.77% in both runs. Because a
 
 ## 4. HELP latent-factor diagnostics
 
-The exploratory prototype used only the selected pooled-QC class to fit a `StandardScaler + PCA` model on complete HELP features. No missing values were imputed. The fitted factors were then projected to the retained study samples.
+The new `HELP_GMF/` directory in this PACS run is a PCA-based latent-factor diagnostic; it is distinct from the earlier Gaussian factor pilot implemented in `run_help_gmf.py`. The exploratory prototype used only the selected pooled-QC class to fit a `StandardScaler + PCA` model on complete HELP features. No missing values were imputed. The fitted factors were then projected to the retained study samples.
 
 | Metric | LM-QC | QC |
 |---|---:|---:|
@@ -96,6 +96,12 @@ There are two QC injections per plate, so these are descriptive estimates from t
 For QC, the median standardized HELP distance between plates was 2.08 times the median within-plate paired-QC distance. This supports a plate-associated HELP structure, but does not by itself establish that all of that structure is technical.
 
 The HELP-to-PG global-shift correlations have opposite signs in the two QC types (+0.66 for LM-QC; -0.83 for QC). This is a warning against treating the two QC types as interchangeable or fitting one shared HELP-to-PG mapping across them.
+
+Two QC injections are particularly influential in the QC-class run:
+- `P9-37`: HELP global shift = -3.275 log2 (observed HELP level ≈0.103× the QC median; inverse correction multiplier ≈9.68×), while the PG global median shift is +2.138 log2 (≈4.40×).
+- `P7-73`: HELP global shift = -2.272 log2 (observed HELP level ≈0.207×; inverse correction multiplier ≈4.83×), while the PG global median shift is +1.626 log2 (≈3.09×).
+
+These are QC samples and are also extreme on the HELP PCA scores. They help explain the inverse HELP–PG relationship, but the pattern does not establish a causal loading, spike-in, or instrument error. See `comparison/QC_HELP_global_shift_outliers.tsv` and the existing `DATA_QUALITY.md` for related diagnostics.
 
 ## 5. Does the HELP factor model improve protein CV?
 
