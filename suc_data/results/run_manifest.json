@@ -1,0 +1,20 @@
+{
+  "samples": {
+    "LM-QC": 16,
+    "sample": 32,
+    "QC": 32
+  },
+  "plates": 16,
+  "proteins": 6137,
+  "help_peptides_all": 97,
+  "help_peptides_used": 87,
+  "PG_missing_fraction": 0.3831167508554668,
+  "HELP_missing_fraction": 0.06301546391752577,
+  "help_exclusion_reasons": {
+    "fail_qc": 489
+  },
+  "min_plates": 8,
+  "stage5_ANML": "NOT RUN: requires healthy-population external reference and eligible matrix",
+  "step2_LM_QC": "1 calibrator per plate; calibration-only step 2 mathematically identity",
+  "validation_caveat": "Cross QC type tests assume materials comparable; QC OOF is like-for-like withheld replicate."
+}
