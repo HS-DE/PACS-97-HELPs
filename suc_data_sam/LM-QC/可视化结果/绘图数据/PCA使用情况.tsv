@@ -1,0 +1,4 @@
+scope	n_samples	n_complete_proteins	n_used_proteins	status
+全部样本	48	903	903	ok
+QC	16	4897	4897	ok
+研究样本	32	1004	1004	ok

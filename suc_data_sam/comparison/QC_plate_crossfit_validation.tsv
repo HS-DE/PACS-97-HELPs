@@ -1,0 +1,2 @@
+strategy	method	n_QC	n_plates	raw_median_CV_pct	PACS_median_CV_pct	crossfit_median_CV_pct	crossfit_Q1_CV_pct	crossfit_Q3_CV_pct	crossfit_n_proteins
+QC	QC plate-specific protein offsets, 2-fold within-plate QC cross-fit	32	16	41.427479412421505	40.170520662831294	50.347038283557794	34.815659143320865	74.63891479166867	4886

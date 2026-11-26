@@ -1,0 +1,6 @@
+group	n_samples
+Blank	15
+Internal-QC	32
+LM-QC	16
+QC	32
+sample	32

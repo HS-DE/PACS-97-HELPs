@@ -1,0 +1,2 @@
+n_study_samples	selected_HELP_LM_QC	selected_HELP_QC	max_abs_log2_shift_difference	all_study_sample_offsets_identical	study_HELP_PG_Pearson	interpretation
+32	HVVPNEVVVQR	HVVPNEVVVQR	0.0	True	-0.1360534786262939	The current PACS run produced exactly the same study-sample offsets under both QC definitions.

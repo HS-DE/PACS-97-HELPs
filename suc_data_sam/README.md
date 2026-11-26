@@ -1,27 +1,94 @@
-# PACS HELP-GMF pilot (16 plates)
+# suc_data_sam — PACS dual-QC and HELP latent-factor evaluation
 
-**Exploratory, not validated for production.** Two separate fits: LM-QC (16) and QC (32), each evaluated against the other QC type and 32 study samples. Internal-QC and blank excluded. 12,028 PGs; 80 retained samples; 97 HELP peptides. Raw input files: Plate1-16_QC_Hela_merged.pg_matrix.tsv, Accurate_Quantification_Report_v4_苏创.csv, metadata.csv. Metadata contains an invalid UTF-8 byte in an unused column; use GB18030 fallback. Original PACS baseline uses supplied PACS_norm.py, with other QC mapped to a separate study condition (transductive). Gaussian GMF is a Python approximation, not official omicsGMF. Soma-like is direct log2 protein-wise reference calibration, not proprietary SomaScan.
+This folder contains the analysis of the uploaded **`Plate1-16_QC_Hela_merged.pg_matrix.tsv`** matrix with the supplied HELP CSV and metadata CSV. It is a new run and is kept separate from the older `suc_data/` experiment, which used a different protein matrix.
 
-## Results
+## Scope
 
-See results/summary.csv, results/validation.csv, results/gated_sensitivity.csv, results/imputation_benchmark.csv and results/synthetic_shift.csv. CV is linear sample SD/mean x100, minimum 3 observations per PG; same observed support across methods. Study CV is descriptive, not a technical precision target.
+Two independent PACS runs were completed:
 
-- LM-QC reference: HELP-GMF plate training CV 8.93% vs raw 16.81%; alternate QC 44.56% vs raw 41.43%. LM-QC leave-one-plate-out HELP-GMF 15.64%. Soma-like yields ~0% training CV (one calibrator per plate), not real generalization.
-- QC reference: HELP-GMF plate training CV 29.41% vs raw 41.43%; alternate LM-QC 23.92% vs raw 16.81%. Same-type QC 2-fold held-out well 37 vs 73: raw 41.43%, HELP-GMF 43.01%, plate variant 43.23%, Soma-like 50.35%, HELP median 71.58%. No validated improvement.
-- Masked study observation RMSE (5,341 test entries): raw low-rank 1.0765 log2, anchored plate models 1.0940/1.0912. No improvement. Fixed corrections preserve synthetic 1.5x shift by construction, not proof of biological accuracy.
-- HELP warning: LM-QC best complete HELP CV 8.02%, QC 24.65%. P9-37 and P7-73 have median HELP multipliers ~9.2x and ~4.9x. Conservative gate and shrinkage still do not establish benefit.
-- Recommendation: investigate HELP spike-in/LC-MS response mismatch and QC material identity; compare within same material with independent controls; do not deploy this model.
+- **LM-QC run:** only `group=LM-QC` is mapped to pooled `qc`.
+- **QC run:** only `group=QC` is mapped to pooled `qc`.
 
-## Reproduction
+In both runs:
+- `group=sample` remains biological/study samples.
+- `Internal-QC` and the non-selected QC class are mapped to `internal-calibrator` and excluded by the PACS input logic.
+- `Blank` remains `blank` and is excluded.
+- No missing protein values are imputed.
 
-Place the original supplied PACS_norm.py beside the scripts and the three inputs in one folder. Install numpy, pandas, scipy, scikit-learn, matplotlib, openpyxl. Run:
-```bash
-python prepare.py results /path/to/input
-python finish_benchmark.py results /path/to/input LM-QC
-python finish_benchmark.py results /path/to/input QC
-python sensitivity.py results /path/to/input
+The original input files are not copied into this public folder. Derived normalized matrices and analysis outputs are included.
+
+## Key result
+
+On this matrix, **LM-QC is the more stable pooled-QC definition**: its median protein CV changed from 16.81% to 14.95% after PACS. The QC-class run started at 41.43% and changed to 40.17%, while PACS also emitted HELP-instability and high-QC-variability warnings.
+
+The exploratory HELP latent-factor prototype can predict QC global PG shifts in plate-grouped cross-validation, but applying its predicted shifts did **not** improve protein-level QC CV over PACS. It is therefore diagnostic only and is not promoted as a final normalization.
+
+## Folder map
+
+```text
+suc_data_sam/
+├── README.md
+├── RESULTS.md
+├── run_manifest.json
+├── scripts/
+│   ├── PACS_norm.py
+│   ├── run_two_qc_pacs.py
+│   ├── help_gmf_diagnostics.py
+│   └── requirements.txt
+├── LM-QC/
+│   ├── 最终蛋白定量表.tsv
+│   ├── 蛋白鉴定量统计柱状图.png
+│   └── 可视化结果/
+├── QC/
+│   ├── 最终蛋白定量表.tsv
+│   ├── 蛋白鉴定量统计柱状图.png
+│   └── 可视化结果/
+├── HELP_GMF/
+│   ├── LM-QC/
+│   └── QC/
+└── comparison/
+    ├── *.tsv
+    └── figures/
 ```
 
-Model: log2 observed-only ridge with global HELP median and two shape PCs, coefficients trained on selected QC only, require >=4 observations/protein; plate residual rank 2, shrink common component by 0.5 and residual by n/(n+4). HELP extraction uses existing PACS quality rules (8 then 7 scan points); threshold fitted across all selected QC, so OOF is not fully nested. HELP-GMF plate applies calibration only to plates with a QC. Checkpoints store fitted sample scores and corrections, not transferable production model. Rank 0/2/5 selected using disjoint 5% validation/5% test observed study values, only >=50% overall detected PGs eligible for optional imputation; original observations unchanged. No claims about true MNAR values. Cross-QC types may be different materials.
+Each PACS result directory contains the final protein matrix (the QC-run matrix is split into four sequential parts under `QC/最终蛋白定量表.parts/`), protein-count chart, before/after boxplots, PCA, CV plots, QC CV histogram, and plotting data.
 
-**Delivery status:** The aggregate result tables and model/reproduction scripts are committed here. Full compressed matrices, model snapshots, per-protein CSVs, masks, plots and original PACS script were generated in the local downloadable ZIP; they are not present on GitHub because the connected GitHub interface cannot transfer the local binary archive directly. Running the scripts recreates the detailed files.
+The full 32k-row PACS `逐蛋白CV明细.tsv` tables are also split into four sequential parts under each run's `可视化结果/绘图数据/逐蛋白CV明细.parts/`. Each parts folder has a README with the concatenation command. Part 1 contains the header; later parts do not repeat it.
+
+The source PACS script writes two QC CV plotting-data files in GBK. UTF-8 copies ending in `_utf8.tsv` are included for reliable viewing on GitHub.
+
+## Reproduce
+
+Install dependencies:
+
+```bash
+python -m pip install -r scripts/requirements.txt
+```
+
+Run PACS twice:
+
+```bash
+python scripts/run_two_qc_pacs.py \
+  --protein-table /path/to/Plate1-16_QC_Hela_merged.pg_matrix.tsv \
+  --help-table /path/to/Accurate_Quantification_Report_v4_苏创.csv \
+  --metadata /path/to/metadata.csv \
+  --out-dir ./suc_data_sam
+```
+
+Run the exploratory HELP latent-factor diagnostics:
+
+```bash
+python scripts/help_gmf_diagnostics.py \
+  --protein-table /path/to/Plate1-16_QC_Hela_merged.pg_matrix.tsv \
+  --help-table /path/to/Accurate_Quantification_Report_v4_苏创.csv \
+  --metadata /path/to/metadata.csv \
+  --out-dir ./suc_data_sam/HELP_GMF_reproduced
+```
+
+## Important interpretation notes
+
+1. The PACS script groups by `group` and `condition`. The `batch`/`plate` field is checked and used for plotting, but is **not** used to estimate plate-specific offsets in the current PACS correction.
+2. The HELP latent-factor analysis is a transparent PCA-based exploratory prototype inspired by factor models. It is **not** an exact implementation or reproduction of omicsGFM.
+3. The QC factor model is trained on the selected QC class only. Its grouped cross-validation keeps all QC replicates from a plate in the same fold.
+4. The 32 study samples all have `condition=sample`; their CV includes biological heterogeneity and must not be interpreted as pure technical CV.
+5. Do not use the exploratory HELP-GMF candidate shifts as a production normalization. The held-out QC protein CV did not improve over PACS.

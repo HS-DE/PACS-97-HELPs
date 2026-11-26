@@ -1,0 +1,39 @@
+scope	label	stage	method	n_samples	n_proteins	median_CV_percent	Q1_CV_percent	Q3_CV_percent	max_CV_percent
+QC	All QC	raw	校正前	32	4886	41.427479412421505	29.49343623233984	63.36864468799421	458.40432466866804
+QC	All QC	corrected	校正后	32	4886	40.17050608998194	29.012866716171203	60.65011798973546	449.3247318901596
+sample	All study samples	raw	校正前	32	5274	64.57295389559269	48.81826849154362	85.56227920498551	448.17070772887445
+sample	All study samples	corrected	校正后	32	5274	63.76955181696563	48.280847588446285	84.54265839830887	447.3925203086318
+QC_1	QC in 1	raw	校正前	2	0				
+QC_1	QC in 1	corrected	校正后	2	0				
+QC_2	QC in 2	raw	校正前	2	0				
+QC_2	QC in 2	corrected	校正后	2	0				
+QC_3	QC in 3	raw	校正前	2	0				
+QC_3	QC in 3	corrected	校正后	2	0				
+QC_4	QC in 4	raw	校正前	2	0				
+QC_4	QC in 4	corrected	校正后	2	0				
+QC_5	QC in 5	raw	校正前	2	0				
+QC_5	QC in 5	corrected	校正后	2	0				
+QC_6	QC in 6	raw	校正前	2	0				
+QC_6	QC in 6	corrected	校正后	2	0				
+QC_7	QC in 7	raw	校正前	2	0				
+QC_7	QC in 7	corrected	校正后	2	0				
+QC_8	QC in 8	raw	校正前	2	0				
+QC_8	QC in 8	corrected	校正后	2	0				
+QC_9	QC in 9	raw	校正前	2	0				
+QC_9	QC in 9	corrected	校正后	2	0				
+QC_10	QC in 10	raw	校正前	2	0				
+QC_10	QC in 10	corrected	校正后	2	0				
+QC_11	QC in 11	raw	校正前	2	0				
+QC_11	QC in 11	corrected	校正后	2	0				
+QC_12	QC in 12	raw	校正前	2	0				
+QC_12	QC in 12	corrected	校正后	2	0				
+QC_13	QC in 13	raw	校正前	2	0				
+QC_13	QC in 13	corrected	校正后	2	0				
+QC_14	QC in 14	raw	校正前	2	0				
+QC_14	QC in 14	corrected	校正后	2	0				
+QC_15	QC in 15	raw	校正前	2	0				
+QC_15	QC in 15	corrected	校正后	2	0				
+QC_16	QC in 16	raw	校正前	2	0				
+QC_16	QC in 16	corrected	校正后	2	0				
+sample_sample	Study sample	raw	校正前	32	5274	64.57295389559269	48.81826849154362	85.56227920498551	448.17070772887445
+sample_sample	Study sample	corrected	校正后	32	5274	63.76955181696563	48.280847588446285	84.54265839830887	447.3925203086318

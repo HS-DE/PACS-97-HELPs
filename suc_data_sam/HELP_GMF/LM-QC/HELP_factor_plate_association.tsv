@@ -1,0 +1,6 @@
+strategy	factor	variance_explained_pct	QC_plate_eta_squared	QC_plate_spearman_rho	QC_plate_spearman_p	n_QC	n_plates	min_QC_per_plate	max_QC_per_plate	plate_effect_interpretation
+LM-QC	PC1	77.65468295565479	1.0	-0.4088235294117647	0.11588783814878345	16	16	1	1	not_estimable_one_QC_per_plate
+LM-QC	PC2	7.694037220380978	0.9999999999999998	0.19411764705882353	0.47128972836210753	16	16	1	1	not_estimable_one_QC_per_plate
+LM-QC	PC3	4.160154973367417	1.0	0.17352941176470588	0.5204075144487407	16	16	1	1	not_estimable_one_QC_per_plate
+LM-QC	PC4	3.1241159221907306	1.0000000000000002	0.2764705882352941	0.29994212849237334	16	16	1	1	not_estimable_one_QC_per_plate
+LM-QC	PC5	1.965635923069471	1.0	0.2823529411764706	0.2893498290632738	16	16	1	1	not_estimable_one_QC_per_plate

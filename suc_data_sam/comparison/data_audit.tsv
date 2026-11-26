@@ -1,0 +1,18 @@
+check	value	definition
+protein_matrix_rows	12028.0	Protein.Group rows
+protein_matrix_columns_total	201.0	including 5 annotation columns
+protein_matrix_sample_columns	196.0	sample columns in matrix
+protein_groups_unique	12028.0	unique Protein.Group
+protein_group_duplicates	0.0	duplicate Protein.Group rows
+metadata_rows	127.0	sample metadata records
+metadata_unique_sample_ids	127.0	unique sample_id
+help_rows	12319.0	HELP long-table rows
+help_unique_samples	127.0	unique Sample values
+help_unique_peptides	97.0	unique Peptide sequences
+help_duplicate_sample_peptide	0.0	duplicate Sample+Peptide rows
+help_non_PASS	0.0	rows not marked PASS
+help_min_scan_points	7.0	minimum Peak_Scan_Points
+help_min_common_transitions	2.0	minimum N_Common_Transitions
+metadata_missing_in_help	0.0	sample IDs absent from HELP
+metadata_missing_in_protein	0.0	sample IDs absent from protein matrix
+protein_sample_columns_without_metadata	69.0	unmatched sample columns excluded

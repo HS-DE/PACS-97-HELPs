@@ -1,0 +1,87 @@
+{
+  "project": "suc_data_sam",
+  "analysis_date_local": "2026-11-26",
+  "inputs": {
+    "protein_matrix": {
+      "filename": "Plate1-16_QC_Hela_merged.pg_matrix.tsv",
+      "size_bytes": 10341050,
+      "sha256": "746e83868f5a68871174baa194a48d7074167841295bede884cf22a61cdeb3b5"
+    },
+    "help_report": {
+      "filename": "Accurate_Quantification_Report_v4_苏创.csv",
+      "size_bytes": 3020678,
+      "sha256": "5cbda5e1089fb0a542b7f08ec58ebf0e275e5218a2739082d6de5dce6b23af3d"
+    },
+    "metadata": {
+      "filename": "metadata.csv",
+      "size_bytes": 3769,
+      "sha256": "b9610f79c5486dcca8d75f94acdeee527f7e730523e13911ea7b172389d2e8aa"
+    }
+  },
+  "input_audit": {
+    "protein_groups": 12028,
+    "protein_sample_columns": 196,
+    "metadata_sample_ids": 127,
+    "metadata_group_counts": {
+      "Internal-QC": 32,
+      "QC": 32,
+      "sample": 32,
+      "LM-QC": 16,
+      "Blank": 15
+    },
+    "help_rows": 12319,
+    "help_unique_peptides": 97,
+    "help_duplicate_sample_peptide": 0,
+    "protein_sample_columns_without_metadata": 69,
+    "all_metadata_ids_match_help": true,
+    "all_metadata_ids_match_protein": true,
+    "metadata_encoding_note": "One stray non-UTF8 byte was found in an unnamed trailing column; only unnamed trailing columns were discarded."
+  },
+  "qc_mapping": {
+    "LM-QC": {
+      "pooled_qc": "LM-QC",
+      "study_samples": "sample",
+      "excluded": [
+        "QC",
+        "Internal-QC",
+        "Blank"
+      ]
+    },
+    "QC": {
+      "pooled_qc": "QC",
+      "study_samples": "sample",
+      "excluded": [
+        "LM-QC",
+        "Internal-QC",
+        "Blank"
+      ]
+    }
+  },
+  "pacs": {
+    "source_script": "scripts/PACS_norm.py",
+    "min_samples": 2,
+    "plate_col": "plate",
+    "imputation": "disabled; missing values preserved",
+    "help_extraction": "PASS; N_Common_Transitions >= 2; Peak_Scan_Points >= 8, relaxed to 7 only if extraction stability condition is not met",
+    "pacs_batch_handling": "The supplied PACS script checks batch completeness but does not use batch/plate in offset estimation."
+  },
+  "help_gmf_exploratory": {
+    "method": "QC-only StandardScaler + PCA latent factors; grouped 8-fold CV by plate; global-shift and protein-wise OOF checks",
+    "not_exact_omicsGFM": "This is a transparent exploratory factor-model prototype, not an implementation or reproduction of omicsGFM.",
+    "normalization_status": "Not promoted as a final corrected matrix because OOF protein CV did not improve over PACS."
+  },
+  "validation": {
+    "pacs_reproducibility": "Both saved runner scripts reproduced final PACS matrices exactly (max absolute numeric difference 0.0).",
+    "help_gmf_reproducibility": "Diagnostic script completed for both QC strategies.",
+    "no_raw_inputs_published": true
+  },
+  "software": {
+    "python": "3.13.5",
+    "numpy": "2.3.5",
+    "pandas": "2.2.3",
+    "scikit_learn": "1.8.0",
+    "scipy": "1.17.0",
+    "matplotlib": "3.10.8",
+    "openpyxl": "3.1.5"
+  }
+}
