@@ -1,0 +1,11 @@
+DATA 6137 PGs 80 eligible samples; HELP 97 selected 87
+CALIBRATOR LM-QC
+CALIBRATOR QC
+OUT OF FOLD QC
+SUMMARY
+{'evaluation_group': 'LM-QC', 'stage': 'stage4_per_protein', 'proteins': 5912, 'median_cv_raw': 16.805766752666578, 'median_cv_corrected': 1.980337522507817e-14, 'cv_delta_percentage_points': -16.805766752666557, 'improved_proteins': 5777, 'improved_fraction': 0.9771650879566982, 'calibrator': 'LM-QC', 'validation_type': 'same_reference_in_sample'}
+{'evaluation_group': 'QC', 'stage': 'stage4_per_protein', 'proteins': 4886, 'median_cv_raw': 41.427479412421505, 'median_cv_corrected': 75.21820220312216, 'cv_delta_percentage_points': 33.790722790700656, 'improved_proteins': 1195, 'improved_fraction': 0.24457634056487926, 'calibrator': 'LM-QC', 'validation_type': 'cross_QC_type_independent'}
+{'evaluation_group': 'LM-QC', 'stage': 'stage4_per_protein', 'proteins': 5912, 'median_cv_raw': 16.805766752666578, 'median_cv_corrected': 30.348346482923805, 'cv_delta_percentage_points': 13.542579730257227, 'improved_proteins': 1059, 'improved_fraction': 0.17912719891745602, 'calibrator': 'QC', 'validation_type': 'cross_QC_type_independent'}
+{'evaluation_group': 'QC', 'stage': 'stage4_per_protein', 'proteins': 4886, 'median_cv_raw': 41.427479412421505, 'median_cv_corrected': 26.95938684592312, 'cv_delta_percentage_points': -14.468092566498385, 'improved_proteins': 4008, 'improved_fraction': 0.8203029062627917, 'calibrator': 'QC', 'validation_type': 'same_reference_in_sample'}
+{'evaluation_group': 'QC', 'stage': 'OOF_stage4_per_protein', 'proteins': 4886, 'median_cv_raw': 41.427479412421505, 'median_cv_corrected': 81.82797776119972, 'cv_delta_percentage_points': 40.400498348778214, 'improved_proteins': 600, 'improved_fraction': 0.12279983626688498, 'calibrator': 'QC', 'validation_type': 'QC_within_plate_2fold_OOF'}
+DONE /mnt/data/suc_data/results
