@@ -1,0 +1,11 @@
+method,median_recovered_shift,median_abs_shift_error,median_abs_unperturbed_change
+Raw,0.5849625,1.110223e-16,0
+Current_PACS,0.5849625,1.110223e-16,0
+HELP_median,0.5849625,1.110223e-16,0
+Soma_like,0.5849625,1.110223e-16,0
+Gaussian_GMF,0.5849624,1.0366164e-07,9.343808e-08
+HELP_GMF,0.5849625,1.110223e-16,0
+HELP_GMF_plate,0.5849625,1.110223e-16,0
+Gated_0.25,0.5849625,1.110223e-16,0
+Gated_0.5,0.5849625,1.110223e-16,0
+Gated_1,0.5849625,1.110223e-16,0

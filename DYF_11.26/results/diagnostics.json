@@ -1,0 +1,42 @@
+{
+  "n_input_PG": 6675,
+  "n_retained": 22,
+  "n_observed_PG": 6120,
+  "n_complete_PG": 3930,
+  "missing_fraction": 0.17773918964930202,
+  "n_HELP": 97,
+  "n_complete_HELP": 76,
+  "n_GMF_HELP": 86,
+  "min_QC_HELP_CV": 4.093393170088878,
+  "PACS_groups": {
+    "('sample', 'HC')": {
+      "HELP": "TFTLLDPK",
+      "RMSE": 0.007186783066384823,
+      "Pearson": 0.9994444682059757,
+      "x": 2.8889639164557575,
+      "status": "ok",
+      "selection_reason": "QC_CV_le10"
+    },
+    "('sample', 'S')": {
+      "HELP": "STVEIFK",
+      "RMSE": 0.21647937783966195,
+      "Pearson": 0.9427921126119597,
+      "x": 2.925627424679901,
+      "status": "ok",
+      "selection_reason": "QC_CV_le10"
+    },
+    "('qc', 'QC')": {
+      "HELP": "TLYSSSPR",
+      "RMSE": 0.04768112641954112,
+      "Pearson": 0.5515632840537575,
+      "x": 2.40004840828865,
+      "status": "ok",
+      "selection_reason": "QC_CV_top5"
+    }
+  },
+  "sha256": {
+    "pg_matrix(2).tsv": "d3d2f334d2506073b2cf00c049c428ecd9b406b5e29fb1e63e3ea57fdc915830",
+    "metadata(1).xlsx": "845d4ee9a679c3afeedb0e0ad96c4d9fa0b2742d5bbd669ef15cfee0a7438c4f",
+    "Accurate_Quantification_Report_v4_10ppm_no_msconvert_remove_8ScanPoints_transitionAgreement.xlsx": "46e90a8f309581c6e227569b9606101eba0a619fc1d190d01deb7808b1fb622e"
+  }
+}
