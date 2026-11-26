@@ -1,0 +1,81 @@
+sample_id	plate	group	fold_if_QC
+P1-01	1	LM-QC	
+P1-25	1	sample	
+P1-37	1	QC	1
+P1-49	1	sample	
+P1-73	1	QC	2
+P2-01	2	LM-QC	
+P2-25	2	sample	
+P2-37	2	QC	1
+P2-49	2	sample	
+P2-73	2	QC	2
+P3-01	3	LM-QC	
+P3-25	3	sample	
+P3-37	3	QC	1
+P3-49	3	sample	
+P3-73	3	QC	2
+P4-01	4	LM-QC	
+P4-25	4	sample	
+P4-37	4	QC	1
+P4-49	4	sample	
+P4-73	4	QC	2
+P5-01	5	LM-QC	
+P5-25	5	sample	
+P5-37	5	QC	1
+P5-49	5	sample	
+P5-73	5	QC	2
+P6-01	6	LM-QC	
+P6-25	6	sample	
+P6-37	6	QC	1
+P6-49	6	sample	
+P6-73	6	QC	2
+P7-01	7	LM-QC	
+P7-25	7	sample	
+P7-37	7	QC	1
+P7-49	7	sample	
+P7-73	7	QC	2
+P8-01	8	LM-QC	
+P8-25	8	sample	
+P8-37	8	QC	1
+P8-49	8	sample	
+P8-73	8	QC	2
+P9-01	9	LM-QC	
+P9-25	9	sample	
+P9-37	9	QC	1
+P9-49	9	sample	
+P9-73	9	QC	2
+P10-01	10	LM-QC	
+P10-25	10	sample	
+P10-37	10	QC	1
+P10-49	10	sample	
+P10-73	10	QC	2
+P11-01	11	LM-QC	
+P11-25	11	sample	
+P11-37	11	QC	1
+P11-49	11	sample	
+P11-73	11	QC	2
+P12-01	12	LM-QC	
+P12-25	12	sample	
+P12-37	12	QC	1
+P12-49	12	sample	
+P12-73	12	QC	2
+P13-01	13	LM-QC	
+P13-25	13	sample	
+P13-37	13	QC	1
+P13-49	13	sample	
+P13-73	13	QC	2
+P14-01	14	LM-QC	
+P14-25	14	sample	
+P14-37	14	QC	1
+P14-49	14	sample	
+P14-73	14	QC	2
+P15-01	15	LM-QC	
+P15-25	15	sample	
+P15-37	15	QC	1
+P15-49	15	sample	
+P15-73	15	QC	2
+P16-01	16	LM-QC	
+P16-25	16	sample	
+P16-37	16	QC	1
+P16-49	16	sample	
+P16-73	16	QC	2
